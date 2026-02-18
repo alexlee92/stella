@@ -128,6 +128,8 @@ Atteindre un agent "tres fiable pour usage personnel" avec:
 
 ---
 
+
+
 ## KPI cibles a 30 jours
 
 - [ ] Taux succes `run --apply` sans rollback >= 70%
