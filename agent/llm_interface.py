@@ -1,4 +1,4 @@
-﻿import json
+import json
 from collections import OrderedDict
 from typing import Any
 
@@ -6,7 +6,7 @@ import requests
 
 from agent.config import MODEL, OLLAMA_URL, REQUEST_TIMEOUT
 
-_JSON_CACHE: "OrderedDict[str, dict]" = OrderedDict()
+_JSON_CACHE: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
 _JSON_CACHE_SIZE = 64
 
 
@@ -69,7 +69,6 @@ def ask_llm_json(prompt: str, retries: int = 3) -> dict[str, Any]:
             return parsed
         except json.JSONDecodeError as exc:
             last_error = str(exc)
-            continue
 
     return {
         "action": "finish",

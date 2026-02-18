@@ -1,4 +1,5 @@
-﻿import datetime
+import ast
+import datetime
 import difflib
 import os
 import shutil
@@ -64,7 +65,19 @@ def show_diff(old: str, new: str):
 
 def _prepare_new_code(abs_path: str, old_code: str, new_code: str):
     if abs_path.endswith(".py"):
+        stripped = (new_code or "").lstrip()
+        if stripped.startswith("```") or stripped.lower().startswith(
+            "here's the modified code"
+        ):
+            raise ValueError("refusing markdown/prose patch for python file")
+
         merged, used, reason = ast_merge_python_code(old_code, new_code)
+        candidate = merged if used else new_code
+        try:
+            ast.parse(candidate)
+        except SyntaxError as exc:
+            raise ValueError(f"refusing invalid python patch: {exc}") from exc
+
         if used:
             print(f"[patch] ast-aware merge applied: {reason}")
             return merged, {"ast_merge": True, "reason": reason}
@@ -81,7 +94,19 @@ def apply_patch_non_interactive(filepath: str, new_code: str):
     except FileNotFoundError:
         old_code = ""
 
-    prepared_code, ast_meta = _prepare_new_code(abs_path, old_code, new_code)
+    try:
+        prepared_code, ast_meta = _prepare_new_code(abs_path, old_code, new_code)
+    except ValueError as exc:
+        return {
+            "old_code": old_code,
+            "new_code": new_code,
+            "backup_path": None,
+            "dry_run": DRY_RUN,
+            "applied": False,
+            "ast_merge": False,
+            "reason": str(exc),
+        }
+
     backup_path = create_backup(abs_path)
 
     if DRY_RUN:
@@ -90,6 +115,7 @@ def apply_patch_non_interactive(filepath: str, new_code: str):
             "new_code": prepared_code,
             "backup_path": backup_path,
             "dry_run": True,
+            "applied": False,
             **ast_meta,
         }
 
@@ -101,6 +127,7 @@ def apply_patch_non_interactive(filepath: str, new_code: str):
         "new_code": prepared_code,
         "backup_path": backup_path,
         "dry_run": False,
+        "applied": True,
         **ast_meta,
     }
 
@@ -113,7 +140,12 @@ def apply_patch_interactive(filepath: str, new_code: str):
     except FileNotFoundError:
         old_code = ""
 
-    prepared_code, ast_meta = _prepare_new_code(abs_path, old_code, new_code)
+    try:
+        prepared_code, ast_meta = _prepare_new_code(abs_path, old_code, new_code)
+    except ValueError as exc:
+        print(f"[patch] rejected: {exc}")
+        return False
+
     show_diff(old_code, prepared_code)
 
     confirm = input("\nApply this patch? (y/n) ")
@@ -143,6 +175,8 @@ def apply_transaction(
     try:
         for path, code in file_to_code.items():
             res = apply_patch_non_interactive(path, code)
+            if not res.get("applied") and not res.get("dry_run"):
+                raise ValueError(res.get("reason", "patch_not_applied"))
             backups.append((path, res.get("backup_path")))
         return True, backups, "transaction_applied"
     except Exception as exc:

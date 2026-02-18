@@ -1,5 +1,4 @@
-﻿import re
-from typing import List, Optional
+﻿from typing import List, Optional
 
 from agent.config import FORMAT_COMMAND, LINT_COMMAND, TEST_COMMAND
 from agent.test_selector import build_targeted_pytest_command
@@ -34,8 +33,8 @@ def _build_changed_file_command(
 def _is_test_stage_success(code: int, output: str) -> bool:
     if code == 0:
         return True
-    low = (output or "").lower()
-    if code == 5 and "no tests ran" in low:
+    # pytest exit code 5 means "no tests collected".
+    if code == 5:
         return True
     return False
 
@@ -45,6 +44,12 @@ def _is_permission_error(output: str) -> bool:
     return (
         "permissionerror" in low or "accès refusé" in low or "access is denied" in low
     )
+
+
+def _with_pytest_ignore_permission_dirs(command: str) -> str:
+    if not command.startswith("pytest"):
+        return command
+    return command + " --ignore-glob=pytest-cache-files-*"
 
 
 def run_quality_pipeline(
@@ -143,6 +148,20 @@ def run_quality_pipeline(
             )
 
         if name == "tests":
+            if code != 0 and _is_permission_error(out):
+                fallback_tests = _with_pytest_ignore_permission_dirs(cmd)
+                f_code, f_out = run_safe_command(fallback_tests)
+                results.append(
+                    {
+                        "mode": mode,
+                        "stage": name,
+                        "command": fallback_tests,
+                        "exit_code": f_code,
+                        "output": f_out[:1200],
+                        "fallback_from": cmd,
+                    }
+                )
+                code, out = f_code, f_out
             if not _is_test_stage_success(code, out):
                 return False, results
         else:
