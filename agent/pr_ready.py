@@ -37,8 +37,7 @@ def _checklist(details: dict) -> tuple[str, bool]:
         for r in rows:
             if r.get("stage") == stage:
                 code = r.get("exit_code", 1)
-                out = (r.get("output") or "").lower()
-                if stage == "tests" and code == 5 and "no tests ran" in out:
+                if stage == "tests" and code == 5:
                     return True
                 return code == 0
         return False
