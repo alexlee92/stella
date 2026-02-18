@@ -41,7 +41,9 @@ def select_test_files(changed_files: List[str]) -> List[str]:
     return sorted(set(selected))
 
 
-def build_targeted_pytest_command(changed_files: List[str], default_command: str = "pytest -q", limit: int = 8) -> str:
+def build_targeted_pytest_command(
+    changed_files: List[str], default_command: str = "pytest -q", limit: int = 8
+) -> str:
     targets = select_test_files(changed_files)
     if not targets:
         return default_command

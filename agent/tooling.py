@@ -73,7 +73,9 @@ def read_file(path: str, max_chars: int = 6000) -> str:
     return content[:max_chars] + "\n\n...[truncated]"
 
 
-def read_many(paths: List[str], max_chars_per_file: int = 2500, max_total_chars: int = 9000) -> str:
+def read_many(
+    paths: List[str], max_chars_per_file: int = 2500, max_total_chars: int = 9000
+) -> str:
     chunks = []
     total = 0
     for path in paths:
@@ -114,7 +116,15 @@ def list_files(limit: int = 200, contains: str = "", ext: str = ".py") -> List[s
 
 def search_code(pattern: str, limit: int = 30) -> List[str]:
     try:
-        rg_cmd = ["rg", "-n", "--hidden", "--glob", "!**/__pycache__/**", pattern, PROJECT_ROOT]
+        rg_cmd = [
+            "rg",
+            "-n",
+            "--hidden",
+            "--glob",
+            "!**/__pycache__/**",
+            pattern,
+            PROJECT_ROOT,
+        ]
         result = subprocess.run(rg_cmd, capture_output=True, text=True, check=False)
         lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
         return lines[:limit]
@@ -138,7 +148,9 @@ def search_code(pattern: str, limit: int = 30) -> List[str]:
     return output
 
 
-def run_tests_detailed(command: str = "pytest -q", timeout: int = 180) -> Tuple[int, str]:
+def run_tests_detailed(
+    command: str = "pytest -q", timeout: int = 180
+) -> Tuple[int, str]:
     return run_safe_command(command, timeout=timeout)
 
 

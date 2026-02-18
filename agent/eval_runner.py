@@ -35,14 +35,22 @@ def _compute_kpis(report: dict):
     passed = sum(1 for r in results if r.get("passed"))
     success_rate = round((passed / total) * 100, 2) if total else 0.0
 
-    avg_task_time = round(sum(float(r.get("duration_s", 0.0)) for r in results) / total, 2) if total else 0.0
+    avg_task_time = (
+        round(sum(float(r.get("duration_s", 0.0)) for r in results) / total, 2)
+        if total
+        else 0.0
+    )
 
     events = _safe_read_jsonl(os.path.join(PROJECT_ROOT, EVENT_LOG_PATH))
     failure_events = [e for e in events if e.get("type") == "failure"]
-    parse_failures = [e for e in failure_events if (e.get("payload") or {}).get("category") == "parse"]
+    parse_failures = [
+        e for e in failure_events if (e.get("payload") or {}).get("category") == "parse"
+    ]
 
     planner_events = [e for e in events if e.get("type") == "plan"]
-    json_failure_rate = round((len(parse_failures) / max(1, len(planner_events))) * 100, 2)
+    json_failure_rate = round(
+        (len(parse_failures) / max(1, len(planner_events))) * 100, 2
+    )
 
     pr_ready_events = [e for e in events if e.get("type") == "pr_ready"]
     pr_success = sum(1 for e in pr_ready_events if (e.get("payload") or {}).get("ok"))

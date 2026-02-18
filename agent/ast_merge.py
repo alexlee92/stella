@@ -30,14 +30,20 @@ def ast_merge_python_code(old_code: str, new_code: str) -> Tuple[str, bool, str]
     merged_body = []
     used_names = set()
     for node in old_tree.body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name in new_named:
+        if (
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            and node.name in new_named
+        ):
             merged_body.append(new_named[node.name])
             used_names.add(node.name)
         else:
             merged_body.append(node)
 
     for node in new_tree.body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name not in used_names:
+        if (
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            and node.name not in used_names
+        ):
             merged_body.append(node)
 
     merged = ast.Module(body=merged_body, type_ignores=[])

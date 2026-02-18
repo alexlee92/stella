@@ -13,7 +13,14 @@ def run(command: list[str]):
 def main():
     steps = [
         [sys.executable, "-m", "py_compile", "main.py"],
-        [sys.executable, "-m", "py_compile", "agent\\agent.py", "agent\\auto_agent.py", "agent\\chat_session.py"],
+        [
+            sys.executable,
+            "-m",
+            "py_compile",
+            "agent\\agent.py",
+            "agent\\auto_agent.py",
+            "agent\\chat_session.py",
+        ],
     ]
 
     for cmd in steps:

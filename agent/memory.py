@@ -140,7 +140,11 @@ def _chunk_python_by_symbols(content: str):
 
     nodes = []
     for node in tree.body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and hasattr(node, "lineno") and hasattr(node, "end_lineno"):
+        if (
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            and hasattr(node, "lineno")
+            and hasattr(node, "end_lineno")
+        ):
             nodes.append(node)
 
     if not nodes:
@@ -211,13 +215,20 @@ def _save_index(meta: dict):
     docs_path, vec_path = _index_files()
     payload = {
         "meta": meta,
-        "docs": [{"path": d.path, "chunk_id": d.chunk_id, "text": d.text, "symbol": d.symbol} for d in documents],
+        "docs": [
+            {"path": d.path, "chunk_id": d.chunk_id, "text": d.text, "symbol": d.symbol}
+            for d in documents
+        ],
     }
 
     with open(docs_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False)
 
-    matrix = np.array(vectors, dtype=np.float32) if vectors else np.zeros((0, 1), dtype=np.float32)
+    matrix = (
+        np.array(vectors, dtype=np.float32)
+        if vectors
+        else np.zeros((0, 1), dtype=np.float32)
+    )
     np.save(vec_path, matrix)
 
 
@@ -250,7 +261,9 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
             vec = embed(chunk)
             if vec is None:
                 continue
-            documents.append(MemoryDoc(path=file_path, chunk_id=idx, text=chunk, symbol=symbol))
+            documents.append(
+                MemoryDoc(path=file_path, chunk_id=idx, text=chunk, symbol=symbol)
+            )
             vectors.append(vec)
 
     _rebuild_lexical_stats()
@@ -304,7 +317,7 @@ def search_memory(query: str, k: int = 3):
         return []
 
     semantic_scores = [float(np.dot(q, v)) for v in vectors]
-    top_idx = np.argsort(semantic_scores)[-max(k * 6, k):][::-1]
+    top_idx = np.argsort(semantic_scores)[-max(k * 6, k) :][::-1]
 
     query_terms = [t for t in _tokenize(query) if len(t) > 2]
     reranked = []
@@ -355,11 +368,12 @@ def budget_context(query: str, k: int = 6, budget_chars: int = CONTEXT_BUDGET_CH
         per_file_count[path] += 1
         total += len(block)
 
-    omitted_files = sorted({os.path.relpath(p, PROJECT_ROOT) for p, _ in candidates} - chosen_files)
+    omitted_files = sorted(
+        {os.path.relpath(p, PROJECT_ROOT) for p, _ in candidates} - chosen_files
+    )
 
     summary_tail = ""
     if omitted_files:
         summary_tail = "\n\n[context] omitted files: " + ", ".join(omitted_files[:6])
 
     return "\n\n".join(chosen) + summary_tail
-

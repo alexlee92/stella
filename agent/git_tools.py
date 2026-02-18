@@ -1,4 +1,5 @@
-﻿import subprocess
+﻿import os
+import subprocess
 from typing import Optional
 
 from agent.config import DRY_RUN, PROJECT_ROOT
@@ -35,13 +36,25 @@ def changed_files():
     code, out = _run_git(["status", "--porcelain"])
     if code != 0:
         return []
+
     files = []
     for line in out.splitlines():
         if not line.strip():
             continue
-        path = line[3:].strip()
-        if path:
+
+        # Porcelain format: XY <path> OR XY <old> -> <new>
+        body = line[3:].strip()
+        if " -> " in body:
+            body = body.split(" -> ", 1)[1].strip()
+
+        path = body.strip('"').replace("\\", "/")
+        if not path:
+            continue
+
+        abs_path = os.path.join(PROJECT_ROOT, path)
+        if os.path.exists(abs_path):
             files.append(path)
+
     return sorted(set(files))
 
 
@@ -73,6 +86,10 @@ def diff_summary(target: Optional[str] = None):
         return f"git diff error: {out}"
 
     lines = out.splitlines()
-    added = sum(1 for l in lines if l.startswith("+") and not l.startswith("+++"))
-    removed = sum(1 for l in lines if l.startswith("-") and not l.startswith("---"))
+    added = sum(
+        1 for line in lines if line.startswith("+") and not line.startswith("+++")
+    )
+    removed = sum(
+        1 for line in lines if line.startswith("-") and not line.startswith("---")
+    )
     return f"changed_lines:+{added}/-{removed}\n{out[:3000]}"

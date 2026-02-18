@@ -6,7 +6,13 @@ from datetime import datetime
 
 import requests
 
-from agent.config import EMBED_MODEL, MEMORY_INDEX_DIR, MODEL, OLLAMA_BASE_URL, PROJECT_ROOT
+from agent.config import (
+    EMBED_MODEL,
+    MEMORY_INDEX_DIR,
+    MODEL,
+    OLLAMA_BASE_URL,
+    PROJECT_ROOT,
+)
 from agent.git_tools import is_git_repo
 
 
@@ -27,18 +33,28 @@ def run_doctor() -> dict:
             ollama_ok = True
             data = r.json()
             tags = [m.get("name", "") for m in data.get("models", [])]
-            models_ok = any(MODEL in t for t in tags) and any(EMBED_MODEL in t for t in tags)
+            models_ok = any(MODEL in t for t in tags) and any(
+                EMBED_MODEL in t for t in tags
+            )
     except Exception as exc:
         add("ollama_api", False, str(exc))
 
     if ollama_ok:
         add("ollama_api", True, f"reachable: {OLLAMA_BASE_URL}")
-        add("ollama_models", models_ok, f"required=({MODEL}, {EMBED_MODEL}), found={len(tags)}")
+        add(
+            "ollama_models",
+            models_ok,
+            f"required=({MODEL}, {EMBED_MODEL}), found={len(tags)}",
+        )
 
     idx_dir = os.path.join(PROJECT_ROOT, MEMORY_INDEX_DIR)
     docs = os.path.join(idx_dir, "docs.json")
     vec = os.path.join(idx_dir, "vectors.npy")
-    add("memory_index", os.path.exists(docs) and os.path.exists(vec), f"index_dir={idx_dir}")
+    add(
+        "memory_index",
+        os.path.exists(docs) and os.path.exists(vec),
+        f"index_dir={idx_dir}",
+    )
 
     add("git_repo", is_git_repo(), f"root={PROJECT_ROOT}")
 

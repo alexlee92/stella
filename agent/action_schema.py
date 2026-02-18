@@ -50,11 +50,17 @@ def validate_decision_schema(decision: dict) -> tuple[bool, str]:
         return False, "args must be an object"
 
     rules = {
-        "list_files": {"required": {}, "optional": {"contains": "str", "ext": "str", "limit": "int"}},
+        "list_files": {
+            "required": {},
+            "optional": {"contains": "str", "ext": "str", "limit": "int"},
+        },
         "read_file": {"required": {"path": "str"}, "optional": {}},
         "read_many": {"required": {"paths": "list_str"}, "optional": {}},
         "search_code": {"required": {"pattern": "str"}, "optional": {"limit": "int"}},
-        "propose_edit": {"required": {"path": "str", "instruction": "str"}, "optional": {}},
+        "propose_edit": {
+            "required": {"path": "str", "instruction": "str"},
+            "optional": {},
+        },
         "apply_edit": {"required": {"path": "str"}, "optional": {}},
         "apply_all_staged": {"required": {}, "optional": {}},
         "run_tests": {"required": {}, "optional": {"command": "str"}},

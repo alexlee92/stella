@@ -4,7 +4,14 @@ import re
 
 from agent.config import PROJECT_ROOT
 from agent.event_logger import EventLogger
-from agent.git_tools import changed_files, commit_all, create_branch, current_branch, diff_summary, is_git_repo
+from agent.git_tools import (
+    changed_files,
+    commit_all,
+    create_branch,
+    current_branch,
+    diff_summary,
+    is_git_repo,
+)
 from agent.quality import run_quality_gate
 
 
@@ -48,7 +55,9 @@ def _checklist(details: dict) -> tuple[str, bool]:
     return body, (format_ok and lint_ok and tests_ok)
 
 
-def _build_pr_text(goal: str, branch: str, commit_message: str, diff_text: str, checklist_md: str) -> tuple[str, str]:
+def _build_pr_text(
+    goal: str, branch: str, commit_message: str, diff_text: str, checklist_md: str
+) -> tuple[str, str]:
     title = f"{commit_message}"
     body = (
         "## Summary\n"
@@ -75,7 +84,9 @@ def _write_pr_markdown(title: str, body: str) -> str:
     return out_path
 
 
-def prepare_pr(goal: str, branch: str | None = None, commit_message: str | None = None) -> dict:
+def prepare_pr(
+    goal: str, branch: str | None = None, commit_message: str | None = None
+) -> dict:
     logger = EventLogger()
 
     if not is_git_repo():

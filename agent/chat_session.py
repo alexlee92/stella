@@ -11,7 +11,9 @@ from agent.memory import search_memory
 
 
 class ChatSession:
-    def __init__(self, history_path: str = CHAT_HISTORY_PATH, top_k: int = TOP_K_RESULTS):
+    def __init__(
+        self, history_path: str = CHAT_HISTORY_PATH, top_k: int = TOP_K_RESULTS
+    ):
         self.top_k = top_k
         self.messages: List[dict] = []
         self.decisions: List[dict] = []
@@ -109,12 +111,16 @@ Project context:
 
         self._persist(user_record)
         self._persist(assistant_record)
-        self.event_logger.log("chat_turn", {"question": question, "answer_preview": answer[:400]})
+        self.event_logger.log(
+            "chat_turn", {"question": question, "answer_preview": answer[:400]}
+        )
 
         return answer
 
     def run_auto(self, goal: str, auto_apply: bool = False, max_steps: int = 8) -> str:
-        agent = AutonomousAgent(top_k=self.top_k, max_steps=max_steps, logger=self.log_decision)
+        agent = AutonomousAgent(
+            top_k=self.top_k, max_steps=max_steps, logger=self.log_decision
+        )
         summary = agent.run(goal=goal, auto_apply=auto_apply)
 
         record = {
@@ -124,7 +130,9 @@ Project context:
             "timestamp": datetime.utcnow().isoformat(),
         }
         self._persist(record)
-        self.event_logger.log("auto_summary", {"goal": goal, "summary_preview": summary[:500]})
+        self.event_logger.log(
+            "auto_summary", {"goal": goal, "summary_preview": summary[:500]}
+        )
         return summary
 
     def show_decisions(self, limit: int = 12) -> str:

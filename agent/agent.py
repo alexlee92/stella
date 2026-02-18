@@ -1,5 +1,6 @@
 ﻿import difflib
 import os
+import re
 from typing import Dict
 
 from agent.config import PROJECT_ROOT, TOP_K_RESULTS
@@ -11,12 +12,24 @@ from agent.risk import compute_patch_risk
 
 
 def _strip_code_fences(text: str) -> str:
-    cleaned = text.strip()
-    if cleaned.startswith("```"):
-        lines = cleaned.splitlines()
-        if len(lines) >= 2 and lines[-1].strip() == "```":
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+
+    # If response is a pure fenced block
+    if raw.startswith("```") and raw.endswith("```"):
+        lines = raw.splitlines()
+        if len(lines) >= 3:
             return "\n".join(lines[1:-1]).strip()
-    return cleaned
+
+    # If response contains prose + fenced code, extract first fenced block
+    match = re.search(
+        r"```(?:python)?\s*(.*?)```", raw, flags=re.IGNORECASE | re.DOTALL
+    )
+    if match:
+        return match.group(1).strip()
+
+    return raw
 
 
 def _to_abs(path: str) -> str:
@@ -44,7 +57,9 @@ Project context:
     return ask_llm(prompt).strip()
 
 
-def propose_file_update(file_path: str, instruction: str, k: int = TOP_K_RESULTS) -> str:
+def propose_file_update(
+    file_path: str, instruction: str, k: int = TOP_K_RESULTS
+) -> str:
     abs_path = _to_abs(file_path)
     current_code = load_file_content(abs_path)
     context = budget_context(instruction, k=max(5, k))
@@ -71,7 +86,9 @@ Related project context:
     return _strip_code_fences(suggestion)
 
 
-def propose_multi_file_update(instruction_by_file: Dict[str, str], k: int = TOP_K_RESULTS) -> Dict[str, str]:
+def propose_multi_file_update(
+    instruction_by_file: Dict[str, str], k: int = TOP_K_RESULTS
+) -> Dict[str, str]:
     result = {}
     for path, instruction in instruction_by_file.items():
         result[path] = propose_file_update(path, instruction, k=k)
@@ -81,7 +98,13 @@ def propose_multi_file_update(instruction_by_file: Dict[str, str], k: int = TOP_
 def review_file_update(file_path: str, suggestion: str) -> str:
     abs_path = _to_abs(file_path)
     old = load_file_content(abs_path)
-    diff = difflib.unified_diff(old.splitlines(), suggestion.splitlines(), fromfile=f"a/{file_path}", tofile=f"b/{file_path}", lineterm="")
+    diff = difflib.unified_diff(
+        old.splitlines(),
+        suggestion.splitlines(),
+        fromfile=f"a/{file_path}",
+        tofile=f"b/{file_path}",
+        lineterm="",
+    )
     return "\n".join(diff)
 
 

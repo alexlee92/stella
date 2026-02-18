@@ -24,8 +24,12 @@ def build_parser():
     parser = argparse.ArgumentParser(description="Local coding agent (DeepSeek/Ollama)")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    idx = sub.add_parser("index", help="Index project files into persistent vector memory")
-    idx.add_argument("--rebuild", action="store_true", help="Force rebuild memory index")
+    idx = sub.add_parser(
+        "index", help="Index project files into persistent vector memory"
+    )
+    idx.add_argument(
+        "--rebuild", action="store_true", help="Force rebuild memory index"
+    )
 
     ask = sub.add_parser("ask", help="Ask a question about the codebase")
     ask.add_argument("question", help="Question to ask")
@@ -37,7 +41,9 @@ def build_parser():
     apply_cmd = sub.add_parser("apply", help="Generate patch and apply immediately")
     apply_cmd.add_argument("file", help="Target file path")
     apply_cmd.add_argument("instruction", help="Change request")
-    apply_cmd.add_argument("--non-interactive", action="store_true", help="Apply without confirmation")
+    apply_cmd.add_argument(
+        "--non-interactive", action="store_true", help="Apply without confirmation"
+    )
 
     undo = sub.add_parser("undo", help="Restore latest backup for file")
     undo.add_argument("file", help="File to restore")
@@ -47,26 +53,49 @@ def build_parser():
 
     run = sub.add_parser("run", help="Run autonomous tool-use loop")
     run.add_argument("goal", help="Goal for the autonomous agent")
-    run.add_argument("--steps", type=int, default=AUTO_MAX_STEPS, help="Maximum decision steps")
+    run.add_argument(
+        "--steps", type=int, default=AUTO_MAX_STEPS, help="Maximum decision steps"
+    )
     run.add_argument("--apply", action="store_true", help="Allow applying staged edits")
 
-    pr = sub.add_parser("pr-ready", help="Create branch, commit changes, and print PR summary")
+    pr = sub.add_parser(
+        "pr-ready", help="Create branch, commit changes, and print PR summary"
+    )
     pr.add_argument("goal", help="Goal used for default branch/commit naming")
     pr.add_argument("--branch", help="Optional branch name")
     pr.add_argument("--message", help="Optional commit message")
 
     chat = sub.add_parser("chat", help="Start continuous chat with session memory")
-    chat.add_argument("--steps", type=int, default=AUTO_MAX_STEPS, help="Default max steps for /run")
-    chat.add_argument("--apply", action="store_true", help="Allow applying staged edits in /run")
+    chat.add_argument(
+        "--steps", type=int, default=AUTO_MAX_STEPS, help="Default max steps for /run"
+    )
+    chat.add_argument(
+        "--apply", action="store_true", help="Allow applying staged edits in /run"
+    )
 
-    bootstrap = sub.add_parser("bootstrap", help="Auto-setup git/index/tools for local use")
-    bootstrap.add_argument("--no-git-init", action="store_true", help="Skip git init step")
-    bootstrap.add_argument("--no-index-rebuild", action="store_true", help="Skip memory index rebuild")
-    bootstrap.add_argument("--no-install-tools", action="store_true", help="Skip pip install pytest/ruff/black")
+    bootstrap = sub.add_parser(
+        "bootstrap", help="Auto-setup git/index/tools for local use"
+    )
+    bootstrap.add_argument(
+        "--no-git-init", action="store_true", help="Skip git init step"
+    )
+    bootstrap.add_argument(
+        "--no-index-rebuild", action="store_true", help="Skip memory index rebuild"
+    )
+    bootstrap.add_argument(
+        "--no-install-tools",
+        action="store_true",
+        help="Skip pip install pytest/ruff/black",
+    )
 
     sub.add_parser("map", help="Print project symbol map")
     eval_cmd = sub.add_parser("eval", help="Run evaluation suite from eval/tasks.json")
-    eval_cmd.add_argument("--limit", type=int, default=0, help="Run only first N tasks for quick KPI snapshot")
+    eval_cmd.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Run only first N tasks for quick KPI snapshot",
+    )
     sub.add_parser("doctor", help="Run environment and tooling diagnostics")
     sub.add_parser("ci", help="Run local compile checks")
     sub.add_parser("progress", help="Show progress summary from UPGRADE_PLAN_30J.md")
@@ -100,7 +129,9 @@ def run_chat(default_steps: int, auto_apply: bool):
 
         if user_input.startswith("/run "):
             goal = user_input[len("/run ") :].strip()
-            summary = session.run_auto(goal=goal, auto_apply=auto_apply, max_steps=default_steps)
+            summary = session.run_auto(
+                goal=goal, auto_apply=auto_apply, max_steps=default_steps
+            )
             print(summary)
             continue
 
@@ -124,7 +155,9 @@ def handle_edit_like(file_path: str, instruction: str, do_apply: bool):
     diff = review_file_update(file_path, code)
     risk = patch_risk(file_path, code)
 
-    print(f"[risk] level={risk['level']} score={risk['score']} changed_lines={risk['changed_lines']} sensitive={risk['sensitive_hits']}")
+    print(
+        f"[risk] level={risk['level']} score={risk['score']} changed_lines={risk['changed_lines']} sensitive={risk['sensitive_hits']}"
+    )
     print(diff or "(no diff)")
 
     if do_apply:
@@ -152,7 +185,9 @@ def main():
         index_project()
         code = propose_file_update(args.file, args.instruction)
         risk = patch_risk(args.file, code)
-        print(f"[risk] level={risk['level']} score={risk['score']} changed_lines={risk['changed_lines']} sensitive={risk['sensitive_hits']}")
+        print(
+            f"[risk] level={risk['level']} score={risk['score']} changed_lines={risk['changed_lines']} sensitive={risk['sensitive_hits']}"
+        )
         if args.non_interactive:
             print(apply_suggestion(args.file, code, interactive=False))
         else:
@@ -175,11 +210,17 @@ def main():
 
     if args.command in {"run", "auto"}:
         index_project()
-        print(AutonomousAgent(max_steps=args.steps).run(goal=args.goal, auto_apply=args.apply))
+        print(
+            AutonomousAgent(max_steps=args.steps).run(
+                goal=args.goal, auto_apply=args.apply
+            )
+        )
         return
 
     if args.command == "pr-ready":
-        result = prepare_pr(goal=args.goal, branch=args.branch, commit_message=args.message)
+        result = prepare_pr(
+            goal=args.goal, branch=args.branch, commit_message=args.message
+        )
         print(result["summary"])
         if not result.get("ok"):
             raise SystemExit(1)

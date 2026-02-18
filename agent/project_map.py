@@ -38,6 +38,8 @@ def render_project_map(limit_files: int = 120, limit_symbols: int = 25) -> str:
     for idx, (path, symbols) in enumerate(sorted(mapping.items())):
         if idx >= limit_files:
             break
-        shown = ", ".join(symbols[:limit_symbols]) if symbols else "(no top-level symbols)"
+        shown = (
+            ", ".join(symbols[:limit_symbols]) if symbols else "(no top-level symbols)"
+        )
         lines.append(f"{path}: {shown}")
     return "\n".join(lines)

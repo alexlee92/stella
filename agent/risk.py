@@ -1,12 +1,13 @@
 ﻿import difflib
 from typing import Dict
 
-
 SENSITIVE_PATTERNS = ["auth", "security", "config", "patcher", "auto_agent", "main.py"]
 
 
 def _changed_line_count(old_code: str, new_code: str) -> int:
-    diff = difflib.unified_diff(old_code.splitlines(), new_code.splitlines(), lineterm="")
+    diff = difflib.unified_diff(
+        old_code.splitlines(), new_code.splitlines(), lineterm=""
+    )
     changed = 0
     for line in diff:
         if line.startswith("+++") or line.startswith("---") or line.startswith("@@"):
@@ -16,7 +17,9 @@ def _changed_line_count(old_code: str, new_code: str) -> int:
     return changed
 
 
-def compute_patch_risk(file_path: str, old_code: str, new_code: str) -> Dict[str, object]:
+def compute_patch_risk(
+    file_path: str, old_code: str, new_code: str
+) -> Dict[str, object]:
     changed = _changed_line_count(old_code, new_code)
     score = min(100, changed)
 

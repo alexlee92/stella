@@ -9,7 +9,9 @@ from agent.config import DRY_RUN, PROJECT_ROOT
 
 
 def _safe_abs(path: str) -> str:
-    abs_path = os.path.abspath(path if os.path.isabs(path) else os.path.join(PROJECT_ROOT, path))
+    abs_path = os.path.abspath(
+        path if os.path.isabs(path) else os.path.join(PROJECT_ROOT, path)
+    )
     root = os.path.abspath(PROJECT_ROOT)
     if not abs_path.startswith(root):
         raise ValueError("Path outside project root")
@@ -42,7 +44,11 @@ def find_latest_backup(filepath: str):
     abs_path = _safe_abs(filepath)
     base = f"{abs_path}.bak_"
     directory = os.path.dirname(abs_path)
-    candidates = [os.path.join(directory, n) for n in os.listdir(directory) if n.startswith(os.path.basename(base))]
+    candidates = [
+        os.path.join(directory, n)
+        for n in os.listdir(directory)
+        if n.startswith(os.path.basename(base))
+    ]
     if not candidates:
         return None
     candidates.sort(reverse=True)
@@ -79,12 +85,24 @@ def apply_patch_non_interactive(filepath: str, new_code: str):
     backup_path = create_backup(abs_path)
 
     if DRY_RUN:
-        return {"old_code": old_code, "new_code": prepared_code, "backup_path": backup_path, "dry_run": True, **ast_meta}
+        return {
+            "old_code": old_code,
+            "new_code": prepared_code,
+            "backup_path": backup_path,
+            "dry_run": True,
+            **ast_meta,
+        }
 
     with open(abs_path, "w", encoding="utf-8") as f:
         f.write(prepared_code)
 
-    return {"old_code": old_code, "new_code": prepared_code, "backup_path": backup_path, "dry_run": False, **ast_meta}
+    return {
+        "old_code": old_code,
+        "new_code": prepared_code,
+        "backup_path": backup_path,
+        "dry_run": False,
+        **ast_meta,
+    }
 
 
 def apply_patch_interactive(filepath: str, new_code: str):
@@ -118,7 +136,9 @@ def apply_patch_interactive(filepath: str, new_code: str):
     return True
 
 
-def apply_transaction(file_to_code: Dict[str, str]) -> Tuple[bool, List[Tuple[str, str]], str]:
+def apply_transaction(
+    file_to_code: Dict[str, str],
+) -> Tuple[bool, List[Tuple[str, str]], str]:
     backups = []
     try:
         for path, code in file_to_code.items():
