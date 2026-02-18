@@ -24,6 +24,15 @@ def _build_changed_file_command(base_command: str, changed_files: Optional[List[
     return base_command
 
 
+def _is_test_stage_success(code: int, output: str) -> bool:
+    if code == 0:
+        return True
+    # pytest exit code 5 = no tests collected; acceptable for repos without tests
+    if code == 5 and "no tests ran" in (output or "").lower():
+        return True
+    return False
+
+
 def run_quality_pipeline(
     mode: str = "full",
     changed_files: Optional[List[str]] = None,
@@ -43,8 +52,13 @@ def run_quality_pipeline(
     for name, cmd in [("format", effective_format), ("lint", effective_lint), ("tests", effective_tests)]:
         code, out = run_safe_command(cmd)
         results.append({"mode": mode, "stage": name, "command": cmd, "exit_code": code, "output": out[:1200]})
-        if code != 0:
-            return False, results
+
+        if name == "tests":
+            if not _is_test_stage_success(code, out):
+                return False, results
+        else:
+            if code != 0:
+                return False, results
 
     return True, results
 

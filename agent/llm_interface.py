@@ -1,4 +1,5 @@
 ﻿import json
+
 import requests
 
 from agent.config import MODEL, OLLAMA_URL, REQUEST_TIMEOUT
@@ -19,6 +20,24 @@ def ask_llm(prompt: str) -> str:
         return ""
 
 
+def _extract_json_candidate(text: str) -> str:
+    raw = text.strip()
+    if raw.startswith("```"):
+        lines = raw.splitlines()
+        if len(lines) >= 3 and lines[-1].strip() == "```":
+            raw = "\n".join(lines[1:-1]).strip()
+
+    if raw.startswith("{") and raw.endswith("}"):
+        return raw
+
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start >= 0 and end > start:
+        return raw[start : end + 1]
+
+    return raw
+
+
 def ask_llm_json(prompt: str, retries: int = 3) -> dict:
     strict_prompt = (
         prompt
@@ -29,13 +48,10 @@ def ask_llm_json(prompt: str, retries: int = 3) -> dict:
     last_error = ""
     for _ in range(max(1, retries)):
         raw = ask_llm(strict_prompt)
-        text = raw.strip()
-        if text.startswith("```"):
-            lines = text.splitlines()
-            if len(lines) >= 3 and lines[-1].strip() == "```":
-                text = "\n".join(lines[1:-1]).strip()
+        candidate = _extract_json_candidate(raw)
+
         try:
-            return json.loads(text)
+            return json.loads(candidate)
         except json.JSONDecodeError as exc:
             last_error = str(exc)
             continue

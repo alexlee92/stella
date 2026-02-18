@@ -54,10 +54,15 @@ def create_branch(name: str):
 def commit_all(message: str):
     if DRY_RUN:
         return 0, f"[dry-run] git add -A && git commit -m {message}"
+
     code1, out1 = _run_git(["add", "-A"])
     if code1 != 0:
         return code1, out1
+
     code2, out2 = _run_git(["commit", "-m", message])
+    if code2 != 0 and "nothing to commit" in (out2 or "").lower():
+        return 0, out2
+
     return code2, out2
 
 

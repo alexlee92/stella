@@ -29,7 +29,11 @@ def _checklist(details: dict) -> tuple[str, bool]:
     def stage_ok(rows, stage):
         for r in rows:
             if r.get("stage") == stage:
-                return r.get("exit_code") == 0
+                code = r.get("exit_code", 1)
+                out = (r.get("output") or "").lower()
+                if stage == "tests" and code == 5 and "no tests ran" in out:
+                    return True
+                return code == 0
         return False
 
     format_ok = stage_ok(full or fast, "format")
@@ -84,6 +88,15 @@ def prepare_pr(goal: str, branch: str | None = None, commit_message: str | None 
         return {"ok": False, "summary": summary}
 
     changed = changed_files()
+    if not changed:
+        summary = (
+            "PR Ready: no\n"
+            "Reason: no local changes to commit\n"
+            "Action: run `python main.py run ... --apply` or edit files, then retry `pr-ready`"
+        )
+        logger.log("pr_ready", {"ok": False, "reason": "no_changes"})
+        return {"ok": False, "summary": summary}
+
     quality_ok, quality_details = run_quality_gate(changed_files=changed)
     checklist_md, checklist_ok = _checklist(quality_details)
 
