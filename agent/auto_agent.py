@@ -36,6 +36,7 @@ class AutonomousAgent:
         self.event_logger = EventLogger()
         self._decision_signatures: List[str] = []
         self._outcome_signatures: List[str] = []
+        self._parse_fallback_count = 0
 
     def _summarize_context(self, goal: str) -> str:
         docs = search_memory(goal, k=self.top_k)
@@ -52,7 +53,7 @@ class AutonomousAgent:
             f"{s.step}. {s.action} | reason={s.reason} | result={s.result[:180]}" for s in self.steps[-8:]
         ) or "none"
 
-        files = list_python_files(limit=120)
+        files = list_python_files(limit=40)
         files_text = "\n".join(files) if files else "no python files"
         context = self._summarize_context(goal)
 
@@ -80,6 +81,8 @@ Rules:
 - Return strict JSON only.
 - Use only listed actions and valid args.
 - Keep edits minimal and safe.
+- Prefer read/search/propose/apply actions first.
+- Use git actions only when the goal explicitly asks for git/commit/pr operations.
 
 Return format:
 {{"action":"...","reason":"short reason","args":{{...}}}}
@@ -93,6 +96,30 @@ Relevant indexed context:
 Recent steps:
 {history}
 """
+
+    def _is_git_goal(self, goal: str) -> bool:
+        low = (goal or "").lower()
+        return any(k in low for k in ["git", "commit", "branch", "pr", "pull request"])
+
+    def _coerce_decision(self, goal: str, decision: dict) -> dict:
+        action = decision.get("action", "")
+        args = decision.get("args", {}) or {}
+
+        # Avoid git actions on non-git goals: they create noisy loops.
+        if action.startswith("git_") and not self._is_git_goal(goal):
+            return {
+                "action": "search_code",
+                "reason": "coerced_non_git_goal",
+                "args": {"pattern": "requests.post|subprocess.run|timeout|sleep", "limit": 20},
+            }
+
+        # Guard against empty/over-filtered file listing.
+        if action == "list_files" and args.get("contains"):
+            args = dict(args)
+            args["contains"] = ""
+            return {"action": "list_files", "reason": "coerced_broad_listing", "args": args}
+
+        return decision
 
     def _critique_prompt(self, goal: str, decision: dict) -> str:
         return f"""
@@ -145,12 +172,15 @@ Rules:
 
         if decision.get("_error_type") == "parse":
             self.event_logger.log_failure("parse", "planner_json_parse_failed", {"decision": decision})
-            return {"action": "finish", "reason": "parse_failed", "args": {"summary": "Planner parse failed"}}
+            self._parse_fallback_count += 1
+            return self._fallback_decision(goal, reason="parse_failed")
+        self._parse_fallback_count = 0
 
+        decision = self._coerce_decision(goal, decision)
         ok, msg = validate_decision_schema(decision)
         if not ok:
             self.event_logger.log_failure("parse", f"planner_schema_invalid:{msg}", {"decision": decision})
-            return {"action": "finish", "reason": "schema_invalid", "args": {"summary": f"Schema invalid: {msg}"}}
+            return self._fallback_decision(goal, reason=f"schema_invalid:{msg}")
 
         critique = ask_llm_json(self._critique_prompt(goal, decision), retries=MAX_RETRIES_JSON)
         c_ok, c_msg = validate_critique_schema(critique)
@@ -163,6 +193,7 @@ Rules:
 
         patched = critique.get("patched_decision")
         if isinstance(patched, dict):
+            patched = self._coerce_decision(goal, patched)
             p_ok, p_msg = validate_decision_schema(patched)
             if p_ok:
                 self.event_logger.log("critique_patch", {"reason": critique.get("reason"), "patched": patched})
@@ -174,6 +205,29 @@ Rules:
             "reason": "critique_rejected",
             "args": {"summary": f"Decision rejected by critique: {critique.get('reason', 'n/a')}"},
         }
+
+    def _fallback_decision(self, goal: str, reason: str) -> dict:
+        low = (goal or "").lower()
+        if self._parse_fallback_count >= 3:
+            return {
+                "action": "finish",
+                "reason": f"fallback_{reason}",
+                "args": {"summary": "Planner parse unstable after 3 retries; stopping early"},
+            }
+
+        if any(k in low for k in ["latence", "performance", "vitesse", "speed"]):
+            if self._parse_fallback_count % 2 == 1:
+                return {
+                    "action": "search_code",
+                    "reason": f"fallback_{reason}",
+                    "args": {"pattern": "requests.post|subprocess.run|timeout|sleep", "limit": 20},
+                }
+            return {"action": "read_many", "reason": f"fallback_{reason}", "args": {"paths": ["agent/llm_interface.py", "agent/auto_agent.py", "agent/tooling.py"]}}
+        if any(k in low for k in ["pr", "commit", "git", "branch"]):
+            if self._parse_fallback_count % 2 == 1:
+                return {"action": "git_diff", "reason": f"fallback_{reason}", "args": {}}
+            return {"action": "read_many", "reason": f"fallback_{reason}", "args": {"paths": ["agent/pr_ready.py", "agent/git_tools.py", "agent/quality.py"]}}
+        return {"action": "list_files", "reason": f"fallback_{reason}", "args": {"limit": 40, "ext": ".py"}}
 
     def plan_once(self, goal: str) -> dict:
         return self._plan_with_critique(goal)
@@ -188,7 +242,10 @@ Rules:
             if self._decision_loop_detected(action, args):
                 self.event_logger.log_failure("tool", "decision_loop_detected", {"action": action, "args": args})
                 self._record(AutoStep(index, "loop_guard", "repeat_decision", "Stopped repeated decision loop"))
-                return self.render_summary("Stopped: repeated decision loop")
+                # Controlled exit with actionable summary instead of dead-end loop.
+                summary = "Stopped repeated decision loop; recommend narrowing goal to a concrete file-level change request"
+                self._record(AutoStep(index, "finish", "auto_stop_repeat", summary))
+                return self.render_summary(summary)
 
             self._decision_signatures.append(self._signature(action, args))
             step = AutoStep(index, action, reason, "")
@@ -223,7 +280,22 @@ Rules:
                     path = args.get("path", "")
                     code = self.staged_edits.get(path)
                     if not path or code is None:
+                        self.event_logger.log_failure(
+                            "tool",
+                            "apply_edit_without_staged",
+                            {"path": path, "staged_files": list(self.staged_edits.keys())},
+                        )
                         step.result = "No staged edit for this file"
+                        self._record(step)
+                        self._record(
+                            AutoStep(
+                                index,
+                                "finish",
+                                "invalid_action_sequence",
+                                "apply_edit requested without staged edit; stopping",
+                            )
+                        )
+                        return self.render_summary("apply_edit requested without staged edit; stopping")
                     elif not auto_apply:
                         step.result = f"Staged only for {path}. Re-run with --apply to apply."
                     else:
@@ -285,6 +357,21 @@ Rules:
                 elif action == "git_commit":
                     code, out = commit_all(args.get("message", "chore: agent update"))
                     step.result = f"exit={code}; {out[:600]}"
+                    if "nothing to commit" in out.lower():
+                        recent_nothing = any(
+                            s.action == "git_commit" and "nothing to commit" in s.result.lower() for s in self.steps[-2:]
+                        )
+                        if recent_nothing:
+                            self._record(step)
+                            self._record(
+                                AutoStep(
+                                    index,
+                                    "finish",
+                                    "auto_stop_redundant_commit",
+                                    "No more changes to commit; stopping redundant git_commit loop",
+                                )
+                            )
+                            return self.render_summary("No more changes to commit; stopping redundant git_commit loop")
 
                 elif action == "git_diff":
                     step.result = diff_summary()
