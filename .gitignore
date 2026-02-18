@@ -1,0 +1,4 @@
+﻿.stella/
+__pycache__/
+*.pyc
+*.bak_*
