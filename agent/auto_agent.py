@@ -4,16 +4,26 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional
 
-from agent.action_schema import validate_critique_schema, validate_decision_schema
+from agent.action_schema import (
+    ALLOWED_ACTIONS,
+    validate_critique_schema,
+    validate_decision_schema,
+)
 from agent.agent import apply_suggestion, patch_risk, propose_file_update
 from agent.config import AUTO_TEST_COMMAND, MAX_RETRIES_JSON, TOP_K_RESULTS
 from agent.event_logger import EventLogger
 from agent.git_tools import commit_all, create_branch, diff_summary
 from agent.llm_interface import ask_llm_json
-from agent.memory import search_memory
+from agent.memory import remember_fix_strategy, search_memory
 from agent.patcher import apply_transaction, restore_backup, rollback_transaction
 from agent.project_map import render_project_map
-from agent.quality import run_quality_gate, run_quality_pipeline
+from agent.quality import (
+    run_quality_gate,
+    run_quality_gate_normalized,
+    run_quality_pipeline_normalized,
+)
+from agent.test_generator import apply_generated_tests
+from agent.test_selector import suggest_test_path
 from agent.tooling import (
     list_files,
     list_python_files,
@@ -50,6 +60,248 @@ class AutonomousAgent:
         self._decision_signatures: List[str] = []
         self._outcome_signatures: List[str] = []
         self._parse_fallback_count = 0
+        self._forced_decisions: List[dict] = []
+        self._consecutive_stalled_steps = 0
+        self._total_cost = 0
+        self._max_cost = max_steps * 4
+        self._replan_attempts = 0
+        self._max_replan_attempts = 4
+        self._fix_until_green = False
+        self._generate_tests = False
+        self._has_validation_action = False
+        self._bootstrapped_code_edit = False
+
+    def _normalize_decision(self, decision: dict) -> dict:
+        if not isinstance(decision, dict):
+            return decision
+
+        root_args = {
+            k: v
+            for k, v in decision.items()
+            if k not in {"action", "tool", "name", "decision", "reason", "why", "args", "parameters", "input"}
+            and not (isinstance(k, str) and k.startswith("_"))
+        }
+
+        action = (
+            decision.get("action")
+            or decision.get("tool")
+            or decision.get("name")
+            or decision.get("decision")
+            or ""
+        )
+        action = str(action).strip().lower().replace("-", "_")
+        alias = {
+            "read": "read_file",
+            "read_files": "read_many",
+            "search": "search_code",
+            "grep": "search_code",
+            "edit": "propose_edit",
+            "propose": "propose_edit",
+            "propose_patch": "propose_edit",
+            "apply_patch": "apply_edit",
+            "apply": "apply_edit",
+            "apply_staged": "apply_all_staged",
+            "test": "run_tests",
+            "run_test": "run_tests",
+            "quality": "run_quality",
+            "run_quality_pipeline": "run_quality",
+            "map": "project_map",
+            "branch": "git_branch",
+            "commit": "git_commit",
+            "diff": "git_diff",
+            "done": "finish",
+            "final": "finish",
+        }
+        action = alias.get(action, action)
+
+        reason = decision.get("reason") or decision.get("why") or "auto_normalized"
+        args = decision.get("args")
+        if args is None:
+            args = decision.get("parameters")
+        if args is None:
+            args = decision.get("input")
+        if not isinstance(args, dict):
+            args = {}
+
+        args = {**root_args, **dict(args)}
+        if action in {"list_files", "search_code"}:
+            limit = args.get("limit")
+            if isinstance(limit, str) and limit.isdigit():
+                args["limit"] = int(limit)
+            elif isinstance(limit, float):
+                args["limit"] = int(limit)
+        if action == "read_many" and isinstance(args.get("paths"), str):
+            args["paths"] = [args["paths"]]
+        if action == "search_code" and "pattern" not in args:
+            query = args.get("query") or args.get("text")
+            if isinstance(query, str) and query.strip():
+                args["pattern"] = query
+        if action == "run_tests" and "command" not in args:
+            cmd = args.get("test_command")
+            if isinstance(cmd, str) and cmd.strip():
+                args["command"] = cmd
+        if action == "finish" and "summary" not in args:
+            summary = args.get("message") or reason
+            if isinstance(summary, str) and summary.strip():
+                args["summary"] = summary
+        if action in {
+            "apply_all_staged",
+            "run_quality",
+            "project_map",
+            "git_diff",
+        }:
+            args = {}
+
+        if action not in ALLOWED_ACTIONS:
+            if isinstance(args.get("path"), str) and isinstance(
+                args.get("instruction"), str
+            ):
+                action = "propose_edit"
+            elif isinstance(args.get("paths"), list):
+                action = "read_many"
+            elif isinstance(args.get("pattern"), str):
+                action = "search_code"
+            elif isinstance(args.get("path"), str):
+                action = "read_file"
+            elif isinstance(args.get("summary"), str):
+                action = "finish"
+
+        allowed = {
+            "list_files": {"contains", "ext", "limit"},
+            "read_file": {"path"},
+            "read_many": {"paths"},
+            "search_code": {"pattern", "limit"},
+            "propose_edit": {"path", "instruction"},
+            "apply_edit": {"path"},
+            "apply_all_staged": set(),
+            "run_tests": {"command"},
+            "run_quality": set(),
+            "project_map": set(),
+            "git_branch": {"name"},
+            "git_commit": {"message"},
+            "git_diff": set(),
+            "finish": {"summary"},
+        }.get(action, set(args.keys()))
+        args = {k: v for k, v in args.items() if k in allowed}
+
+        normalized = {"action": action, "reason": str(reason), "args": args}
+        for k, v in decision.items():
+            if isinstance(k, str) and k.startswith("_"):
+                normalized[k] = v
+        return normalized
+
+    def _normalize_critique(self, critique: dict) -> dict:
+        if not isinstance(critique, dict):
+            return critique
+        approve = critique.get("approve")
+        if isinstance(approve, str):
+            approve = approve.strip().lower() in {"true", "1", "yes", "ok"}
+        if not isinstance(approve, bool):
+            approve = False
+
+        reason = critique.get("reason") or critique.get("comment") or "normalized"
+        patched = critique.get("patched_decision")
+        if patched is None:
+            patched = critique.get("patch")
+        if not isinstance(patched, dict):
+            patched = None
+        else:
+            patched = self._normalize_decision(patched)
+
+        normalized = {
+            "approve": approve,
+            "reason": str(reason),
+            "patched_decision": patched,
+        }
+        for k, v in critique.items():
+            if isinstance(k, str) and k.startswith("_"):
+                normalized[k] = v
+        return normalized
+
+    def _infer_fallback_action(self, goal: str, args: dict) -> tuple[str, dict]:
+        low_goal = (goal or "").lower()
+        target = self._extract_target_file_from_goal(goal)
+        if target:
+            return "read_file", {"path": target}
+
+        text_blob = " ".join(
+            str(v)
+            for v in args.values()
+            if isinstance(v, (str, int, float, bool))
+        ).lower()
+        combined = f"{low_goal} {text_blob}"
+
+        if any(k in combined for k in ["test", "pytest", "coverage", "fiabilite"]):
+            return "search_code", {"pattern": "pytest|test_|_test.py", "limit": 20}
+        if any(k in combined for k in ["performance", "latence", "speed", "optimiz"]):
+            return "search_code", {
+                "pattern": "timeout|sleep|requests.post|subprocess.run",
+                "limit": 20,
+            }
+        if any(k in combined for k in ["refactor", "risk", "analyse", "architecture"]):
+            return "list_files", {"limit": 40, "ext": ".py"}
+        if any(k in combined for k in ["pr", "commit", "branch", "git"]):
+            return "git_diff", {}
+        return "list_files", {"limit": 40, "ext": ".py"}
+
+    def _autocorrect_decision_schema(self, goal: str, decision: dict, msg: str) -> dict:
+        if not isinstance(decision, dict):
+            return decision
+        corrected = self._normalize_decision(decision)
+        action = corrected.get("action")
+        args = corrected.get("args", {}) or {}
+        if not isinstance(args, dict):
+            args = {}
+
+        if "invalid action" in msg:
+            action, inferred_args = self._infer_fallback_action(goal, args)
+            corrected["action"] = action
+            args = dict(inferred_args)
+
+        if action == "read_file" and "missing required arg 'path'" in msg:
+            path = args.get("file") or args.get("target")
+            if isinstance(path, str) and path:
+                args["path"] = path
+            else:
+                target = self._extract_target_file_from_goal(goal)
+                if target:
+                    args["path"] = target
+        elif action == "read_many" and "missing required arg 'paths'" in msg:
+            path = args.get("path")
+            if isinstance(path, str) and path:
+                args["paths"] = [path]
+            else:
+                target = self._extract_target_file_from_goal(goal)
+                if target:
+                    args["paths"] = [target]
+        elif action == "propose_edit":
+            if "missing required arg 'path'" in msg:
+                path = args.get("file") or args.get("target")
+                if isinstance(path, str) and path:
+                    args["path"] = path
+                else:
+                    target = self._extract_target_file_from_goal(goal)
+                    if target:
+                        args["path"] = target
+            if "missing required arg 'instruction'" in msg:
+                instruction = (
+                    args.get("prompt")
+                    or args.get("change")
+                    or decision.get("reason", "")
+                )
+                if isinstance(instruction, str) and instruction:
+                    args["instruction"] = instruction
+                elif isinstance(goal, str) and goal.strip():
+                    args["instruction"] = goal[:500]
+        elif action == "finish" and "unexpected arg 'reason'" in msg:
+            summary = args.get("reason")
+            if isinstance(summary, str) and summary:
+                args.pop("reason", None)
+                args["summary"] = summary
+
+        corrected["args"] = args
+        corrected["reason"] = str(corrected.get("reason") or "auto_corrected_schema")
+        return corrected
 
     def _summarize_context(self, goal: str) -> str:
         docs = search_memory(goal, k=self.top_k)
@@ -104,6 +356,12 @@ Rules:
 Return format:
 {{"action":"...","reason":"short reason","args":{{...}}}}
 
+Valid examples:
+{{"action":"search_code","reason":"find implementation points","args":{{"pattern":"run_quality_pipeline","limit":20}}}}
+{{"action":"read_file","reason":"inspect target file","args":{{"path":"agent/auto_agent.py"}}}}
+{{"action":"propose_edit","reason":"prepare safe minimal change","args":{{"path":"agent/eval_runner.py","instruction":"Add parse KPI details"}}}}
+{{"action":"finish","reason":"task completed","args":{{"summary":"Explained how pr-ready works"}}}}
+
 Project files:
 {files_text}
 
@@ -112,6 +370,34 @@ Relevant indexed context:
 
 Recent steps:
 {history}
+"""
+
+    def _schema_repair_prompt(self, goal: str, decision: dict, schema_error: str) -> str:
+        return f"""
+You must repair this planner JSON to satisfy a strict schema.
+Goal: {goal}
+Schema error: {schema_error}
+Invalid decision:
+{json.dumps(decision, ensure_ascii=False)}
+
+Return only one strict JSON object with this exact shape:
+{{"action":"...","reason":"...","args":{{...}}}}
+
+Rules:
+- action must be one of:
+  list_files, read_file, read_many, search_code, propose_edit, apply_edit,
+  apply_all_staged, run_tests, run_quality, project_map,
+  git_branch, git_commit, git_diff, finish
+- args must match action:
+  read_file->{{"path":"..."}}
+  read_many->{{"paths":["..."]}}
+  search_code->{{"pattern":"...","limit":20?}}
+  propose_edit->{{"path":"...","instruction":"..."}}
+  apply_edit->{{"path":"..."}}
+  run_tests->{{"command":"..."}}
+  finish->{{"summary":"..."}}
+- never add unknown keys in args.
+- keep decision useful for the goal.
 """
 
     def _extract_target_file_from_goal(self, goal: str) -> Optional[str]:
@@ -123,6 +409,84 @@ Recent steps:
         if path.startswith("./"):
             path = path[2:]
         return path
+
+    def _is_code_edit_goal(self, goal: str) -> bool:
+        low = (goal or "").lower()
+        return "code-edit" in low or ("dans " in low and ".py" in low)
+
+    def _is_allowed_edit_path(self, goal: str, path: str) -> bool:
+        target = self._extract_target_file_from_goal(goal)
+        if not target:
+            return True
+        norm = (path or "").replace("\\", "/").lower()
+        target_norm = target.replace("\\", "/").lower()
+        if norm == target_norm:
+            return True
+        if norm == suggest_test_path(target).replace("\\", "/").lower():
+            return True
+        if norm.startswith("tests/"):
+            return True
+        return False
+
+    def _bootstrap_code_edit_decisions(self, goal: str, auto_apply: bool):
+        if self._bootstrapped_code_edit:
+            return
+        target = self._extract_target_file_from_goal(goal)
+        if not target:
+            return
+        if not self._is_code_edit_goal(goal):
+            return
+
+        queue = [
+            {
+                "action": "read_file",
+                "reason": "code_edit_bootstrap_read",
+                "args": {"path": target},
+            },
+            {
+                "action": "propose_edit",
+                "reason": "code_edit_bootstrap_patch",
+                "args": {"path": target, "instruction": goal[:500]},
+            },
+        ]
+        if self._generate_tests and target.endswith(".py"):
+            queue.append(
+                {
+                    "action": "propose_edit",
+                    "reason": "code_edit_bootstrap_tests",
+                    "args": {
+                        "path": suggest_test_path(target),
+                        "instruction": (
+                            f"Add pytest tests for {target} with one nominal case and one edge case."
+                        ),
+                    },
+                }
+            )
+
+        if auto_apply:
+            queue.append(
+                {
+                    "action": "apply_all_staged",
+                    "reason": "code_edit_bootstrap_apply",
+                    "args": {},
+                }
+            )
+            queue.append(
+                {
+                    "action": "run_quality",
+                    "reason": "code_edit_bootstrap_validate",
+                    "args": {},
+                }
+            )
+        queue.append(
+            {
+                "action": "finish",
+                "reason": "code_edit_bootstrap_finish",
+                "args": {"summary": f"Prepared code edit for {target}"},
+            }
+        )
+        self._forced_decisions = queue + self._forced_decisions
+        self._bootstrapped_code_edit = True
 
     def _is_git_goal(self, goal: str) -> bool:
         low = (goal or "").lower()
@@ -202,13 +566,154 @@ Rules:
         sig = self._signature(action, args, result)
         return self._outcome_signatures[-4:].count(sig) >= 2
 
+    def _action_cost(self, action: str) -> int:
+        costs = {
+            "list_files": 1,
+            "read_file": 1,
+            "read_many": 2,
+            "search_code": 2,
+            "propose_edit": 3,
+            "apply_edit": 4,
+            "apply_all_staged": 5,
+            "run_tests": 4,
+            "run_quality": 5,
+            "project_map": 2,
+            "git_branch": 2,
+            "git_commit": 3,
+            "git_diff": 2,
+            "finish": 0,
+        }
+        return costs.get(action, 2)
+
+    def _is_stalled_step(self, action: str, result: str) -> bool:
+        low = (result or "").lower()
+        if action in {"list_files", "search_code"} and (
+            "no files found" in low or "no matches" in low
+        ):
+            return True
+        if action in {"read_file", "read_many"} and ("[error]" in low or not low.strip()):
+            return True
+        if action in {"unknown_action", "loop_guard"}:
+            return True
+        return False
+
+    def _failure_excerpt(self, text: str, max_lines: int = 8) -> str:
+        lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+        if not lines:
+            return "no failure output"
+        return "\n".join(lines[:max_lines])[:800]
+
+    def _extract_error_paths(self, text: str) -> List[str]:
+        found = re.findall(r"([A-Za-z0-9_./\\-]+\.py)", text or "")
+        out = []
+        seen = set()
+        for raw in found:
+            p = raw.replace("\\", "/")
+            if p in seen:
+                continue
+            seen.add(p)
+            out.append(p)
+        return out
+
+    def _enqueue_replan_after_failure(
+        self,
+        failure_kind: str,
+        failure_text: str,
+        auto_apply: bool,
+        fallback_path: Optional[str] = None,
+    ) -> bool:
+        if self._replan_attempts >= self._max_replan_attempts:
+            return False
+
+        targets = self._extract_error_paths(failure_text)
+        target_path = targets[0] if targets else (fallback_path or "")
+        excerpt = self._failure_excerpt(failure_text)
+
+        queue = []
+        if target_path:
+            queue.append(
+                {
+                    "action": "propose_edit",
+                    "reason": f"replan_after_{failure_kind}",
+                    "args": {
+                        "path": target_path,
+                        "instruction": (
+                            f"Fix {failure_kind} issue using this diagnostic:\n{excerpt}\n"
+                            "Keep patch minimal and focused on making checks pass."
+                        ),
+                    },
+                }
+            )
+            if auto_apply:
+                queue.append(
+                    {
+                        "action": "apply_edit",
+                        "reason": f"apply_after_{failure_kind}_replan",
+                        "args": {"path": target_path},
+                    }
+                )
+        else:
+            queue.append(
+                {
+                    "action": "search_code",
+                    "reason": f"replan_after_{failure_kind}",
+                    "args": {"pattern": "test_|assert|ruff|black|traceback", "limit": 20},
+                }
+            )
+
+        queue.append(
+            {
+                "action": "run_quality" if failure_kind in {"lint", "format"} else "run_tests",
+                "reason": f"verify_after_{failure_kind}_replan",
+                "args": {},
+            }
+        )
+
+        self._forced_decisions.extend(queue)
+        self._replan_attempts += 1
+        self.event_logger.log(
+            "replan_policy",
+            {
+                "failure_kind": failure_kind,
+                "target_path": target_path,
+                "queued_actions": [d["action"] for d in queue],
+                "attempt": self._replan_attempts,
+            },
+        )
+        return True
+
     def _plan_with_critique(self, goal: str) -> dict:
-        decision = ask_llm_json(self._planner_prompt(goal), retries=MAX_RETRIES_JSON)
+        if self._forced_decisions:
+            forced = self._forced_decisions.pop(0)
+            self.event_logger.log(
+                "forced_plan",
+                {"decision": forced, "remaining": len(self._forced_decisions)},
+            )
+            return forced
+
+        raw_decision = ask_llm_json(
+            self._planner_prompt(goal),
+            retries=MAX_RETRIES_JSON,
+            prompt_class="planner",
+        )
+        decision = self._normalize_decision(raw_decision)
         self.event_logger.log("plan", {"goal": goal, "decision": decision})
 
         if decision.get("_error_type") == "parse":
+            parse_meta = (
+                decision.get("_parse_meta")
+                if isinstance(decision.get("_parse_meta"), dict)
+                else {}
+            )
             self.event_logger.log_failure(
-                "parse", "planner_json_parse_failed", {"decision": decision}
+                "parse",
+                "planner_json_parse_failed",
+                {
+                    "decision": decision,
+                    "parse_class": parse_meta.get("error_class", "unknown_parse_error"),
+                    "parse_attempts": parse_meta.get("attempt_count", 0),
+                    "prompt_class": parse_meta.get("prompt_class", "planner"),
+                },
             )
             self._parse_fallback_count += 1
             return self._fallback_decision(goal, reason="parse_failed")
@@ -217,18 +722,77 @@ Rules:
         decision = self._coerce_decision(goal, decision)
         ok, msg = validate_decision_schema(decision)
         if not ok:
-            self.event_logger.log_failure(
-                "parse", f"planner_schema_invalid:{msg}", {"decision": decision}
-            )
-            return self._fallback_decision(goal, reason=f"schema_invalid:{msg}")
+            corrected = self._autocorrect_decision_schema(goal, decision, msg)
+            c_ok, _ = validate_decision_schema(corrected)
+            if c_ok:
+                self.event_logger.log(
+                    "schema_autocorrect",
+                    {"from": decision, "to": corrected, "issue": msg},
+                )
+                decision = corrected
+            else:
+                repaired = ask_llm_json(
+                    self._schema_repair_prompt(goal, decision, msg),
+                    retries=1,
+                    prompt_class="planner_schema_repair",
+                )
+                repaired = self._normalize_decision(repaired)
+                r_ok, r_msg = validate_decision_schema(repaired)
+                if r_ok:
+                    self.event_logger.log(
+                        "schema_repair",
+                        {"from": decision, "to": repaired, "issue": msg},
+                    )
+                    decision = repaired
+                else:
+                    self.event_logger.log_failure(
+                        "parse",
+                        f"planner_schema_invalid:{msg}",
+                        {
+                            "decision": decision,
+                            "parse_class": "schema_invalid",
+                            "prompt_class": "planner",
+                            "repair_schema_error": r_msg,
+                        },
+                    )
+                    return self._fallback_decision(goal, reason=f"schema_invalid:{msg}")
 
-        critique = ask_llm_json(
-            self._critique_prompt(goal, decision), retries=MAX_RETRIES_JSON
+        raw_critique = ask_llm_json(
+            self._critique_prompt(goal, decision),
+            retries=MAX_RETRIES_JSON,
+            prompt_class="critique",
         )
+        if (
+            isinstance(raw_critique, dict)
+            and raw_critique.get("_error_type") == "parse"
+        ):
+            parse_meta = (
+                raw_critique.get("_parse_meta")
+                if isinstance(raw_critique.get("_parse_meta"), dict)
+                else {}
+            )
+            self.event_logger.log_failure(
+                "parse",
+                "critique_json_parse_failed",
+                {
+                    "critique": raw_critique,
+                    "parse_class": parse_meta.get("error_class", "unknown_parse_error"),
+                    "parse_attempts": parse_meta.get("attempt_count", 0),
+                    "prompt_class": parse_meta.get("prompt_class", "critique"),
+                },
+            )
+            return decision
+        critique = self._normalize_critique(raw_critique)
         c_ok, c_msg = validate_critique_schema(critique)
         if not c_ok:
             self.event_logger.log_failure(
-                "parse", f"critique_schema_invalid:{c_msg}", {"critique": critique}
+                "parse",
+                f"critique_schema_invalid:{c_msg}",
+                {
+                    "critique": critique,
+                    "parse_class": "critique_schema_invalid",
+                    "prompt_class": "critique",
+                },
             )
             return decision
 
@@ -239,6 +803,16 @@ Rules:
         if isinstance(patched, dict):
             patched = self._coerce_decision(goal, patched)
             p_ok, p_msg = validate_decision_schema(patched)
+            if not p_ok:
+                patched2 = self._autocorrect_decision_schema(goal, patched, p_msg)
+                p2_ok, _ = validate_decision_schema(patched2)
+                if p2_ok:
+                    self.event_logger.log(
+                        "schema_autocorrect",
+                        {"from": patched, "to": patched2, "issue": p_msg},
+                    )
+                    patched = patched2
+                    p_ok = True
             if p_ok:
                 self.event_logger.log(
                     "critique_patch",
@@ -246,16 +820,20 @@ Rules:
                 )
                 return patched
             self.event_logger.log_failure(
-                "parse", f"patched_schema_invalid:{p_msg}", {"patched": patched}
+                "parse",
+                f"patched_schema_invalid:{p_msg}",
+                {
+                    "patched": patched,
+                    "parse_class": "patched_schema_invalid",
+                    "prompt_class": "critique",
+                },
             )
 
-        return {
-            "action": "finish",
-            "reason": "critique_rejected",
-            "args": {
-                "summary": f"Decision rejected by critique: {critique.get('reason', 'n/a')}"
-            },
-        }
+        self.event_logger.log(
+            "critique_reject_fallback",
+            {"reason": critique.get("reason", "n/a")},
+        )
+        return self._fallback_decision(goal, reason="critique_rejected")
 
     def _fallback_decision(self, goal: str, reason: str) -> dict:
         target = self._extract_target_file_from_goal(goal)
@@ -326,12 +904,68 @@ Rules:
     def plan_once(self, goal: str) -> dict:
         return self._plan_with_critique(goal)
 
-    def run(self, goal: str, auto_apply: bool = False) -> str:
+    def run(
+        self,
+        goal: str,
+        auto_apply: bool = False,
+        fix_until_green: bool = False,
+        generate_tests: bool = False,
+        max_seconds: int = 0,
+    ) -> str:
+        self._fix_until_green = bool(fix_until_green)
+        self._generate_tests = bool(generate_tests)
+        self._consecutive_stalled_steps = 0
+        self._total_cost = 0
+        self._replan_attempts = 0
+        self._forced_decisions = []
+        self._has_validation_action = False
+        self._bootstrapped_code_edit = False
+        self._bootstrap_code_edit_decisions(goal, auto_apply=auto_apply)
+        start_ts = datetime.utcnow()
+
         for index in range(1, self.max_steps + 1):
+            if max_seconds and (datetime.utcnow() - start_ts).total_seconds() > max_seconds:
+                self._record(
+                    AutoStep(
+                        index,
+                        "finish",
+                        "max_time_reached",
+                        f"Stopped: max runtime reached ({max_seconds}s)",
+                    )
+                )
+                return self.render_summary(
+                    f"Stopped: max runtime reached ({max_seconds}s)"
+                )
+
             decision = self._plan_with_critique(goal)
             action = decision.get("action", "")
             reason = decision.get("reason", "")
             args = decision.get("args", {}) or {}
+
+            if (
+                index == self.max_steps
+                and self.staged_edits
+                and not self._has_validation_action
+                and self._fix_until_green
+                and action not in {"run_tests", "run_quality"}
+            ):
+                action = "run_quality"
+                reason = "forced_final_validation"
+                args = {}
+
+            self._total_cost += self._action_cost(action)
+            if self._total_cost > self._max_cost:
+                self._record(
+                    AutoStep(
+                        index,
+                        "finish",
+                        "max_cost_reached",
+                        f"Stopped: max cost budget reached ({self._total_cost}/{self._max_cost})",
+                    )
+                )
+                return self.render_summary(
+                    f"Stopped: max cost budget reached ({self._total_cost}/{self._max_cost})"
+                )
 
             if self._decision_loop_detected(action, args):
                 self.event_logger.log_failure(
@@ -381,10 +1015,48 @@ Rules:
                 elif action == "propose_edit":
                     path = args.get("path", "")
                     instruction = args.get("instruction", "")
+                    if self._is_code_edit_goal(goal) and not self._is_allowed_edit_path(
+                        goal, path
+                    ):
+                        target = self._extract_target_file_from_goal(goal)
+                        if target:
+                            path = target
+                            instruction = (
+                                f"{instruction}\nKeep changes strictly in {target}."
+                            )
                     code = propose_file_update(path, instruction, k=self.top_k)
                     self.staged_edits[path] = code
                     risk = patch_risk(path, code)
                     step.result = f"Staged edit for {path} ({len(code)} chars), risk={risk['level']}:{risk['score']}"
+                    if self._fix_until_green and auto_apply and path:
+                        self._forced_decisions = [
+                            {
+                                "action": "apply_edit",
+                                "reason": "fix_until_green_apply_staged",
+                                "args": {"path": path},
+                            },
+                            {
+                                "action": "run_quality",
+                                "reason": "fix_until_green_verify_patch",
+                                "args": {},
+                            },
+                        ] + self._forced_decisions
+                    elif self._generate_tests and path.endswith(".py"):
+                        test_path = suggest_test_path(path)
+                        if test_path not in self.staged_edits:
+                            self._forced_decisions = [
+                                {
+                                    "action": "propose_edit",
+                                    "reason": "with_tests_auto_target",
+                                    "args": {
+                                        "path": test_path,
+                                        "instruction": (
+                                            f"Add focused pytest tests for {path} with one nominal case "
+                                            "and one edge case."
+                                        ),
+                                    },
+                                }
+                            ] + self._forced_decisions
 
                 elif action == "apply_edit":
                     path = args.get("path", "")
@@ -422,24 +1094,80 @@ Rules:
                             if isinstance(patch_result, dict)
                             else None
                         )
+                        changed_scope = [path]
+                        if self._generate_tests and path.endswith(".py"):
+                            gen = apply_generated_tests([path], limit=2)
+                            generated = gen.get("applied", [])
+                            if generated:
+                                changed_scope.extend(generated)
+                                self.event_logger.log(
+                                    "generated_tests",
+                                    {
+                                        "source_files": [path],
+                                        "generated_files": generated,
+                                        "quality_ok_rate": gen.get("quality_ok_rate", 0.0),
+                                    },
+                                )
+                                step.result = (
+                                    f"Applied {path}; generated_tests={','.join(generated)}; "
+                                    f"tests_quality_ok_rate={gen.get('quality_ok_rate', 0.0)}"
+                                )
 
-                        ok, details = run_quality_gate(changed_files=[path])
+                        ok, details = run_quality_gate(
+                            changed_files=changed_scope, command_timeout=90
+                        )
                         if ok:
-                            step.result = f"Applied {path}; quality gate passed"
+                            if "generated_tests=" in step.result:
+                                step.result += "; quality gate passed"
+                            else:
+                                step.result = f"Applied {path}; quality gate passed"
                         else:
                             self.event_logger.log_failure(
                                 "test",
                                 "quality_gate_failed_after_apply_edit",
                                 {"path": path, "details": details},
                             )
-                            restore_ok = restore_backup(path, backup_path)
-                            if not restore_ok:
-                                self.event_logger.log_failure(
-                                    "rollback",
-                                    "rollback_failed_after_apply_edit",
-                                    {"path": path, "backup_path": backup_path},
+                            if self._fix_until_green:
+                                flat_rows = []
+                                flat_rows.extend(details.get("fast", []))
+                                flat_rows.extend(details.get("full", []))
+                                normalized = run_quality_pipeline_normalized(
+                                    mode="fast", changed_files=[path], command_timeout=90
                                 )
-                            step.result = f"Applied {path}; quality gate failed; rollback={'ok' if restore_ok else 'failed'}"
+                                failure_text = json.dumps(
+                                    normalized if normalized else {"rows": flat_rows},
+                                    ensure_ascii=False,
+                                )
+                                scheduled = self._enqueue_replan_after_failure(
+                                    "quality",
+                                    failure_text,
+                                    auto_apply=auto_apply,
+                                    fallback_path=path,
+                                )
+                                if not scheduled:
+                                    self._forced_decisions.insert(
+                                        0,
+                                        {
+                                            "action": "finish",
+                                            "reason": "stop_max_replan_attempts",
+                                            "args": {
+                                                "summary": "Stopped: max replan attempts reached after quality failures"
+                                            },
+                                        },
+                                    )
+                                step.result = (
+                                    f"Applied {path}; quality gate failed; replan queued "
+                                    "in fix-until-green mode"
+                                )
+                            else:
+                                restore_ok = restore_backup(path, backup_path)
+                                if not restore_ok:
+                                    self.event_logger.log_failure(
+                                        "rollback",
+                                        "rollback_failed_after_apply_edit",
+                                        {"path": path, "backup_path": backup_path},
+                                    )
+                                step.result = f"Applied {path}; quality gate failed; rollback={'ok' if restore_ok else 'failed'}"
 
                 elif action == "apply_all_staged":
                     if not self.staged_edits:
@@ -457,24 +1185,76 @@ Rules:
                             step.result = msg
                         else:
                             changed = list(self.staged_edits.keys())
-                            ok, details = run_quality_gate(changed_files=changed)
+                            changed_scope = list(changed)
+                            if self._generate_tests:
+                                gen = apply_generated_tests(changed, limit=3)
+                                generated = gen.get("applied", [])
+                                if generated:
+                                    changed_scope.extend(generated)
+                                    self.event_logger.log(
+                                        "generated_tests",
+                                        {
+                                            "source_files": changed,
+                                            "generated_files": generated,
+                                            "quality_ok_rate": gen.get("quality_ok_rate", 0.0),
+                                        },
+                                    )
+                                    step.result = (
+                                        "Transaction applied; generated_tests="
+                                        + ",".join(generated)
+                                        + f"; tests_quality_ok_rate={gen.get('quality_ok_rate', 0.0)}"
+                                    )
+
+                            ok, details = run_quality_gate(
+                                changed_files=changed_scope, command_timeout=90
+                            )
                             if ok:
                                 self.last_backups = backups
-                                step.result = "Transaction applied; quality gate passed"
+                                if "generated_tests=" in step.result:
+                                    step.result += "; quality gate passed"
+                                else:
+                                    step.result = "Transaction applied; quality gate passed"
                             else:
                                 self.event_logger.log_failure(
                                     "test",
                                     "quality_gate_failed_after_transaction",
                                     {"details": details},
                                 )
-                                rb = rollback_transaction(backups)
-                                if not rb:
-                                    self.event_logger.log_failure(
-                                        "rollback", "rollback_transaction_failed", {}
+                                if self._fix_until_green:
+                                    normalized = run_quality_gate_normalized(
+                                        changed_files=changed, command_timeout=90
                                     )
-                                step.result = f"Transaction applied then failed quality gate; rollback={'ok' if rb else 'failed'}"
+                                    scheduled = self._enqueue_replan_after_failure(
+                                        "quality",
+                                        json.dumps(normalized, ensure_ascii=False),
+                                        auto_apply=auto_apply,
+                                        fallback_path=changed[0] if changed else None,
+                                    )
+                                    if not scheduled:
+                                        self._forced_decisions.insert(
+                                            0,
+                                            {
+                                                "action": "finish",
+                                                "reason": "stop_max_replan_attempts",
+                                                "args": {
+                                                    "summary": "Stopped: max replan attempts reached after quality failures"
+                                                },
+                                            },
+                                        )
+                                    step.result = (
+                                        "Transaction applied then failed quality gate; "
+                                        "replan queued in fix-until-green mode"
+                                    )
+                                else:
+                                    rb = rollback_transaction(backups)
+                                    if not rb:
+                                        self.event_logger.log_failure(
+                                            "rollback", "rollback_transaction_failed", {}
+                                        )
+                                    step.result = f"Transaction applied then failed quality gate; rollback={'ok' if rb else 'failed'}"
 
                 elif action == "run_tests":
+                    self._has_validation_action = True
                     command = args.get("command", AUTO_TEST_COMMAND)
                     step.result = run_tests(command)
                     if "exit_code=0" not in step.result:
@@ -483,13 +1263,72 @@ Rules:
                             "run_tests_non_zero",
                             {"command": command, "result": step.result[:500]},
                         )
+                        scheduled = self._enqueue_replan_after_failure(
+                            "tests",
+                            step.result,
+                            auto_apply=auto_apply,
+                        )
+                        if not scheduled:
+                            self._forced_decisions.insert(
+                                0,
+                                {
+                                    "action": "finish",
+                                    "reason": "stop_max_replan_attempts",
+                                    "args": {
+                                        "summary": "Stopped: max replan attempts reached after test failures"
+                                    },
+                                },
+                            )
+                    elif self._replan_attempts > 0:
+                        recent = " | ".join(
+                            f"{s.action}:{s.reason}" for s in self.steps[-6:]
+                        )
+                        remember_fix_strategy(
+                            issue=f"tests failure recovered for goal: {goal[:120]}",
+                            strategy=recent,
+                            files=list(self.staged_edits.keys())[:6],
+                        )
 
                 elif action == "run_quality":
-                    ok, details = run_quality_pipeline(mode="full")
-                    step.result = f"ok={ok}; details={details}"
+                    self._has_validation_action = True
+                    changed_scope = list(self.staged_edits.keys()) or None
+                    normalized = run_quality_pipeline_normalized(
+                        mode="fast" if changed_scope else "full",
+                        changed_files=changed_scope,
+                        command_timeout=90,
+                    )
+                    ok = bool(normalized.get("ok"))
+                    details = normalized.get("raw", [])
+                    step.result = f"ok={ok}; failed_stage={normalized.get('failed_stage')}; details={details}"
                     if not ok:
                         self.event_logger.log_failure(
-                            "test", "run_quality_failed", {"details": details}
+                            "test", "run_quality_failed", {"details": normalized}
+                        )
+                        stage = normalized.get("failed_stage") or "quality"
+                        scheduled = self._enqueue_replan_after_failure(
+                            str(stage),
+                            json.dumps(normalized, ensure_ascii=False),
+                            auto_apply=auto_apply,
+                        )
+                        if not scheduled:
+                            self._forced_decisions.insert(
+                                0,
+                                {
+                                    "action": "finish",
+                                    "reason": "stop_max_replan_attempts",
+                                    "args": {
+                                        "summary": "Stopped: max replan attempts reached after quality failures"
+                                    },
+                                },
+                            )
+                    elif self._replan_attempts > 0:
+                        recent = " | ".join(
+                            f"{s.action}:{s.reason}" for s in self.steps[-6:]
+                        )
+                        remember_fix_strategy(
+                            issue=f"quality failure recovered for goal: {goal[:120]}",
+                            strategy=recent,
+                            files=list(self.staged_edits.keys())[:6],
                         )
 
                 elif action == "project_map":
@@ -544,6 +1383,25 @@ Rules:
                     {"action": action, "error": str(exc)},
                 )
                 step.result = f"Tool error: {exc}"
+
+            if self._is_stalled_step(step.action, step.result):
+                self._consecutive_stalled_steps += 1
+            else:
+                self._consecutive_stalled_steps = 0
+
+            if self._consecutive_stalled_steps >= 4:
+                self._record(step)
+                self._record(
+                    AutoStep(
+                        index,
+                        "finish",
+                        "stop_impasse",
+                        "Stopped: impasse detected (4 stalled steps in a row)",
+                    )
+                )
+                return self.render_summary(
+                    "Stopped: impasse detected (4 stalled steps in a row)"
+                )
 
             if self._outcome_loop_detected(action, args, step.result):
                 self._record(step)

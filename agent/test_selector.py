@@ -20,6 +20,18 @@ def _walk_test_files() -> List[str]:
     return dedup
 
 
+def suggest_test_path(changed_file: str) -> str:
+    rel = changed_file.replace("\\", "/")
+    base = os.path.basename(rel)
+    stem = os.path.splitext(base)[0]
+
+    if rel.startswith("agent/"):
+        return f"tests/agent/test_{stem}.py"
+    if rel.startswith("tests/"):
+        return rel
+    return f"tests/test_{stem}.py"
+
+
 def select_test_files(changed_files: List[str]) -> List[str]:
     tests = _walk_test_files()
     if not tests:
@@ -32,10 +44,11 @@ def select_test_files(changed_files: List[str]) -> List[str]:
         base = os.path.basename(changed)
         stem = os.path.splitext(base)[0].lower()
         candidates = {f"test_{stem}.py", f"{stem}_test.py"}
+        suggested = suggest_test_path(changed).replace("\\", "/").lower()
 
         for path, low in lowered_tests.items():
             filename = os.path.basename(low)
-            if filename in candidates or stem in filename:
+            if low.endswith(suggested) or filename in candidates or stem in filename:
                 selected.append(path)
 
     return sorted(set(selected))

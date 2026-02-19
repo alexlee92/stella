@@ -12,15 +12,17 @@ EXCLUDED_DIRS = {
 }
 
 
-def get_python_files(project_root=None):
+def get_source_files(project_root=None, extensions=None):
     root_dir = os.path.abspath(project_root or PROJECT_ROOT)
+    allowed = set(extensions or [".py"])
     files = []
 
     for root, dirs, filenames in os.walk(root_dir):
         dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]
 
         for filename in filenames:
-            if not filename.endswith(".py"):
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in allowed:
                 continue
 
             path = os.path.join(root, filename)
@@ -31,6 +33,10 @@ def get_python_files(project_root=None):
                 continue
 
     return files
+
+
+def get_python_files(project_root=None):
+    return get_source_files(project_root=project_root, extensions={".py"})
 
 
 def load_file_content(path):

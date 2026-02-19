@@ -4,14 +4,18 @@ from typing import Optional
 
 from agent.config import DRY_RUN, PROJECT_ROOT
 
+_SAFE_DIR = PROJECT_ROOT.replace("\\", "/")
+
 
 def _run_git(args):
     try:
         result = subprocess.run(
-            ["git", *args],
+            ["git", "-c", f"safe.directory={_SAFE_DIR}", *args],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=False,
         )
     except Exception as exc:

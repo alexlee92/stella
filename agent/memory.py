@@ -23,7 +23,8 @@ from agent.config import (
     PROJECT_ROOT,
     REQUEST_TIMEOUT,
 )
-from agent.project_scan import get_python_files, load_file_content
+from agent.git_tools import changed_files
+from agent.project_scan import get_source_files, load_file_content
 
 
 @dataclass
@@ -40,6 +41,19 @@ _index_loaded = False
 _query_cache: "OrderedDict[str, List[Tuple[str, str]]]" = OrderedDict()
 _token_df: Dict[str, int] = {}
 _avg_doc_len = 1.0
+_project_cache_token = ""
+
+SOURCE_EXTENSIONS = {
+    ".py",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".json",
+    ".toml",
+    ".yaml",
+    ".yml",
+}
 
 
 def _ensure_index_dir() -> str:
@@ -51,6 +65,49 @@ def _ensure_index_dir() -> str:
 def _index_files() -> tuple[str, str]:
     d = _ensure_index_dir()
     return os.path.join(d, "docs.json"), os.path.join(d, "vectors.npy")
+
+
+def _strategy_file() -> str:
+    return os.path.join(_ensure_index_dir(), "fix_strategies.jsonl")
+
+
+def remember_fix_strategy(issue: str, strategy: str, files: List[str] | None = None):
+    record = {
+        "issue": (issue or "")[:300],
+        "strategy": (strategy or "")[:1500],
+        "files": files or [],
+    }
+    try:
+        with open(_strategy_file(), "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except OSError:
+        return
+
+
+def _load_fix_strategy_docs(limit: int = 8) -> List[Tuple[str, str]]:
+    path = _strategy_file()
+    if not os.path.exists(path):
+        return []
+    rows = []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                issue = str(obj.get("issue", ""))
+                strategy = str(obj.get("strategy", ""))
+                files = obj.get("files") or []
+                files_text = ", ".join(files[:4]) if isinstance(files, list) else ""
+                text = f"issue: {issue}\nstrategy: {strategy}\nfiles: {files_text}".strip()
+                rows.append(("memory://fix_strategies", text))
+    except OSError:
+        return []
+    return rows[-limit:]
 
 
 def _normalize(vec: np.ndarray):
@@ -165,9 +222,39 @@ def _chunk_python_by_symbols(content: str):
     return chunks[:MAX_CHUNKS_PER_FILE]
 
 
+def _chunk_jsts_by_symbols(content: str):
+    lines = content.splitlines()
+    chunks = []
+    current_name = ""
+    start = None
+    pattern = re.compile(
+        r"^\s*(?:export\s+)?(?:async\s+)?(?:function|class|const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)"
+    )
+    for idx, line in enumerate(lines, start=1):
+        m = pattern.search(line)
+        if m:
+            if start is not None and current_name:
+                text = "\n".join(lines[start - 1 : idx - 1]).strip()
+                if text:
+                    chunks.append((text, f"symbol:{current_name}"))
+            current_name = m.group(1)
+            start = idx
+
+    if start is not None and current_name:
+        text = "\n".join(lines[start - 1 :]).strip()
+        if text:
+            chunks.append((text, f"symbol:{current_name}"))
+
+    return chunks[:MAX_CHUNKS_PER_FILE]
+
+
 def _chunk_for_file(path: str, content: str):
     if path.endswith(".py"):
         symbol_chunks = _chunk_python_by_symbols(content)
+        if symbol_chunks:
+            return symbol_chunks
+    if path.endswith((".js", ".jsx", ".ts", ".tsx")):
+        symbol_chunks = _chunk_jsts_by_symbols(content)
         if symbol_chunks:
             return symbol_chunks
     return _chunk_text(content)
@@ -247,7 +334,7 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
     vectors.clear()
     _query_cache.clear()
 
-    files = get_python_files(project_root)
+    files = get_source_files(project_root, extensions=SOURCE_EXTENSIONS)
     file_hashes = {}
 
     for file_path in files:
@@ -267,7 +354,13 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
             vectors.append(vec)
 
     _rebuild_lexical_stats()
-    _save_index(meta={"file_hashes": file_hashes, "chunking": "symbol_or_window"})
+    _save_index(
+        meta={
+            "file_hashes": file_hashes,
+            "chunking": "symbol_or_window_multilang",
+            "extensions": sorted(SOURCE_EXTENSIONS),
+        }
+    )
     _index_loaded = True
     print(f"[memory] indexed {len(vectors)} chunks from {len(files)} files")
 
@@ -300,14 +393,80 @@ def _bm25_lite_score(query_terms: List[str], doc_text: str) -> float:
     return float(score)
 
 
+def _project_token() -> str:
+    try:
+        dirty = changed_files()
+    except Exception:
+        dirty = []
+    key = "|".join(sorted(dirty))[:4000]
+    return hashlib.sha1((PROJECT_ROOT + "|" + key).encode("utf-8")).hexdigest()
+
+
+def _extract_import_tokens(path: str, content: str) -> set[str]:
+    tokens = set()
+    if path.endswith(".py"):
+        for m in re.finditer(
+            r"^\s*(?:from|import)\s+([A-Za-z_][A-Za-z0-9_\.]*)",
+            content,
+            flags=re.MULTILINE,
+        ):
+            root = m.group(1).split(".")[0].lower()
+            if len(root) > 2:
+                tokens.add(root)
+    elif path.endswith((".js", ".jsx", ".ts", ".tsx")):
+        for m in re.finditer(
+            r"(?:from\s+['\"]([^'\"]+)['\"]|require\(\s*['\"]([^'\"]+)['\"]\s*\))",
+            content,
+        ):
+            val = (m.group(1) or m.group(2) or "").split("/")[-1].lower()
+            val = val.replace(".js", "").replace(".ts", "")
+            if re.match(r"[a-z_][a-z0-9_]{2,}", val):
+                tokens.add(val)
+    return tokens
+
+
+def _build_hot_path_signals(limit: int = 20) -> tuple[set[str], set[str]]:
+    hot = set()
+    import_tokens = set()
+    try:
+        for rel in changed_files()[:limit]:
+            norm = rel.replace("\\", "/").lower()
+            hot.add(norm)
+            abs_path = os.path.join(PROJECT_ROOT, rel)
+            if os.path.exists(abs_path):
+                import_tokens.update(_extract_import_tokens(norm, load_file_content(abs_path)))
+    except Exception:
+        pass
+
+    try:
+        candidates = get_source_files(PROJECT_ROOT, extensions=SOURCE_EXTENSIONS)
+        candidates.sort(
+            key=lambda p: os.path.getmtime(p) if os.path.exists(p) else 0.0,
+            reverse=True,
+        )
+        for abs_path in candidates[: min(12, limit)]:
+            hot.add(os.path.relpath(abs_path, PROJECT_ROOT).replace("\\", "/").lower())
+    except OSError:
+        pass
+
+    return hot, import_tokens
+
+
 def search_memory(query: str, k: int = 3):
+    global _project_cache_token
+
     if not vectors:
         build_memory(PROJECT_ROOT)
 
     if not vectors:
         return []
 
-    cache_key = f"{query}|{k}"
+    token = _project_token()
+    if token != _project_cache_token:
+        _query_cache.clear()
+        _project_cache_token = token
+
+    cache_key = f"{_project_cache_token}|{query}|{k}"
     cached = _cache_get(cache_key)
     if cached is not None:
         return cached
@@ -320,18 +479,27 @@ def search_memory(query: str, k: int = 3):
     top_idx = np.argsort(semantic_scores)[-max(k * 6, k) :][::-1]
 
     query_terms = [t for t in _tokenize(query) if len(t) > 2]
+    hot_paths, import_tokens = _build_hot_path_signals()
     reranked = []
     for i in top_idx:
         doc = documents[i]
         semantic = semantic_scores[i]
         lexical = _bm25_lite_score(query_terms, doc.text)
+        rel = os.path.relpath(doc.path, PROJECT_ROOT).replace("\\", "/").lower()
         path_boost = 0.05 if any(t in doc.path.lower() for t in query_terms) else 0.0
+        hot_boost = 0.12 if rel in hot_paths else 0.0
+        graph_boost = 0.06 if any(tok in rel for tok in import_tokens) else 0.0
         final_score = 0.78 * semantic + 0.22 * lexical + path_boost
+        final_score += hot_boost + graph_boost
         reranked.append((final_score, doc))
 
     reranked.sort(key=lambda x: x[0], reverse=True)
 
     out = [(doc.path, doc.text) for _, doc in reranked[:k]]
+    strategy_docs = _load_fix_strategy_docs(limit=2)
+    if strategy_docs:
+        out.extend(strategy_docs)
+        out = out[:k]
     _cache_put(cache_key, out)
     return out
 

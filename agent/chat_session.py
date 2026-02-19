@@ -117,11 +117,25 @@ Project context:
 
         return answer
 
-    def run_auto(self, goal: str, auto_apply: bool = False, max_steps: int = 8) -> str:
+    def run_auto(
+        self,
+        goal: str,
+        auto_apply: bool = False,
+        max_steps: int = 8,
+        fix_until_green: bool = False,
+        generate_tests: bool = False,
+        max_seconds: int = 0,
+    ) -> str:
         agent = AutonomousAgent(
             top_k=self.top_k, max_steps=max_steps, logger=self.log_decision
         )
-        summary = agent.run(goal=goal, auto_apply=auto_apply)
+        summary = agent.run(
+            goal=goal,
+            auto_apply=auto_apply,
+            fix_until_green=fix_until_green,
+            generate_tests=generate_tests,
+            max_seconds=max_seconds,
+        )
 
         record = {
             "type": "auto_summary",

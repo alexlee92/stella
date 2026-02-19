@@ -20,6 +20,16 @@ def _count_checkboxes(text: str) -> ProgressStats:
     return ProgressStats(total=total, done=done)
 
 
+def _section_chunk(content: str, marker: str) -> str:
+    start = content.find(marker)
+    if start < 0:
+        return ""
+    next_pos = content.find("\n## ", start + len(marker))
+    if next_pos < 0:
+        return content[start:]
+    return content[start:next_pos]
+
+
 def summarize_progress(md_path: str = "UPGRADE_PLAN_30J.md") -> str:
     try:
         with open(md_path, "r", encoding="utf-8") as f:
@@ -35,23 +45,20 @@ def summarize_progress(md_path: str = "UPGRADE_PLAN_30J.md") -> str:
         "KPI": "## KPI cibles a 30 jours",
     }
 
-    keys = list(sections.items())
     stats = {}
-    for i, (label, marker) in enumerate(keys):
-        start = content.find(marker)
-        if start < 0:
+    for label, marker in sections.items():
+        chunk = _section_chunk(content, marker)
+        if not chunk:
             stats[label] = ProgressStats(total=0, done=0)
             continue
-        end = len(content)
-        if i + 1 < len(keys):
-            next_marker = keys[i + 1][1]
-            pos = content.find(next_marker, start + 1)
-            if pos > 0:
-                end = pos
-        chunk = content[start:end]
         stats[label] = _count_checkboxes(chunk)
 
-    global_stats = _count_checkboxes(content)
+    core_content = content
+    backlog_marker = "## Backlog bonus"
+    backlog_pos = content.find(backlog_marker)
+    if backlog_pos >= 0:
+        core_content = content[:backlog_pos]
+    global_stats = _count_checkboxes(core_content)
 
     lines = [
         "Progress Summary",

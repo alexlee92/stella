@@ -15,7 +15,13 @@ TOOLS = ["pytest", "ruff", "black"]
 def _run(cmd):
     try:
         proc = subprocess.run(
-            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, check=False
+            cmd,
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
         )
         out = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
         return proc.returncode, out.strip()

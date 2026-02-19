@@ -84,6 +84,13 @@ Execution multi-etapes:
 python main.py run "Ameliore la robustesse de l'agent" --steps 10 --apply
 ```
 
+Mode robuste (borne runtime + tests generes):
+
+```bash
+python main.py run "..." --apply --with-tests
+python main.py run "..." --apply --with-tests --fix-until-green --max-seconds 900
+```
+
 ## Mode chat continu
 
 ```bash
@@ -126,6 +133,12 @@ Executer la suite d'evaluation:
 
 ```bash
 python main.py eval
+```
+
+Suite code-edit stricte (profil production):
+
+```bash
+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5
 ```
 
 Rapport ecrit dans:
@@ -180,9 +193,15 @@ python main.py apply <file> "..."
 python main.py undo <file>
 python main.py plan "..."
 python main.py run "..." --steps 10 --apply
+python main.py run "..." --steps 10 --apply --with-tests --max-seconds 600
 python main.py chat --apply
 python main.py map
 python main.py eval
+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5
 python main.py ci
 python main.py pr-ready "..."
+python main.py dev-task "<goal>" --profile safe
+python main.py dev-task "<goal>" --profile standard
+python main.py dev-task "<goal>" --profile aggressive --max-seconds 900
+python main.py ide-shortcuts
 ```

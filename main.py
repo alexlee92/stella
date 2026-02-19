@@ -12,6 +12,7 @@ from agent.auto_agent import AutonomousAgent
 from agent.bootstrap import format_bootstrap, run_bootstrap
 from agent.chat_session import ChatSession
 from agent.config import AUTO_MAX_STEPS
+from agent.dev_task import ide_shortcuts, run_dev_task
 from agent.doctor import format_doctor, run_doctor
 from agent.eval_runner import run_eval
 from agent.patcher import find_latest_backup, restore_backup
@@ -44,6 +45,11 @@ def build_parser():
     apply_cmd.add_argument(
         "--non-interactive", action="store_true", help="Apply without confirmation"
     )
+    apply_cmd.add_argument(
+        "--with-tests",
+        action="store_true",
+        help="Generate targeted unit tests after applying code changes",
+    )
 
     undo = sub.add_parser("undo", help="Restore latest backup for file")
     undo.add_argument("file", help="File to restore")
@@ -57,6 +63,22 @@ def build_parser():
         "--steps", type=int, default=AUTO_MAX_STEPS, help="Maximum decision steps"
     )
     run.add_argument("--apply", action="store_true", help="Allow applying staged edits")
+    run.add_argument(
+        "--fix-until-green",
+        action="store_true",
+        help="Enable deterministic replanning loop until checks are green (bounded)",
+    )
+    run.add_argument(
+        "--with-tests",
+        action="store_true",
+        help="Generate targeted unit tests for modified Python files",
+    )
+    run.add_argument(
+        "--max-seconds",
+        type=int,
+        default=0,
+        help="Hard runtime budget in seconds (0 = disabled)",
+    )
 
     pr = sub.add_parser(
         "pr-ready", help="Create branch, commit changes, and print PR summary"
@@ -72,6 +94,17 @@ def build_parser():
     chat.add_argument(
         "--apply", action="store_true", help="Allow applying staged edits in /run"
     )
+    chat.add_argument(
+        "--fix-until-green",
+        action="store_true",
+        help="Enable deterministic replanning loop until checks are green (bounded)",
+    )
+    chat.add_argument(
+        "--with-tests",
+        action="store_true",
+        help="Generate targeted unit tests for modified Python files",
+    )
+    chat.add_argument("--max-seconds", type=int, default=0)
 
     bootstrap = sub.add_parser(
         "bootstrap", help="Auto-setup git/index/tools for local use"
@@ -91,6 +124,11 @@ def build_parser():
     sub.add_parser("map", help="Print project symbol map")
     eval_cmd = sub.add_parser("eval", help="Run evaluation suite from eval/tasks.json")
     eval_cmd.add_argument(
+        "--tasks",
+        default="eval/tasks.json",
+        help="Tasks file path relative to project root (e.g. eval/tasks_code_edit.json)",
+    )
+    eval_cmd.add_argument(
         "--limit",
         type=int,
         default=0,
@@ -99,11 +137,25 @@ def build_parser():
     sub.add_parser("doctor", help="Run environment and tooling diagnostics")
     sub.add_parser("ci", help="Run local compile checks")
     sub.add_parser("progress", help="Show progress summary from UPGRADE_PLAN_30J.md")
+    dev_task = sub.add_parser(
+        "dev-task", help="Single command: plan + patch + tests + actionable summary"
+    )
+    dev_task.add_argument("goal", help="Goal for the autonomous agent")
+    dev_task.add_argument("--steps", type=int, default=AUTO_MAX_STEPS)
+    dev_task.add_argument("--apply", action="store_true")
+    dev_task.add_argument("--fix-until-green", action="store_true")
+    dev_task.add_argument("--with-tests", action="store_true")
+    dev_task.add_argument("--profile", choices=["safe", "standard", "aggressive"])
+    dev_task.add_argument("--max-seconds", type=int, default=0)
+    sub.add_parser("ide-shortcuts", help="Print quick IDE-friendly command shortcuts")
 
     auto = sub.add_parser("auto", help="Alias of run")
     auto.add_argument("goal", help="Goal for the autonomous agent")
     auto.add_argument("--steps", type=int, default=AUTO_MAX_STEPS)
     auto.add_argument("--apply", action="store_true")
+    auto.add_argument("--fix-until-green", action="store_true")
+    auto.add_argument("--with-tests", action="store_true")
+    auto.add_argument("--max-seconds", type=int, default=0)
 
     edit = sub.add_parser("edit", help="Alias of review/apply workflow")
     edit.add_argument("file")
@@ -113,7 +165,13 @@ def build_parser():
     return parser
 
 
-def run_chat(default_steps: int, auto_apply: bool):
+def run_chat(
+    default_steps: int,
+    auto_apply: bool,
+    fix_until_green: bool,
+    with_tests: bool,
+    max_seconds: int,
+):
     index_project()
     session = ChatSession()
 
@@ -130,7 +188,12 @@ def run_chat(default_steps: int, auto_apply: bool):
         if user_input.startswith("/run "):
             goal = user_input[len("/run ") :].strip()
             summary = session.run_auto(
-                goal=goal, auto_apply=auto_apply, max_steps=default_steps
+                goal=goal,
+                auto_apply=auto_apply,
+                max_steps=default_steps,
+                fix_until_green=fix_until_green,
+                generate_tests=with_tests,
+                max_seconds=max_seconds,
             )
             print(summary)
             continue
@@ -192,6 +255,13 @@ def main():
             print(apply_suggestion(args.file, code, interactive=False))
         else:
             apply_suggestion(args.file, code, interactive=True)
+        if args.with_tests:
+            from agent.test_generator import apply_generated_tests
+
+            generated = apply_generated_tests([args.file], limit=2)
+            print(
+                f"[tests] generated={generated.get('generated', [])} applied={generated.get('applied', [])}"
+            )
         return
 
     if args.command == "undo":
@@ -212,7 +282,11 @@ def main():
         index_project()
         print(
             AutonomousAgent(max_steps=args.steps).run(
-                goal=args.goal, auto_apply=args.apply
+                goal=args.goal,
+                auto_apply=args.apply,
+                fix_until_green=args.fix_until_green,
+                generate_tests=args.with_tests,
+                max_seconds=args.max_seconds,
             )
         )
         return
@@ -227,7 +301,13 @@ def main():
         return
 
     if args.command == "chat":
-        run_chat(default_steps=args.steps, auto_apply=args.apply)
+        run_chat(
+            default_steps=args.steps,
+            auto_apply=args.apply,
+            fix_until_green=args.fix_until_green,
+            with_tests=args.with_tests,
+            max_seconds=args.max_seconds,
+        )
         return
 
     if args.command == "bootstrap":
@@ -246,7 +326,9 @@ def main():
         return
 
     if args.command == "eval":
-        report = run_eval(max_tasks=args.limit if args.limit > 0 else None)
+        report = run_eval(
+            tasks_file=args.tasks, max_tasks=args.limit if args.limit > 0 else None
+        )
         print(report["summary"])
         print(report.get("kpis", {}))
         return
@@ -266,6 +348,31 @@ def main():
 
     if args.command == "progress":
         print(summarize_progress())
+        return
+
+    if args.command == "dev-task":
+        result = run_dev_task(
+            goal=args.goal,
+            max_steps=args.steps,
+            auto_apply=args.apply,
+            fix_until_green=args.fix_until_green,
+            with_tests=args.with_tests,
+            profile=args.profile,
+            max_seconds=args.max_seconds,
+        )
+        print(
+            {
+                "status": result.get("status"),
+                "changed_files_count": result.get("changed_files_count"),
+                "next_action": result.get("next_action"),
+                "summary_json": result.get("summary_json"),
+                "summary_md": result.get("summary_md"),
+            }
+        )
+        return
+
+    if args.command == "ide-shortcuts":
+        print(ide_shortcuts())
         return
 
     if args.command == "edit":

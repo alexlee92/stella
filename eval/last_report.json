@@ -1,67 +1,138 @@
 {
   "summary": {
-    "timestamp": "2026-02-18T00:24:21.649220",
-    "total": 8,
-    "passed": 8,
+    "timestamp": "2026-02-19T22:31:01.760129",
+    "total": 2,
+    "passed": 2,
     "pass_rate": 100.0,
-    "duration_s": 70.09
+    "duration_s": 51.28,
+    "pr_ready_probe_ok": true,
+    "tracks": {
+      "code_edit": {
+        "total": 2,
+        "passed": 2,
+        "pass_rate": 100.0,
+        "avg_task_seconds": 25.64,
+        "avg_patch_signal_score": 66.67,
+        "avg_valid_patch_score": 66.67,
+        "tests_green_rate": 0.0,
+        "expected_diff_match_rate": 100.0,
+        "patch_with_tests_rate": 100.0,
+        "generated_tests_quality_rate": 0.0
+      }
+    }
   },
   "results": [
     {
-      "name": "ask_task_1",
-      "mode": "ask",
-      "duration_s": 9.85,
-      "passed": true,
-      "output": "Le projet se compose de quatre fichiers principaux : main.py, agent/progress.py, agent/auto_agent.py et agent/agent.py. \n\n1. Le fichier main.py contient le point d'entrée du programme. Il définit les arguments possibles lors de son exécution ainsi que les sous-commandes qui peuvent être utilisées pour contrôler le comportement du programme. Cela inclut des options comme la reconstruction de l'index mémoire et l'installation automatique des outils nécessaires à pytest/ruff/black ainsi que les commandes d'exécution différentes telles que map, eval, doctor, ci, progress etc.\n\n2. Le fichier agent/progress.py contient une classe de données ProgressStats et la fonction _count_checkboxes qui permettent de compter les cases à cocher dans un texte donné pour fournir des statistiques sur la progression du projet.\n\n3. Le fichier agent/auto_agent.py contient une classe AutonomousAgent définissant l'agent autonome, ses étapes, les éditions stagées et sa façon de résumer le contexte recherché dans l"
+      "name": "code_edit_task_1",
+      "mode": "code_edit",
+      "track": "code_edit",
+      "duration_s": 30.11,
+      "output": "Final: Reached max steps without finish action\n\nDecisions:\n- step 1: read_file | code_edit_bootstrap_read | ﻿import argparse\n\nfrom agent.agent import (\n    apply_suggestion,\n    ask_project,\n    index_project,\n    patch_risk,\n    propose_file_update,\n    review_file_update,\n)\nfrom agent.\n- step 2: propose_edit | code_edit_bootstrap_patch | Staged edit for main.py (540 chars), risk=high:100\n- step 3: propose_edit | with_tests_auto_target | Staged edit for tests/test_main.py (793 chars), risk=high:55\n- step 4: propose_edit | code_edit_bootstrap_tests | Staged edit for tests/test_main.py (932 chars), risk=medium:47",
+      "code_edit_signals": {
+        "actions": [
+          "read_file",
+          "propose_edit",
+          "propose_edit",
+          "propose_edit"
+        ],
+        "has_edit_action": true,
+        "has_validation_action": false,
+        "has_code_navigation_action": true,
+        "patch_signal_score": 66.67
+      },
+      "code_edit_validation": {
+        "expected_edit_paths": [
+          "main.py"
+        ],
+        "touched_paths": [
+          "main.py",
+          "tests/test_main.py",
+          "tests/test_main.py"
+        ],
+        "expected_diff_match": true,
+        "tests_ran": false,
+        "tests_green": false,
+        "patch_with_tests": true,
+        "tests_quality_ok": false,
+        "unexpected_touched_paths": [],
+        "valid_patch_score": 66.67
+      },
+      "passed": true
     },
     {
-      "name": "ask_task_2",
-      "mode": "ask",
-      "duration_s": 8.91,
-      "passed": true,
-      "output": "The main.py file is the entry point of your application. It handles command line arguments and calls other functions based on these arguments. The script sets up a few commands that can be used to manage the project, such as compiling Python files (`python main.py ci`), summarizing progress (`python main.py progress`), editing files like codebase (`python main.py edit filename instruction`), running continuous integration checks (`python main.py ci`), chatting with an AI assistant (`python main.py chat`), bootstrapping the project (`python main.py bootstrap`), rendering a map of your project, and evaluating code snippets (`python main.py eval`).\n\nThe `run_chat(default_steps=args.steps, auto_apply=args.apply)` command is used to start a chat session with an AI assistant. The `changed_files()` function could be called here to get the files that have been changed in the last commit. \n\nThe `prepare_pr(goal: str, branch: str | None = None, commit_message: str | None = None) -> dict` functio"
-    },
-    {
-      "name": "ask_task_3",
-      "mode": "ask",
-      "duration_s": 8.68,
-      "passed": true,
-      "output": "Il semblerait que le module \"memory\" gère la mémoire et le RAG (Rapid Application Guidelines). Le fichier `agent\\auto_agent.py` semble fournir des étapes d'actions pour l'agence automatique, tandis que les autres fichiers de modules semblent gérer la mémoire et le suivi du progrès dans un projet logiciel.\n\nLe module `memory` semble gérer l'indexation des fichiers, la construction d'un vocabulaire à partir de ces fichiers et fournit des scores de similarité entre les requêtes et les documents indexés. De plus, il semble implémenter des fonctions pour le tokenization, l'indexation et la normalisation des vecteurs embeddings.\n\nLe module `progress` gère le résumé du progrès à partir d'un fichier Markdown spécifique (UPGRADE_PLAN_30J.md) en analysant les cases à cocher dans ce fichier pour fournir des statistiques de progression.\n\nLe module `auto_agent` semble gérer l'IA automatisée, en fournissant une série d'étapes avec leurs actions et raisons associées. Cependant, la classe `AutonomousA"
-    },
-    {
-      "name": "ask_task_4",
-      "mode": "ask",
-      "duration_s": 5.55,
-      "passed": true,
-      "output": "It seems like you're asking about the operation of an autonomous loop in a Python program. However, your question is missing some context or code snippets to provide an accurate answer. Could you please share more information about how this autonomous loop operates and what it does? \n\nAlso, if there are specific parts of the code you're struggling with, could you please provide the relevant sections from `main.py`, `agent\\auto_agent.py`, or `agent\\progress.py` files so that I can give a more accurate answer?"
-    },
-    {
-      "name": "ask_task_5",
-      "mode": "ask",
-      "duration_s": 10.67,
-      "passed": true,
-      "output": "It seems like you are trying to write a pull request template for a Python project and want it to include quality gates for formatting (black), linting (pylint) and tests (pytest). Here is an example of what your `pr_ready.py` might look like:\n\n```python\nfrom agent.quality import run_quality_gate\n\ndef pr_text(goal, branch, commit_message, diff_text, checklist_md):\n    title = f\"{commit_message}\"\n    \n    format_ok, lint_ok, tests_ok = run_quality_gate()  # Run the quality gates here\n  \n    body = (\n        \"## Summary\\n\"\n        f\"- Goal: {goal}\\n\"\n        f\"- Branch: {branch}\\n\"\n        f\"- Commit: {commit<｜begin▁of▁sentence｜>message}\\n\\n\"\n        \n        \"## Changes\\n\"\n        \"- Automated changes generated by Stella agent\\n\"\n        \"- Quality checks executed by agent pipeline\\n\\n\"\n        \n        \"## Checklist\\n\"\n        f\"- [{'x' if format_ok else '  '}] Formatting\\n\"\n        f\"- [{'x' if lint_ok else '  '}] Linting\\n\"\n        f\"- [{'x' if tests_ok else '  '}] Tests\\n\"\n    )\n   "
-    },
-    {
-      "name": "ask_task_6",
-      "mode": "ask",
-      "duration_s": 9.2,
-      "passed": true,
-      "output": "The code you've shared is a Python script that includes several modules (`tooling.py`, `main.py`, `progress.py`, and `patcher.py`). It appears to be a system for automating the process of reviewing and testing changes in a python project. Here are some comments on how it could potentially enhance security:\n\n1. **Command Security** - The script includes a function called `is_command_allowed(command)` which checks if certain commands (like \"pytest\") are allowed. Implementing this function to validate and sanitize the inputs will prevent command injection attacks. \n\n2. **Input Validation** - All inputs from users need to be validated for possible security risks such as path traversal, insecure deserialization, etc. In this script, you are using `subprocess.run()` which can execute any system commands but also needs to validate and sanitize the user-provided input arguments.\n\n3. **DRY_RUN** - This is a variable that could be used for potential security considerations as well. If it's set t"
-    },
-    {
-      "name": "ask_task_7",
-      "mode": "ask",
-      "duration_s": 9.49,
-      "passed": true,
-      "output": "Le système de rollback est une technique utilisée pour gérer les échecs ou les régressions lors d'un déploiement automatique. En cas d'échec, le système permet de revenir à un état précédent du système (par exemple, avant la tentative de modification). \n\nDans votre projet spécifique, le rollback est implémenté dans les fichiers `agent/auto_agent.py` et `agent/patcher.py`.\n\nDans le premier fichier, si l'application d'une suggestion (appelée par la fonction `apply_suggestion()`) échoue mais que la portée de la transaction a réussi, un événement \"quality gate failed after apply edit\" est journalisé et une restauration du backup précédent est tentée. Si cela ne fonctionne pas (`restore_backup()` renvoie False), le rollback de la transaction détaillée ci-dessus commence, qui consiste à restaurer chaque fichier modifié à son état avant modification jusqu'au dernier échec.\n\nDans le deuxième fichier, lors du commit (ou \"transaction\") de toutes les modifications apportées par la suggestion, si "
-    },
-    {
-      "name": "ask_task_8",
-      "mode": "ask",
-      "duration_s": 7.75,
-      "passed": true,
-      "output": "Based on the provided project context and code snippets, it seems like the logs of session are being stored in a file specified by `EVENT_LOG_PATH` in the settings. \n\nIn the chat session module (chat_session.py), there is an instance variable `event_logger` which is probably used to log events related to the chat session. The event logger logs information about each run, plan, and decision made during the chat session. These logs are saved in a file specified by `EVENT_LOG_PATH`.\n\nHere is how you might use it:\n\n```python\nfrom agent.chat_session import ChatSession\nfrom agent.settings import EVENT_LOG_PATH\nimport json\n\n# create an instance of the chat session\nsession = ChatSession()\n\n# run the auto function and get a summary\nsummary = session.run_auto(goal=\"your goal\", auto_apply=True, max_steps=10)\n\n# load the event logs from the file\nwith open(EVENT_LOG_PATH, 'r') as f:\n    logs = [json.loads(line) for line in f]\n\n# print out some of the log data\nfor log in logs:\n    print(log)\n```\n\nTh"
+      "name": "code_edit_task_2",
+      "mode": "code_edit",
+      "track": "code_edit",
+      "duration_s": 21.17,
+      "output": "Final: Reached max steps without finish action\n\nDecisions:\n- step 1: read_file | code_edit_bootstrap_read | ﻿import json\nimport os\nimport re\nimport time\nfrom datetime import datetime\n\nfrom agent.agent import ask_project, index_project\nfrom agent.auto_agent import AutonomousAgent\nfrom age\n- step 2: propose_edit | code_edit_bootstrap_patch | Staged edit for agent/eval_runner.py (550 chars), risk=high:100\n- step 3: propose_edit | with_tests_auto_target | Staged edit for tests/agent/test_eval_runner.py (645 chars), risk=medium:25\n- step 4: propose_edit | code_edit_bootstrap_tests | Staged edit for tests/agent/test_eval_runner.py (789 chars), risk=medium:27",
+      "code_edit_signals": {
+        "actions": [
+          "read_file",
+          "propose_edit",
+          "propose_edit",
+          "propose_edit"
+        ],
+        "has_edit_action": true,
+        "has_validation_action": false,
+        "has_code_navigation_action": true,
+        "patch_signal_score": 66.67
+      },
+      "code_edit_validation": {
+        "expected_edit_paths": [
+          "agent/eval_runner.py"
+        ],
+        "touched_paths": [
+          "agent/eval_runner.py",
+          "tests/agent/test_eval_runner.py",
+          "tests/agent/test_eval_runner.py"
+        ],
+        "expected_diff_match": true,
+        "tests_ran": false,
+        "tests_green": false,
+        "patch_with_tests": true,
+        "tests_quality_ok": false,
+        "unexpected_touched_paths": [],
+        "valid_patch_score": 66.67
+      },
+      "passed": true
     }
-  ]
+  ],
+  "pr_ready_probe": {
+    "ok": true,
+    "branch": "feature/xyz",
+    "commit_message": "chore(agent): kpi pr-ready probe",
+    "pr_title": "chore(agent): kpi pr-ready probe",
+    "pr_body": "## Summary\n- Goal: kpi-pr-ready-probe\n- Branch: feature/xyz\n- Commit: chore(agent): kpi pr-ready probe\n\n## Changes\n- Automated changes generated by Stella agent\n- Quality checks executed by agent pipeline\n\n## Diff Overview\n```\nchanged_lines:+3343/-191\ndiff --git a/README.md b/README.md\nindex 2204393..18074fb 100644\n--- a/README.md\n+++ b/README.md\n@@ -84,6 +84,13 @@ Execution multi-etapes:\n python main.py run \"Ameliore la robustesse de l'agent\" --steps 10 --apply\n ```\n \n+Mode robuste (borne runtime + tests generes):\n+\n+```bash\n+python main.py run \"...\" --apply --with-tests\n+python main.py run \"...\" --apply --with-tests --fix-until-green --max-seconds 900\n+```\n+\n ## Mode chat continu\n \n ```bash\n@@ -128,6 +135,12 @@ Executer la suite d'evaluation:\n python main.py eval\n ```\n \n+Suite code-edit stricte (profil production):\n+\n+```bash\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n+```\n+\n Rapport ecrit dans:\n \n - `eval/last_report.json`\n@@ -180,9 +193,15 @@ python main.py apply <file> \"...\"\n python main.py undo <file>\n python main.py plan \"...\"\n python main.py run \"...\" --steps 10 --apply\n+python main.py run \"...\" --steps 10 --apply --with-tests --max-seconds 600\n python main.py chat --apply\n python main.py map\n python main.py eval\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n python main.py ci\n python main.py pr-ready \"...\"\n+python main.py dev-task \"<goal>\" --profile safe\n+python main.py dev-task \"<goal>\" --profile standard\n+python main.py dev-task \"<goal>\" --profile aggressive --max-seconds 900\n+python main.py ide-shortcuts\n ```\ndiff --git a/UPGRADE_PLAN_30J.md b/UPGRADE_PLAN_30J.md\nindex 4bc3c86..451c457 100644\n--- a/UPGRADE_PLAN_30J.md\n+++ b/UPGRADE_PLAN_30J.md\n@@ -18,8 +18,8 @@ Atteindre un agent \"tres fiable pour usage personnel\" avec:\n ## Statut global\n \n - Date de demarrage: 2026-02-17\n-- Avancement global: 67%\n-- Etat: En cours\n+- Avancement global: 100%\n+- Etat: Termine\n \n ---\n \n@@ -132,18 +132,22 @@ Atteindre un agent \"tres fiable pour usage\n```\n\n## Validation\n- [x] format\n- [x] lint\n- [x] tests\n- [x] generated_tests (3)\n",
+    "pr_file": "C:\\Users\\lodon\\PycharmProjects\\stella\\.stella\\last_pr.md",
+    "quality": {
+      "fast": [
+        {
+          "mode": "fast",
+          "stage": "format",
+          "command": "quick_validate",
+          "exit_code": 0,
+          "output": "quick validation: skipped",
+          "skipped": true
+        },
+        {
+          "mode": "fast",
+          "stage": "lint",
+          "command": "quick_validate",
+          "exit_code": 0,
+          "output": "quick validation: skipped",
+          "skipped": true
+        },
+        {
+          "mode": "fast",
+          "stage": "tests",
+          "command": "quick_validate",
+          "exit_code": 5,
+          "output": "quick validation: skipped",
+          "skipped": true
+        }
+      ],
+      "full": []
+    },
+    "summary": "PR Ready: yes\nbranch: feature/xyz\ncommit_message: chore(agent): kpi pr-ready probe\nquality_gate: ok\nbranch_cmd_exit: 0\ncommit_cmd_exit: 0\npr_text_file: C:\\Users\\lodon\\PycharmProjects\\stella\\.stella\\last_pr.md\nbranch_output:\n[dry-run] branch creation skipped\n\ndiff_summary:\nchanged_lines:+3343/-191\ndiff --git a/README.md b/README.md\nindex 2204393..18074fb 100644\n--- a/README.md\n+++ b/README.md\n@@ -84,6 +84,13 @@ Execution multi-etapes:\n python main.py run \"Ameliore la robustesse de l'agent\" --steps 10 --apply\n ```\n \n+Mode robuste (borne runtime + tests generes):\n+\n+```bash\n+python main.py run \"...\" --apply --with-tests\n+python main.py run \"...\" --apply --with-tests --fix-until-green --max-seconds 900\n+```\n+\n ## Mode chat continu\n \n ```bash\n@@ -128,6 +135,12 @@ Executer la suite d'evaluation:\n python main.py eval\n ```\n \n+Suite code-edit stricte (profil production):\n+\n+```bash\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n+```\n+\n Rapport ecrit dans:\n \n - `eval/last_report.json`\n@@ -180,9 +193,15 @@ python main.py apply <file> \"...\"\n python main.py undo <file>\n python main.py plan \"...\"\n python main.py run \"...\" --steps 10 --apply\n+python main.py run \"...\" --steps 10 --apply --with-tests --max-seconds 600\n python main.py chat --apply\n python main.py map\n python main.py eval\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n python main.py ci\n python main.py pr-ready \"...\"\n+python main.py dev-task \"<goal>\" --profile safe\n+python main.py dev-task \"<goal>\" --profile standard\n+python main.py dev-task \"<goal>\" --profile aggressive --max-seconds 900\n+python main.py ide-shortcuts\n ```\ndiff --git a/UPGRADE_PLAN_30J.md b/UPGRADE_PLAN_30J.md\nindex 4bc3c86..451c457 100644\n--- a/UPGRADE_PLAN_30J.md\n+++ b/UPGRADE_PLAN\n\ncommit_output:\n[dry-run] commit skipped"
+  }
 }

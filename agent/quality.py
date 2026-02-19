@@ -52,12 +52,62 @@ def _with_pytest_ignore_permission_dirs(command: str) -> str:
     return command + " --ignore-glob=pytest-cache-files-*"
 
 
+def _classify_failure(stage: str, output: str) -> str:
+    low = (output or "").lower()
+    if "refused command" in low:
+        return "command_refused"
+    if _is_permission_error(output):
+        return "permission"
+    if stage == "tests" and ("assert" in low or "failed" in low):
+        return "test_failure"
+    if stage == "lint":
+        return "lint_failure"
+    if stage == "format":
+        return "format_failure"
+    return "unknown"
+
+
+def normalize_quality_results(ok: bool, results: List[dict]) -> dict:
+    failed_stage = None
+    failed_reason = None
+    stage_status = {}
+
+    for row in results or []:
+        stage = str(row.get("stage", "unknown"))
+        exit_code = int(row.get("exit_code", 2))
+        output = str(row.get("output", ""))
+        skipped = bool(row.get("skipped"))
+
+        stage_ok = (exit_code == 0) or (stage == "tests" and exit_code == 5) or skipped
+        stage_status[stage] = {
+            "ok": stage_ok,
+            "exit_code": exit_code,
+            "command": row.get("command", ""),
+            "skipped": skipped,
+            "failure_class": None if stage_ok else _classify_failure(stage, output),
+            "output_excerpt": output[:400],
+        }
+
+        if not stage_ok and failed_stage is None:
+            failed_stage = stage
+            failed_reason = stage_status[stage]["failure_class"]
+
+    return {
+        "ok": bool(ok),
+        "failed_stage": failed_stage,
+        "failed_reason": failed_reason,
+        "stages": stage_status,
+        "raw": results,
+    }
+
+
 def run_quality_pipeline(
     mode: str = "full",
     changed_files: Optional[List[str]] = None,
     format_cmd: str = FORMAT_COMMAND,
     lint_cmd: str = LINT_COMMAND,
     test_cmd: str = TEST_COMMAND,
+    command_timeout: int = 180,
 ):
     results = []
 
@@ -94,7 +144,7 @@ def run_quality_pipeline(
         ("lint", effective_lint),
         ("tests", effective_tests),
     ]:
-        code, out = run_safe_command(cmd)
+        code, out = run_safe_command(cmd, timeout=command_timeout)
 
         # If formatting/linting on broad scope fails due FS permission, fallback to changed .py files.
         if name in {"format", "lint"} and code != 0 and _is_permission_error(out):
@@ -114,7 +164,9 @@ def run_quality_pipeline(
             else:
                 fallback_cmd = _build_changed_file_command(cmd, changed_files)
                 if fallback_cmd != cmd:
-                    f_code, f_out = run_safe_command(fallback_cmd)
+                    f_code, f_out = run_safe_command(
+                        fallback_cmd, timeout=command_timeout
+                    )
                     results.append(
                         {
                             "mode": mode,
@@ -150,7 +202,9 @@ def run_quality_pipeline(
         if name == "tests":
             if code != 0 and _is_permission_error(out):
                 fallback_tests = _with_pytest_ignore_permission_dirs(cmd)
-                f_code, f_out = run_safe_command(fallback_tests)
+                f_code, f_out = run_safe_command(
+                    fallback_tests, timeout=command_timeout
+                )
                 results.append(
                     {
                         "mode": mode,
@@ -171,14 +225,37 @@ def run_quality_pipeline(
     return True, results
 
 
-def run_quality_gate(changed_files: Optional[List[str]] = None):
+def run_quality_gate(changed_files: Optional[List[str]] = None, command_timeout: int = 180):
     fast_ok, fast_results = run_quality_pipeline(
-        mode="fast", changed_files=changed_files
+        mode="fast", changed_files=changed_files, command_timeout=command_timeout
     )
     if not fast_ok:
         return False, {"fast": fast_results, "full": []}
 
     full_ok, full_results = run_quality_pipeline(
-        mode="full", changed_files=changed_files
+        mode="full", changed_files=changed_files, command_timeout=command_timeout
     )
     return full_ok, {"fast": fast_results, "full": full_results}
+
+
+def run_quality_pipeline_normalized(
+    mode: str = "full",
+    changed_files: Optional[List[str]] = None,
+    command_timeout: int = 180,
+):
+    ok, results = run_quality_pipeline(
+        mode=mode, changed_files=changed_files, command_timeout=command_timeout
+    )
+    return normalize_quality_results(ok, results)
+
+
+def run_quality_gate_normalized(
+    changed_files: Optional[List[str]] = None, command_timeout: int = 180
+):
+    ok, details = run_quality_gate(
+        changed_files=changed_files, command_timeout=command_timeout
+    )
+    merged = []
+    merged.extend(details.get("fast", []))
+    merged.extend(details.get("full", []))
+    return normalize_quality_results(ok, merged)

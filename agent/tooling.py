@@ -54,6 +54,8 @@ def run_safe_command(command: str, timeout: int = 300) -> Tuple[int, str]:
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             shell=True,
             check=False,
@@ -125,7 +127,14 @@ def search_code(pattern: str, limit: int = 30) -> List[str]:
             pattern,
             PROJECT_ROOT,
         ]
-        result = subprocess.run(rg_cmd, capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            rg_cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
         lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
         return lines[:limit]
     except Exception:

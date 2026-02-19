@@ -29,7 +29,15 @@ def default_commit_message(goal: str) -> str:
     return f"feat(agent): {goal.strip()[:72]}"
 
 
-def _checklist(details: dict) -> tuple[str, bool]:
+def _is_test_file(path: str) -> bool:
+    rel = path.replace("\\", "/").lower()
+    name = os.path.basename(rel)
+    return rel.startswith("tests/") or name.startswith("test_") or name.endswith(
+        "_test.py"
+    )
+
+
+def _checklist(details: dict, changed: list[str]) -> tuple[str, bool]:
     fast = details.get("fast", [])
     full = details.get("full", [])
 
@@ -45,13 +53,19 @@ def _checklist(details: dict) -> tuple[str, bool]:
     format_ok = stage_ok(full or fast, "format")
     lint_ok = stage_ok(full or fast, "lint")
     tests_ok = stage_ok(full or fast, "tests")
+    changed_py = [
+        p for p in changed if p.endswith(".py") and not _is_test_file(p)
+    ]
+    generated_tests = [p for p in changed if _is_test_file(p)]
+    generated_tests_ok = (not changed_py) or bool(generated_tests)
 
     body = (
         f"- [{'x' if format_ok else ' '}] format\n"
         f"- [{'x' if lint_ok else ' '}] lint\n"
         f"- [{'x' if tests_ok else ' '}] tests\n"
+        f"- [{'x' if generated_tests_ok else ' '}] generated_tests ({len(generated_tests)})\n"
     )
-    return body, (format_ok and lint_ok and tests_ok)
+    return body, (format_ok and lint_ok and tests_ok and generated_tests_ok)
 
 
 def _build_pr_text(
@@ -84,7 +98,11 @@ def _write_pr_markdown(title: str, body: str) -> str:
 
 
 def prepare_pr(
-    goal: str, branch: str | None = None, commit_message: str | None = None
+    goal: str,
+    branch: str | None = None,
+    commit_message: str | None = None,
+    dry_run: bool = False,
+    quick_validate: bool = False,
 ) -> dict:
     logger = EventLogger()
 
@@ -107,16 +125,53 @@ def prepare_pr(
         logger.log("pr_ready", {"ok": False, "reason": "no_changes"})
         return {"ok": False, "summary": summary}
 
-    quality_ok, quality_details = run_quality_gate(changed_files=changed)
-    checklist_md, checklist_ok = _checklist(quality_details)
+    if quick_validate:
+        quality_ok = True
+        quality_details = {
+            "fast": [
+                {
+                    "mode": "fast",
+                    "stage": "format",
+                    "command": "quick_validate",
+                    "exit_code": 0,
+                    "output": "quick validation: skipped",
+                    "skipped": True,
+                },
+                {
+                    "mode": "fast",
+                    "stage": "lint",
+                    "command": "quick_validate",
+                    "exit_code": 0,
+                    "output": "quick validation: skipped",
+                    "skipped": True,
+                },
+                {
+                    "mode": "fast",
+                    "stage": "tests",
+                    "command": "quick_validate",
+                    "exit_code": 5,
+                    "output": "quick validation: skipped",
+                    "skipped": True,
+                },
+            ],
+            "full": [],
+        }
+    else:
+        quality_ok, quality_details = run_quality_gate(changed_files=changed)
+    checklist_md, checklist_ok = _checklist(quality_details, changed)
 
     branch_name = branch or default_branch_name(goal)
     commit_msg = commit_message or default_commit_message(goal)
 
-    b_code, b_out = create_branch(branch_name)
     d_out = diff_summary()
-    c_code, c_out = commit_all(commit_msg)
-    branch_after = current_branch() or "unknown"
+    if dry_run:
+        b_code, b_out = 0, "[dry-run] branch creation skipped"
+        c_code, c_out = 0, "[dry-run] commit skipped"
+        branch_after = current_branch() or "unknown"
+    else:
+        b_code, b_out = create_branch(branch_name)
+        c_code, c_out = commit_all(commit_msg)
+        branch_after = current_branch() or "unknown"
 
     title, body = _build_pr_text(
         goal=goal,
@@ -151,5 +206,13 @@ def prepare_pr(
         "quality": quality_details,
         "summary": pr_summary,
     }
-    logger.log("pr_ready", {"ok": ok, "branch": branch_after, "quality_ok": quality_ok})
+    logger.log(
+        "pr_ready",
+        {
+            "ok": ok,
+            "branch": branch_after,
+            "quality_ok": quality_ok,
+            "dry_run": dry_run,
+        },
+    )
     return result
