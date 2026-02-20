@@ -5,7 +5,7 @@ from typing import Any
 
 import requests
 
-from agent.config import MODEL, OLLAMA_URL, REQUEST_TIMEOUT
+from agent.config import MODEL, OLLAMA_URL, REQUEST_TIMEOUT, OPENAI_API_KEY
 
 _JSON_CACHE: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
 _JSON_CACHE_SIZE = 64
@@ -147,23 +147,38 @@ def _fallback_json_error(
     }
 
 
-def ask_llm(prompt: str) -> str:
+def ask_llm(prompt: str, system_prompt: str = "You are a helpful coding assistant.") -> str:
     try:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        if OPENAI_API_KEY and (MODEL.startswith("gpt-") or MODEL.startswith("o1-")):
+            from openai import OpenAI
+            client = OpenAI(api_key=OPENAI_API_KEY)
+            response = client.chat.completions.create(
+                model=MODEL,
+                messages=messages,
+                timeout=REQUEST_TIMEOUT,
+            )
+            return response.choices[0].message.content
+
         response = requests.post(
             OLLAMA_URL,
-            json={"model": MODEL, "prompt": prompt, "stream": False},
+            json={"model": MODEL, "messages": messages, "stream": False},
             timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         data = response.json()
-        return data.get("response", "")
+        return data.get("message", {}).get("content", "")
     except Exception as exc:
         print(f"[llm] error: {exc}")
         return ""
 
 
 def ask_llm_json(
-    prompt: str, retries: int = 3, prompt_class: str = "generic"
+    prompt: str, retries: int = 3, prompt_class: str = "generic", system_prompt: str = "You are a helpful coding assistant that only outputs valid JSON."
 ) -> dict[str, Any]:
     strict_prompt = _build_json_strict_prompt(prompt)
 
@@ -181,7 +196,7 @@ def ask_llm_json(
 
     for stage_prompt in stages:
         for _ in range(max_retries):
-            raw = ask_llm(stage_prompt)
+            raw = ask_llm(stage_prompt, system_prompt=system_prompt)
             parsed, err = _parse_json_response(raw)
             if parsed is not None:
                 _JSON_CACHE[strict_prompt] = parsed

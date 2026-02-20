@@ -41,7 +41,7 @@ def load_settings() -> dict:
             )
         ),
         "OLLAMA_BASE_URL": base_url,
-        "OLLAMA_URL": f"{base_url}/api/generate",
+        "OLLAMA_URL": f"{base_url}/api/chat",
         "OLLAMA_EMBED_URL": f"{base_url}/api/embeddings",
         "REQUEST_TIMEOUT": int(
             os.getenv(
@@ -124,6 +124,7 @@ def load_settings() -> dict:
         "TEST_COMMAND": os.getenv(
             "TEST_COMMAND", _get(file_cfg, "quality", "test_command", "pytest -q")
         ),
+        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
     }
 
     return settings

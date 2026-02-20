@@ -67,7 +67,17 @@ def propose_file_update(
     prompt = f"""
 You are a coding agent.
 Task: modify the target file according to the instruction.
-Return only valid code for the target file, no markdown, no explanations.
+
+You can return either:
+1. The FULL content of the file (for new files or small files).
+2. One or more SEARCH/REPLACE blocks for surgical edits (preferred for large files to preserve formatting).
+
+Format for SEARCH/REPLACE blocks:
+<<<<<<< SEARCH
+[exact code to find]
+=======
+[code to replace with]
+>>>>>>> REPLACE
 
 Instruction:
 {instruction}

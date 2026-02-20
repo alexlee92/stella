@@ -1,4 +1,8 @@
-﻿import json
+﻿"""
+Autonomous agent loop for Stella.
+Handles planning, tool execution, and self-correction.
+"""
+import json
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -44,6 +48,10 @@ class AutoStep:
 
 
 class AutonomousAgent:
+    """
+    An agent that can run multiple steps to achieve a goal.
+    It uses a Planner to decide on actions and a Critique to validate them.
+    """
     def __init__(
         self,
         top_k: int = TOP_K_RESULTS,
@@ -335,7 +343,7 @@ You can use one action at a time:
 - read_file: {{"path": "relative/path.py"}}
 - read_many: {{"paths": ["a.py", "b.py"]}}
 - search_code: {{"pattern": "regex or text", "limit": 20}}
-- propose_edit: {{"path": "relative/path.py", "instruction": "change request"}}
+- propose_edit: {{"path": "relative/path.py", "instruction": "change request. You can use SEARCH/REPLACE blocks for surgical edits."}}
 - apply_edit: {{"path": "relative/path.py"}}
 - apply_all_staged: {{}}
 - run_tests: {{"command": "pytest -q"}}

@@ -1,13 +1,19 @@
-﻿import hashlib
+﻿"""
+Vector memory and indexing for Stella.
+Supports semantic search (Ollama embeddings) and lexical search (BM25).
+"""
+import hashlib
 import json
 import os
 import re
 from collections import OrderedDict, Counter
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
 import numpy as np
 import requests
+from tqdm import tqdm
 
 from agent.config import (
     CHUNK_OVERLAP,
@@ -336,6 +342,7 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
 
     files = get_source_files(project_root, extensions=SOURCE_EXTENSIONS)
     file_hashes = {}
+    all_chunks_to_embed = [] # list of (path, idx, text, symbol)
 
     for file_path in files:
         content = load_file_content(file_path)
@@ -345,12 +352,24 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
         file_hashes[file_path] = _file_hash(content)
         chunks = _chunk_for_file(file_path, content)
         for idx, (chunk, symbol) in enumerate(chunks):
-            vec = embed(chunk)
-            if vec is None:
-                continue
-            documents.append(
-                MemoryDoc(path=file_path, chunk_id=idx, text=chunk, symbol=symbol)
-            )
+            all_chunks_to_embed.append((file_path, idx, chunk, symbol))
+
+    print(f"[memory] embedding {len(all_chunks_to_embed)} chunks using parallel workers...")
+
+    def _embed_and_wrap(item):
+        path, idx, text, symbol = item
+        vec = embed(text)
+        if vec is None:
+            return None
+        return MemoryDoc(path=path, chunk_id=idx, text=text, symbol=symbol), vec
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(tqdm(executor.map(_embed_and_wrap, all_chunks_to_embed), total=len(all_chunks_to_embed), desc="Embedding chunks"))
+
+    for res in results:
+        if res:
+            doc, vec = res
+            documents.append(doc)
             vectors.append(vec)
 
     _rebuild_lexical_stats()

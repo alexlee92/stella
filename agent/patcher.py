@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 
 from agent.ast_merge import ast_merge_python_code
 from agent.config import DRY_RUN, PROJECT_ROOT
+from agent.partial_edits import parse_partial_edit, apply_multi_edit
 
 
 def _safe_abs(path: str) -> str:
@@ -64,6 +65,20 @@ def show_diff(old: str, new: str):
 
 
 def _prepare_new_code(abs_path: str, old_code: str, new_code: str):
+    # Try partial edits first (language agnostic)
+    edits = parse_partial_edit(new_code)
+    if edits:
+        patched = apply_multi_edit(old_code, edits)
+        if patched != old_code:
+            print(f"[patch] applied {len(edits)} partial edits")
+            # If it's python, still check syntax
+            if abs_path.endswith(".py"):
+                try:
+                    ast.parse(patched)
+                except SyntaxError as exc:
+                    raise ValueError(f"partial edit produced invalid python: {exc}")
+            return patched, {"partial_edits": True, "count": len(edits)}
+
     if abs_path.endswith(".py"):
         stripped = (new_code or "").lstrip()
         if stripped.startswith("```") or stripped.lower().startswith(
