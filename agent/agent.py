@@ -103,6 +103,45 @@ Contexte du projet:
     return ask_llm(prompt, task_type="analysis").strip()
 
 
+def ask_project_stream(question: str, k: int = TOP_K_RESULTS) -> str:
+    """Version streaming de ask_project — affiche les tokens en temps réel."""
+    from agent.llm_interface import ask_llm_stream_print
+
+    context = budget_context(question, k=max(4, k))
+    file_sections: list[str] = []
+    for ref in _extract_file_refs(question):
+        abs_path = _resolve_file_fuzzy(ref)
+        if abs_path:
+            try:
+                content = load_file_content(abs_path)
+                rel = os.path.relpath(abs_path, PROJECT_ROOT)
+                numbered = "\n".join(
+                    f"{i+1:4d} | {line}" for i, line in enumerate(content.splitlines())
+                )
+                file_sections.append(f"=== {rel} ===\n{numbered}")
+            except OSError:
+                pass
+
+    file_context = "\n\n".join(file_sections)
+    prompt = f"""Tu es un assistant de développement senior. Réponds en prose claire, PAS en JSON.
+
+Question: {question}
+{f'''
+Voici le contenu exact du fichier mentionné — analyse-le ligne par ligne:
+{file_context}
+
+Instructions:
+- Liste uniquement les vraies erreurs (NameError, ImportError, logique incorrecte).
+- Pour chaque erreur: numéro de ligne, description courte, correction proposée en code.
+- Si le fichier est correct, dis-le explicitement.
+- Ne réinvente pas des erreurs qui n'existent pas.
+''' if file_context else f'''
+Contexte du projet:
+{context}
+'''}"""
+    return ask_llm_stream_print(prompt, task_type="analysis")
+
+
 def propose_file_update(
     file_path: str, instruction: str, k: int = TOP_K_RESULTS
 ) -> str:

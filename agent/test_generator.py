@@ -1,12 +1,13 @@
 import os
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from agent.config import PROJECT_ROOT
 from agent.llm_interface import ask_llm
 from agent.patcher import apply_patch_non_interactive
 from agent.project_scan import load_file_content
 from agent.test_selector import suggest_test_path
+from agent.tooling import run_tests_detailed
 
 
 def _to_abs(path: str) -> str:
@@ -70,6 +71,27 @@ def build_test_targets(changed_files: List[str], limit: int = 3) -> List[Tuple[s
     return out
 
 
+def _get_coverage_report(source_path: str, test_path: str) -> Optional[str]:
+    """P4.3 — Exécute pytest-cov et retourne les lignes non couvertes.
+
+    Retourne None si pytest-cov n'est pas disponible ou si aucun test n'existe.
+    """
+    test_abs = os.path.join(PROJECT_ROOT, test_path)
+    if not os.path.exists(test_abs):
+        return None
+
+    # Convertit le chemin de fichier en module dot-notation pour --cov
+    module = source_path.replace("\\", "/").replace("/", ".").removesuffix(".py")
+    cmd = f"pytest {test_path} --cov={module} --cov-report=term-missing -q"
+    try:
+        code, output = run_tests_detailed(cmd, timeout=60)
+        if "no module named" in output.lower() or "ModuleNotFoundError" in output:
+            return None
+        return output[:3000]
+    except Exception:
+        return None
+
+
 def generate_tests_for_changes(changed_files: List[str], limit: int = 3) -> Dict[str, str]:
     generated: Dict[str, str] = {}
     targets = build_test_targets(changed_files, limit=limit)
@@ -82,6 +104,12 @@ def generate_tests_for_changes(changed_files: List[str], limit: int = 3) -> Dict
         if os.path.exists(test_abs):
             current_test = load_file_content(test_abs)
 
+        # P4.3 — coverage-guided context
+        coverage_report = _get_coverage_report(source_path, test_path)
+        coverage_section = ""
+        if coverage_report:
+            coverage_section = f"\nCoverage report (lines not yet covered):\n{coverage_report}\n"
+
         prompt = f"""
 You generate pytest tests for a changed Python file.
 Return only complete valid Python code for the target test file.
@@ -91,7 +119,7 @@ Requirements:
 - cover at least one edge case
 - keep tests deterministic
 - avoid network/filesystem side effects when possible
-
+{coverage_section}
 Source file: {source_path}
 Target test file: {test_path}
 

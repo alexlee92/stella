@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 from agent.ast_merge import ast_merge_python_code
 from agent.config import DRY_RUN, PROJECT_ROOT
 from agent.partial_edits import parse_partial_edit, apply_multi_edit
+from agent.ts_merge import ts_merge, is_js_ts_file  # P4.1
 
 
 def _safe_abs(path: str) -> str:
@@ -57,11 +58,40 @@ def find_latest_backup(filepath: str):
     return candidates[0]
 
 
-def show_diff(old: str, new: str):
-    diff = difflib.unified_diff(old.splitlines(), new.splitlines(), lineterm="")
-    print("\n[patch] proposed diff:\n")
-    for line in diff:
-        print(line)
+def _colorize_diff_line(line: str) -> str:
+    """Colore une ligne de diff avec des codes ANSI."""
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    CYAN = "\033[36m"
+    RESET = "\033[0m"
+    if line.startswith("+++") or line.startswith("---"):
+        return f"{CYAN}{line}{RESET}"
+    if line.startswith("@@"):
+        return f"{CYAN}{line}{RESET}"
+    if line.startswith("+"):
+        return f"{GREEN}{line}{RESET}"
+    if line.startswith("-"):
+        return f"{RED}{line}{RESET}"
+    return line
+
+
+def show_diff(old: str, new: str, filepath: str = "") -> str:
+    """Affiche un diff coloré et retourne le texte brut du diff."""
+    from_label = f"a/{filepath}" if filepath else "a/original"
+    to_label = f"b/{filepath}" if filepath else "b/modified"
+    diff_lines = list(difflib.unified_diff(
+        old.splitlines(), new.splitlines(),
+        fromfile=from_label, tofile=to_label, lineterm=""
+    ))
+    if not diff_lines:
+        print("\n[patch] aucune difference detectee\n")
+        return ""
+
+    print(f"\n[patch] proposed diff ({len([l for l in diff_lines if l.startswith('+') and not l.startswith('+++')])} additions, {len([l for l in diff_lines if l.startswith('-') and not l.startswith('---')])} deletions):\n")
+    for line in diff_lines:
+        print(_colorize_diff_line(line))
+    print()
+    return "\n".join(diff_lines)
 
 
 def _prepare_new_code(abs_path: str, old_code: str, new_code: str):
@@ -97,6 +127,13 @@ def _prepare_new_code(abs_path: str, old_code: str, new_code: str):
             print(f"[patch] ast-aware merge applied: {reason}")
             return merged, {"ast_merge": True, "reason": reason}
         return new_code, {"ast_merge": False, "reason": reason}
+
+    # P4.1 — JS/TS symbol-aware merge
+    if is_js_ts_file(abs_path) and old_code.strip():
+        merged, used, reason = ts_merge(old_code, new_code)
+        if used:
+            print(f"[patch] ts-merge applied: {reason}")
+            return merged, {"ts_merge": True, "reason": reason}
 
     return new_code, {"ast_merge": False, "reason": "non_python_file"}
 
@@ -161,9 +198,9 @@ def apply_patch_interactive(filepath: str, new_code: str):
         print(f"[patch] rejected: {exc}")
         return False
 
-    show_diff(old_code, prepared_code)
+    show_diff(old_code, prepared_code, filepath=filepath)
 
-    confirm = input("\nApply this patch? (y/n) ")
+    confirm = input("\nAppliquer ce patch ? [y/n/q] ")
     if confirm.lower() != "y":
         print("[patch] cancelled")
         return False
@@ -183,9 +220,70 @@ def apply_patch_interactive(filepath: str, new_code: str):
     return True
 
 
+def validate_cross_imports(file_to_code: Dict[str, str]) -> List[str]:
+    """P3.4 — Validate import coherence across files in a transaction.
+
+    Checks that if file A imports from file B, and both are being modified,
+    the symbols being imported actually exist in the new version of B.
+    Returns a list of warning strings (empty = all good).
+    """
+    warnings = []
+    py_files = {p: c for p, c in file_to_code.items() if p.endswith(".py")}
+    if len(py_files) < 2:
+        return warnings
+
+    # Build a map of symbols defined in each file
+    defined_symbols: Dict[str, set] = {}
+    for path, code in py_files.items():
+        try:
+            tree = ast.parse(code)
+            syms = set()
+            for node in tree.body:
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    syms.add(node.name)
+                elif isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            syms.add(target.id)
+            defined_symbols[path] = syms
+        except SyntaxError:
+            pass
+
+    # Check imports between transaction files
+    import re as _re
+    for path, code in py_files.items():
+        for m in _re.finditer(
+            r"^\s*from\s+([A-Za-z0-9_.]+)\s+import\s+(.+)$",
+            code,
+            flags=_re.MULTILINE,
+        ):
+            module = m.group(1)
+            imported = [s.strip().split(" as ")[0] for s in m.group(2).split(",")]
+            # Find which transaction file this module maps to
+            module_path = module.replace(".", "/") + ".py"
+            for tx_path in py_files:
+                norm = tx_path.replace("\\", "/")
+                if norm == module_path or norm.endswith("/" + module_path):
+                    syms = defined_symbols.get(tx_path, set())
+                    for imp in imported:
+                        imp = imp.strip()
+                        if imp and imp != "*" and imp not in syms:
+                            warnings.append(
+                                f"{path} imports '{imp}' from {tx_path} but it's not defined there"
+                            )
+    return warnings
+
+
 def apply_transaction(
     file_to_code: Dict[str, str],
 ) -> Tuple[bool, List[Tuple[str, str]], str]:
+    # P3.4 — Cross-import validation
+    cross_warnings = validate_cross_imports(file_to_code)
+    if cross_warnings:
+        print(f"\n  [!] Cross-import warnings:")
+        for w in cross_warnings[:5]:
+            print(f"    - {w}")
+
     backups = []
     try:
         for path, code in file_to_code.items():

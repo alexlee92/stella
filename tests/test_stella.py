@@ -72,8 +72,8 @@ class TestDetectTaskType:
         assert self._detect("créer une route API dans Flask avec base de données") == "backend"
 
     def test_fallback(self):
-        # Sans mot-clé reconnu, retourne "optimization" par défaut
-        assert self._detect("bonjour") == "optimization"
+        # Sans mot-clé reconnu, retourne "analysis" par défaut (pour réponses détaillées)
+        assert self._detect("bonjour") == "analysis"
 
     def test_system_prompt_contributes(self):
         # Le system_prompt compte aussi dans la détection

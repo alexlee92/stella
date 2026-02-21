@@ -97,3 +97,54 @@ def diff_summary(target: Optional[str] = None):
         1 for line in lines if line.startswith("-") and not line.startswith("---")
     )
     return f"changed_lines:+{added}/-{removed}\n{out[:3000]}"
+
+
+# --- P3.1 : Git avance ---
+
+def git_stash(message: Optional[str] = None):
+    """Sauvegarde le travail en cours dans le stash."""
+    if DRY_RUN:
+        return 0, f"[dry-run] git stash"
+    args = ["stash", "push"]
+    if message:
+        args.extend(["-m", message])
+    return _run_git(args)
+
+
+def git_stash_pop():
+    """Restaure le dernier stash."""
+    if DRY_RUN:
+        return 0, f"[dry-run] git stash pop"
+    return _run_git(["stash", "pop"])
+
+
+def git_stash_list():
+    """Liste les stashs disponibles."""
+    return _run_git(["stash", "list"])
+
+
+def git_log(file_path: Optional[str] = None, limit: int = 10):
+    """Historique des commits (optionnellement filtre par fichier)."""
+    args = ["log", f"--oneline", f"-{limit}", "--no-color"]
+    if file_path:
+        args.extend(["--", file_path])
+    code, out = _run_git(args)
+    return out if code == 0 else f"git log error: {out}"
+
+
+def git_blame(file_path: str, start_line: int = 0, end_line: int = 0):
+    """Qui a ecrit quoi — blame sur un fichier (optionnellement un range de lignes)."""
+    args = ["blame", "--no-color"]
+    if start_line > 0 and end_line > 0:
+        args.extend(["-L", f"{start_line},{end_line}"])
+    args.append(file_path)
+    code, out = _run_git(args)
+    return out[:4000] if code == 0 else f"git blame error: {out}"
+
+
+def git_diff_staged():
+    """Diff des fichiers stages (git add)."""
+    code, out = _run_git(["diff", "--cached"])
+    if code != 0:
+        return f"git diff --cached error: {out}"
+    return out[:3000]

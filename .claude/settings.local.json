@@ -4,7 +4,10 @@
       "Bash(python:*)",
       "Bash(PYTHONIOENCODING=utf-8 python:*)",
       "Bash(curl:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git push:*)",
+      "Bash(wc:*)",
+      "Bash(tail:*)"
     ]
   }
 }

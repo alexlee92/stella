@@ -6,45 +6,40 @@ Handles planning, tool execution, and self-correction.
 import json
 import os
 import re
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional
 
 from agent.action_schema import (
-    ALLOWED_ACTIONS,
     validate_critique_schema,
     validate_decision_schema,
 )
-from agent.agent import apply_suggestion, patch_risk, propose_file_update
+from agent.agent import patch_risk
 from agent.config import (
-    AUTO_TEST_COMMAND,
     MAX_RETRIES_JSON,
     PROJECT_ROOT,
     TOP_K_RESULTS,
+    _CFG,
+)
+from agent.decision_normalizer import (
+    autocorrect_decision_schema,
+    coerce_decision,
+    extract_all_target_files_from_goal,
+    extract_target_file_from_goal,
+    infer_fallback_action,
+    is_code_edit_goal,
+    is_allowed_edit_path,
+    is_git_goal,
+    normalize_critique,
+    normalize_decision,
 )
 from agent.event_logger import EventLogger
-from agent.git_tools import commit_all, create_branch, diff_summary
+from agent.executor import ActionExecutor
 from agent.llm_interface import ask_llm_json
-from agent.deps import detect_and_install_deps
-from agent.memory import index_file_in_session, remember_fix_strategy, search_memory
-from agent.patcher import apply_transaction, restore_backup, rollback_transaction
-from agent.project_map import render_project_map
-from agent.quality import (
-    run_quality_gate,
-    run_quality_gate_normalized,
-    run_quality_pipeline_normalized,
-)
-from agent.test_generator import apply_generated_tests
+from agent.memory import search_memory
 from agent.test_selector import suggest_test_path
-from agent.tooling import (
-    list_files,
-    list_python_files,
-    read_file,
-    read_many,
-    run_tests,
-    search_code,
-    write_new_file,
-)
+from agent.tooling import list_python_files
 
 
 @dataclass
@@ -67,10 +62,19 @@ class AutonomousAgent:
         top_k: int = TOP_K_RESULTS,
         max_steps: int = 8,
         logger: Optional[Callable[[dict], None]] = None,
+        interactive: bool = False,
+        config: Optional[Dict] = None,
+        llm_fn: Optional[Callable] = None,
+        memory_fn: Optional[Callable] = None,
     ):
+        # P2.5 — Dependency injection: accept config/llm/memory as arguments
+        self.config = config or dict(_CFG)
+        self._llm_fn = llm_fn or ask_llm_json
+        self._memory_fn = memory_fn or search_memory
         self.top_k = top_k
         self.max_steps = max_steps
         self.logger = logger
+        self.interactive = interactive
         self.steps: List[AutoStep] = []
         self.staged_edits: Dict[str, str] = {}
         self.last_backups = []
@@ -88,254 +92,57 @@ class AutonomousAgent:
         self._generate_tests = False
         self._has_validation_action = False
         self._bootstrapped_code_edit = False
+        self._executor = ActionExecutor(self)
 
+    # P2.1 — Delegate to decision_normalizer module
     def _normalize_decision(self, decision: dict) -> dict:
-        if not isinstance(decision, dict):
-            return decision
-
-        root_args = {
-            k: v
-            for k, v in decision.items()
-            if k
-            not in {
-                "action",
-                "tool",
-                "name",
-                "decision",
-                "reason",
-                "why",
-                "args",
-                "parameters",
-                "input",
-            }
-            and not (isinstance(k, str) and k.startswith("_"))
-        }
-
-        action = (
-            decision.get("action")
-            or decision.get("tool")
-            or decision.get("name")
-            or decision.get("decision")
-            or ""
-        )
-        action = str(action).strip().lower().replace("-", "_")
-        alias = {
-            "read": "read_file",
-            "read_files": "read_many",
-            "search": "search_code",
-            "grep": "search_code",
-            "create": "create_file",
-            "new_file": "create_file",
-            "write_file": "create_file",
-            "generate_file": "create_file",
-            "create_module": "create_file",
-            "write_new_file": "create_file",
-            "edit": "propose_edit",
-            "propose": "propose_edit",
-            "propose_patch": "propose_edit",
-            "apply_patch": "apply_edit",
-            "apply": "apply_edit",
-            "apply_staged": "apply_all_staged",
-            "test": "run_tests",
-            "run_test": "run_tests",
-            "quality": "run_quality",
-            "run_quality_pipeline": "run_quality",
-            "map": "project_map",
-            "branch": "git_branch",
-            "commit": "git_commit",
-            "diff": "git_diff",
-            "done": "finish",
-            "final": "finish",
-        }
-        action = alias.get(action, action)
-
-        reason = decision.get("reason") or decision.get("why") or "auto_normalized"
-        args = decision.get("args")
-        if args is None:
-            args = decision.get("parameters")
-        if args is None:
-            args = decision.get("input")
-        if not isinstance(args, dict):
-            args = {}
-
-        args = {**root_args, **dict(args)}
-        if action in {"list_files", "search_code"}:
-            limit = args.get("limit")
-            if isinstance(limit, str) and limit.isdigit():
-                args["limit"] = int(limit)
-            elif isinstance(limit, float):
-                args["limit"] = int(limit)
-        if action == "read_many" and isinstance(args.get("paths"), str):
-            args["paths"] = [args["paths"]]
-        if action == "search_code" and "pattern" not in args:
-            query = args.get("query") or args.get("text")
-            if isinstance(query, str) and query.strip():
-                args["pattern"] = query
-        if action == "run_tests" and "command" not in args:
-            cmd = args.get("test_command")
-            if isinstance(cmd, str) and cmd.strip():
-                args["command"] = cmd
-        if action == "finish" and "summary" not in args:
-            summary = args.get("message") or reason
-            if isinstance(summary, str) and summary.strip():
-                args["summary"] = summary
-        if action in {
-            "apply_all_staged",
-            "run_quality",
-            "project_map",
-            "git_diff",
-        }:
-            args = {}
-
-        if action not in ALLOWED_ACTIONS:
-            if isinstance(args.get("path"), str) and isinstance(
-                args.get("instruction"), str
-            ):
-                action = "propose_edit"
-            elif isinstance(args.get("paths"), list):
-                action = "read_many"
-            elif isinstance(args.get("pattern"), str):
-                action = "search_code"
-            elif isinstance(args.get("path"), str):
-                action = "read_file"
-            elif isinstance(args.get("summary"), str):
-                action = "finish"
-
-        allowed = {
-            "list_files": {"contains", "ext", "limit"},
-            "read_file": {"path"},
-            "read_many": {"paths"},
-            "search_code": {"pattern", "limit"},
-            "create_file": {"path", "description"},
-            "propose_edit": {"path", "instruction"},
-            "apply_edit": {"path"},
-            "apply_all_staged": set(),
-            "run_tests": {"command"},
-            "run_quality": set(),
-            "project_map": set(),
-            "git_branch": {"name"},
-            "git_commit": {"message"},
-            "git_diff": set(),
-            "finish": {"summary"},
-        }.get(action, set(args.keys()))
-        args = {k: v for k, v in args.items() if k in allowed}
-
-        normalized = {"action": action, "reason": str(reason), "args": args}
-        for k, v in decision.items():
-            if isinstance(k, str) and k.startswith("_"):
-                normalized[k] = v
-        return normalized
+        return normalize_decision(decision)
 
     def _normalize_critique(self, critique: dict) -> dict:
-        if not isinstance(critique, dict):
-            return critique
-        approve = critique.get("approve")
-        if isinstance(approve, str):
-            approve = approve.strip().lower() in {"true", "1", "yes", "ok"}
-        if not isinstance(approve, bool):
-            approve = False
-
-        reason = critique.get("reason") or critique.get("comment") or "normalized"
-        patched = critique.get("patched_decision")
-        if patched is None:
-            patched = critique.get("patch")
-        if not isinstance(patched, dict):
-            patched = None
-        else:
-            patched = self._normalize_decision(patched)
-
-        normalized = {
-            "approve": approve,
-            "reason": str(reason),
-            "patched_decision": patched,
-        }
-        for k, v in critique.items():
-            if isinstance(k, str) and k.startswith("_"):
-                normalized[k] = v
-        return normalized
+        return normalize_critique(critique)
 
     def _infer_fallback_action(self, goal: str, args: dict) -> tuple[str, dict]:
-        low_goal = (goal or "").lower()
-        target = self._extract_target_file_from_goal(goal)
-        if target:
-            return "read_file", {"path": target}
-
-        text_blob = " ".join(
-            str(v) for v in args.values() if isinstance(v, (str, int, float, bool))
-        ).lower()
-        combined = f"{low_goal} {text_blob}"
-
-        if any(k in combined for k in ["test", "pytest", "coverage", "fiabilite"]):
-            return "search_code", {"pattern": "pytest|test_|_test.py", "limit": 20}
-        if any(k in combined for k in ["performance", "latence", "speed", "optimiz"]):
-            return "search_code", {
-                "pattern": "timeout|sleep|requests.post|subprocess.run",
-                "limit": 20,
-            }
-        if any(k in combined for k in ["refactor", "risk", "analyse", "architecture"]):
-            return "list_files", {"limit": 40, "ext": ".py"}
-        if any(k in combined for k in ["pr", "commit", "branch", "git"]):
-            return "git_diff", {}
-        return "list_files", {"limit": 40, "ext": ".py"}
+        return infer_fallback_action(goal, args)
 
     def _autocorrect_decision_schema(self, goal: str, decision: dict, msg: str) -> dict:
-        if not isinstance(decision, dict):
-            return decision
-        corrected = self._normalize_decision(decision)
-        action = corrected.get("action")
-        args = corrected.get("args", {}) or {}
-        if not isinstance(args, dict):
-            args = {}
+        return autocorrect_decision_schema(goal, decision, msg)
 
-        if "invalid action" in msg:
-            action, inferred_args = self._infer_fallback_action(goal, args)
-            corrected["action"] = action
-            args = dict(inferred_args)
+    def _confirm_apply(self, paths: List[str]) -> bool:
+        """P1.2 — Demande confirmation à l'utilisateur avant d'appliquer des patches.
 
-        if action == "read_file" and "missing required arg 'path'" in msg:
-            path = args.get("file") or args.get("target")
-            if isinstance(path, str) and path:
-                args["path"] = path
-            else:
-                target = self._extract_target_file_from_goal(goal)
-                if target:
-                    args["path"] = target
-        elif action == "read_many" and "missing required arg 'paths'" in msg:
-            path = args.get("path")
-            if isinstance(path, str) and path:
-                args["paths"] = [path]
-            else:
-                target = self._extract_target_file_from_goal(goal)
-                if target:
-                    args["paths"] = [target]
-        elif action == "propose_edit":
-            if "missing required arg 'path'" in msg:
-                path = args.get("file") or args.get("target")
-                if isinstance(path, str) and path:
-                    args["path"] = path
-                else:
-                    target = self._extract_target_file_from_goal(goal)
-                    if target:
-                        args["path"] = target
-            if "missing required arg 'instruction'" in msg:
-                instruction = (
-                    args.get("prompt")
-                    or args.get("change")
-                    or decision.get("reason", "")
-                )
-                if isinstance(instruction, str) and instruction:
-                    args["instruction"] = instruction
-                elif isinstance(goal, str) and goal.strip():
-                    args["instruction"] = goal[:500]
-        elif action == "finish" and "unexpected arg 'reason'" in msg:
-            summary = args.get("reason")
-            if isinstance(summary, str) and summary:
-                args.pop("reason", None)
-                args["summary"] = summary
-
-        corrected["args"] = args
-        corrected["reason"] = str(corrected.get("reason") or "auto_corrected_schema")
-        return corrected
+        En mode non-interactif, retourne toujours True.
+        """
+        if not self.interactive:
+            return True
+        files_list = ", ".join(paths[:5])
+        if len(paths) > 5:
+            files_list += f" (+{len(paths) - 5} autres)"
+        try:
+            answer = input(
+                f"\n  [?] Appliquer les modifications sur {files_list} ? [y/n/d(iff)] "
+            ).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print("\n  [stella] Annulation.")
+            return False
+        if answer == "d":
+            # Afficher les diffs pour chaque fichier
+            from agent.patcher import show_diff
+            from agent.project_scan import load_file_content
+            for path in paths:
+                code = self.staged_edits.get(path)
+                if code is None:
+                    continue
+                abs_path = os.path.join(PROJECT_ROOT, path) if not os.path.isabs(path) else path
+                try:
+                    old_code = load_file_content(abs_path)
+                except Exception:
+                    old_code = ""
+                show_diff(old_code, code, filepath=path)
+            try:
+                answer = input("  [?] Appliquer ? [y/n] ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                return False
+        return answer in {"y", "yes", "o", "oui"}
 
     def _session_context(self, max_chars_per_file: int = 2000) -> str:
         """Retourne le contenu des fichiers créés/modifiés dans cette session."""
@@ -348,7 +155,7 @@ class AutonomousAgent:
         return "\n\n".join(chunks)
 
     def _summarize_context(self, goal: str) -> str:
-        docs = search_memory(goal, k=self.top_k)
+        docs = self._memory_fn(goal, k=self.top_k)
         if not docs:
             return "No indexed context found"
 
@@ -373,7 +180,7 @@ class AutonomousAgent:
         def _add_docs(query: str):
             if not query.strip():
                 return
-            for fpath, content in search_memory(query, k=self.top_k):
+            for fpath, content in self._memory_fn(query, k=self.top_k):
                 rel = _os.path.relpath(fpath, ".").replace("\\", "/")
                 if rel not in seen_paths:
                     seen_paths.add(rel)
@@ -500,60 +307,18 @@ Rules:
 - keep decision useful for the goal.
 """
 
+    # P2.1 — Delegate to decision_normalizer module
     def _extract_target_file_from_goal(self, goal: str) -> Optional[str]:
-        low = goal.strip()
-        m = re.search(r"([A-Za-z0-9_./\\-]+\.[a-zA-Z]{1,5})", low)
-        if not m:
-            return None
-        path = m.group(1).replace("\\", "/")
-        if path.startswith("./"):
-            path = path[2:]
-        return path
+        return extract_target_file_from_goal(goal)
 
     def _extract_all_target_files_from_goal(self, goal: str) -> List[str]:
-        """Extrait les chemins de fichiers à CRÉER depuis le goal.
-
-        Exclut les fichiers qui existent déjà sur disque (ils sont seulement
-        référencés comme contexte, pas comme cibles de création).
-        """
-        found = re.findall(r"([A-Za-z0-9_./\\-]+\.[a-zA-Z]{1,5})", goal)
-        seen: set[str] = set()
-        out: List[str] = []
-        for raw in found:
-            path = raw.replace("\\", "/")
-            if path.startswith("./"):
-                path = path[2:]
-            # Filtrer les faux positifs (e.g. "1.0", "e.g")
-            if not re.match(
-                r".+\.(py|js|ts|jsx|tsx|html|css|scss|json|yaml|yml|toml|sql|md)$", path
-            ):
-                continue
-            # Ne pas inclure les fichiers qui existent déjà sur disque
-            abs_path = os.path.join(PROJECT_ROOT, path)
-            if os.path.isfile(abs_path):
-                continue
-            if path not in seen:
-                seen.add(path)
-                out.append(path)
-        return out
+        return extract_all_target_files_from_goal(goal)
 
     def _is_code_edit_goal(self, goal: str) -> bool:
-        low = (goal or "").lower()
-        return "code-edit" in low or ("dans " in low and ".py" in low)
+        return is_code_edit_goal(goal)
 
     def _is_allowed_edit_path(self, goal: str, path: str) -> bool:
-        target = self._extract_target_file_from_goal(goal)
-        if not target:
-            return True
-        norm = (path or "").replace("\\", "/").lower()
-        target_norm = target.replace("\\", "/").lower()
-        if norm == target_norm:
-            return True
-        if norm == suggest_test_path(target).replace("\\", "/").lower():
-            return True
-        if norm.startswith("tests/"):
-            return True
-        return False
+        return is_allowed_edit_path(goal, path)
 
     def _bootstrap_code_edit_decisions(self, goal: str, auto_apply: bool):
         if self._bootstrapped_code_edit:
@@ -616,33 +381,10 @@ Rules:
         self._bootstrapped_code_edit = True
 
     def _is_git_goal(self, goal: str) -> bool:
-        low = (goal or "").lower()
-        return any(k in low for k in ["git", "commit", "branch", "pr", "pull request"])
+        return is_git_goal(goal)
 
     def _coerce_decision(self, goal: str, decision: dict) -> dict:
-        action = decision.get("action", "")
-        args = decision.get("args", {}) or {}
-
-        if action.startswith("git_") and not self._is_git_goal(goal):
-            return {
-                "action": "search_code",
-                "reason": "coerced_non_git_goal",
-                "args": {
-                    "pattern": "requests.post|subprocess.run|timeout|sleep",
-                    "limit": 20,
-                },
-            }
-
-        if action == "list_files" and args.get("contains"):
-            args = dict(args)
-            args["contains"] = ""
-            return {
-                "action": "list_files",
-                "reason": "coerced_broad_listing",
-                "args": args,
-            }
-
-        return decision
+        return coerce_decision(goal, decision)
 
     def _critique_prompt(self, goal: str, decision: dict) -> str:
         return f"""
@@ -725,6 +467,27 @@ Rules:
             "finish": 0,
         }
         return costs.get(action, 2)
+
+    def _action_timeout(self, action: str) -> int:
+        """P2.3 — Timeout spécifique par type d'action (en secondes)."""
+        timeouts = {
+            "list_files": 10,
+            "read_file": 10,
+            "read_many": 15,
+            "search_code": 15,
+            "create_file": 180,
+            "propose_edit": 180,
+            "apply_edit": 60,
+            "apply_all_staged": 90,
+            "run_tests": 300,
+            "run_quality": 300,
+            "project_map": 15,
+            "git_branch": 10,
+            "git_commit": 30,
+            "git_diff": 10,
+            "finish": 5,
+        }
+        return timeouts.get(action, 60)
 
     def _is_stalled_step(self, action: str, result: str) -> bool:
         low = (result or "").lower()
@@ -839,7 +602,7 @@ Rules:
             )
             return forced
 
-        raw_decision = ask_llm_json(
+        raw_decision = self._llm_fn(
             self._planner_prompt(goal),
             retries=MAX_RETRIES_JSON,
             prompt_class="planner",
@@ -880,7 +643,7 @@ Rules:
                 )
                 decision = corrected
             else:
-                repaired = ask_llm_json(
+                repaired = self._llm_fn(
                     self._schema_repair_prompt(goal, decision, msg),
                     retries=1,
                     prompt_class="planner_schema_repair",
@@ -910,7 +673,7 @@ Rules:
         import time as _time
 
         _t0_critique = _time.time()
-        raw_critique = ask_llm_json(
+        raw_critique = self._llm_fn(
             self._critique_prompt(goal, decision),
             retries=1,  # 1 seul retry : si échec, on auto-approuve (fallback sûr)
             prompt_class="critique",
@@ -1185,7 +948,8 @@ Rules:
                 "finish": "finalise la tâche",
             }
             label = _action_labels.get(action, action)
-            print(f"  [{index}/{self.max_steps}] {label}...", flush=True)
+            elapsed_so_far = round((datetime.utcnow() - start_ts).total_seconds(), 1)
+            print(f"  [{index}/{self.max_steps}] {label}... ({elapsed_so_far}s)", flush=True)
 
             if (
                 index == self.max_steps
@@ -1265,500 +1029,48 @@ Rules:
             self._decision_signatures.append(self._signature(action, args))
             step = AutoStep(index, action, reason, "")
 
+            # P2.1 — Delegate action execution to ActionExecutor
             try:
-                if action == "list_files":
-                    out = list_files(
-                        limit=int(args.get("limit", 50)),
-                        contains=args.get("contains", ""),
-                        ext=args.get("ext", ".py"),
+                result = self._executor.execute(
+                    action, args, goal=goal, auto_apply=auto_apply, index=index,
+                )
+                # Special handling for apply_edit without staged edit
+                if action == "apply_edit" and result == "[no_staged_edit]":
+                    step.result = "No staged edit for this file"
+                    self._record(step)
+                    self._record(AutoStep(
+                        index, "finish", "invalid_action_sequence",
+                        "apply_edit requested without staged edit; stopping",
+                    ))
+                    return self.render_summary("apply_edit requested without staged edit; stopping")
+                # Special handling for git_commit redundancy
+                if action == "git_commit" and "nothing to commit" in result.lower():
+                    recent_nothing = any(
+                        s.action == "git_commit" and "nothing to commit" in s.result.lower()
+                        for s in self.steps[-2:]
                     )
-                    step.result = "\n".join(out) if out else "No files found"
-
-                elif action == "read_file":
-                    step.result = read_file(args.get("path", ""))
-
-                elif action == "read_many":
-                    paths = args.get("paths", [])
-                    step.result = (
-                        read_many(paths)
-                        if isinstance(paths, list) and paths
-                        else "Missing paths list"
-                    )
-
-                elif action == "search_code":
-                    pattern = args.get("pattern", "")
-                    limit = int(args.get("limit", 20))
-                    matches = search_code(pattern, limit=limit) if pattern else []
-                    step.result = "\n".join(matches) if matches else "No matches"
-
-                elif action == "create_file":
-                    path = args.get("path", "")
-                    description = args.get("description", "")
-                    if not path or not description:
-                        step.result = (
-                            "[error] create_file requires 'path' and 'description'"
-                        )
-                    elif path in self.staged_edits:
-                        # Fichier déjà créé dans cette session → skip
-                        step.result = f"Skipped: {path} already created this session"
-                    elif os.path.isfile(os.path.join(PROJECT_ROOT, path)):
-                        # Fichier pré-existant sur disque → skip, puis vérifier si tous les
-                        # fichiers cibles du goal existent → finish automatique
-                        step.result = f"Skipped: {path} already exists on disk (use fix to modify it)"
-                        all_targets = self._extract_all_target_files_from_goal(goal)
-                        if not all_targets and not self._forced_decisions:
-                            # Tous les fichiers mentionnés dans le goal existent déjà → finish
-                            self._forced_decisions.insert(
-                                0,
-                                {
-                                    "action": "finish",
-                                    "reason": "all_target_files_already_exist",
-                                    "args": {
-                                        "summary": f"All target files already exist on disk: {path}"
-                                    },
-                                },
-                            )
-                    else:
-                        print(f"     génère le contenu de {path}...", flush=True)
-                        content = self._generate_file_content(goal, path, description)
-                        if not content:
-                            step.result = (
-                                f"[error] LLM returned empty content for {path}"
-                            )
-                        else:
-                            write_result = write_new_file(path, content)
-                            if write_result.startswith("ok:"):
-                                self.staged_edits[path] = content
-                                risk = patch_risk(path, content)
-                                # Indexer immédiatement le fichier créé dans la mémoire
-                                # pour qu'il soit trouvable par les prochaines créations.
-                                n_chunks = index_file_in_session(path, content)
-                                # Détecter et installer les dépendances manquantes.
-                                deps_result = detect_and_install_deps(path, content)
-                                step.result = (
-                                    f"Created {path} ({len(content)} chars), "
-                                    f"risk={risk['level']}:{risk['score']}, "
-                                    f"indexed={n_chunks} chunks, "
-                                    f"{deps_result}"
-                                )
-                                # Enchaîner automatiquement les autres fichiers du goal.
-                                all_targets = self._extract_all_target_files_from_goal(
-                                    goal
-                                )
-                                pending = [
-                                    t for t in all_targets if t not in self.staged_edits
-                                ]
-                                if pending:
-                                    # Forcer le prochain fichier comme prochaine décision
-                                    next_path = pending[0]
-                                    self._forced_decisions.insert(
-                                        0,
-                                        {
-                                            "action": "create_file",
-                                            "reason": "multi_file_goal_continuation",
-                                            "args": {
-                                                "path": next_path,
-                                                "description": (
-                                                    f"{goal[:400]} "
-                                                    f"(already created: {', '.join(self.staged_edits.keys())})"
-                                                ),
-                                            },
-                                        },
-                                    )
-                                else:
-                                    # Tous les fichiers du goal sont créés → finish
-                                    created = ", ".join(self.staged_edits.keys())
-                                    self._forced_decisions.insert(
-                                        0,
-                                        {
-                                            "action": "finish",
-                                            "reason": "all_files_created",
-                                            "args": {"summary": f"Created: {created}"},
-                                        },
-                                    )
-                            else:
-                                step.result = f"[error] write failed: {write_result}"
-
-                elif action == "propose_edit":
-                    path = args.get("path", "")
-                    instruction = args.get("instruction", "")
-                    if self._is_code_edit_goal(goal) and not self._is_allowed_edit_path(
-                        goal, path
-                    ):
-                        target = self._extract_target_file_from_goal(goal)
-                        if target:
-                            path = target
-                            instruction = (
-                                f"{instruction}\nKeep changes strictly in {target}."
-                            )
-                    code = propose_file_update(path, instruction, k=self.top_k)
-                    self.staged_edits[path] = code
-                    risk = patch_risk(path, code)
-                    step.result = f"Staged edit for {path} ({len(code)} chars), risk={risk['level']}:{risk['score']}"
-                    if self._fix_until_green and auto_apply and path:
-                        self._forced_decisions = [
-                            {
-                                "action": "apply_edit",
-                                "reason": "fix_until_green_apply_staged",
-                                "args": {"path": path},
-                            },
-                            {
-                                "action": "run_quality",
-                                "reason": "fix_until_green_verify_patch",
-                                "args": {},
-                            },
-                        ] + self._forced_decisions
-                    elif self._generate_tests and path.endswith(".py"):
-                        test_path = suggest_test_path(path)
-                        if test_path not in self.staged_edits:
-                            self._forced_decisions = [
-                                {
-                                    "action": "propose_edit",
-                                    "reason": "with_tests_auto_target",
-                                    "args": {
-                                        "path": test_path,
-                                        "instruction": (
-                                            f"Add focused pytest tests for {path} with one nominal case "
-                                            "and one edge case."
-                                        ),
-                                    },
-                                }
-                            ] + self._forced_decisions
-
-                elif action == "apply_edit":
-                    path = args.get("path", "")
-                    code = self.staged_edits.get(path)
-                    if not path or code is None:
-                        self.event_logger.log_failure(
-                            "tool",
-                            "apply_edit_without_staged",
-                            {
-                                "path": path,
-                                "staged_files": list(self.staged_edits.keys()),
-                            },
-                        )
-                        step.result = "No staged edit for this file"
+                    if recent_nothing:
+                        step.result = result
                         self._record(step)
-                        self._record(
-                            AutoStep(
-                                index,
-                                "finish",
-                                "invalid_action_sequence",
-                                "apply_edit requested without staged edit; stopping",
-                            )
-                        )
-                        return self.render_summary(
-                            "apply_edit requested without staged edit; stopping"
-                        )
-                    elif not auto_apply:
-                        step.result = (
-                            f"Staged only for {path}. Re-run with --apply to apply."
-                        )
-                    else:
-                        patch_result = apply_suggestion(path, code, interactive=False)
-                        backup_path = (
-                            patch_result.get("backup_path")
-                            if isinstance(patch_result, dict)
-                            else None
-                        )
-                        changed_scope = [path]
-                        if self._generate_tests and path.endswith(".py"):
-                            gen = apply_generated_tests([path], limit=2)
-                            generated = gen.get("applied", [])
-                            if generated:
-                                changed_scope.extend(generated)
-                                self.event_logger.log(
-                                    "generated_tests",
-                                    {
-                                        "source_files": [path],
-                                        "generated_files": generated,
-                                        "quality_ok_rate": gen.get(
-                                            "quality_ok_rate", 0.0
-                                        ),
-                                    },
-                                )
-                                step.result = (
-                                    f"Applied {path}; generated_tests={','.join(generated)}; "
-                                    f"tests_quality_ok_rate={gen.get('quality_ok_rate', 0.0)}"
-                                )
-
-                        ok, details = run_quality_gate(
-                            changed_files=changed_scope, command_timeout=90
-                        )
-                        if ok:
-                            if "generated_tests=" in step.result:
-                                step.result += "; quality gate passed"
-                            else:
-                                step.result = f"Applied {path}; quality gate passed"
-                        else:
-                            self.event_logger.log_failure(
-                                "test",
-                                "quality_gate_failed_after_apply_edit",
-                                {"path": path, "details": details},
-                            )
-                            if self._fix_until_green:
-                                flat_rows = []
-                                flat_rows.extend(details.get("fast", []))
-                                flat_rows.extend(details.get("full", []))
-                                normalized = run_quality_pipeline_normalized(
-                                    mode="fast",
-                                    changed_files=[path],
-                                    command_timeout=90,
-                                )
-                                failure_text = json.dumps(
-                                    normalized if normalized else {"rows": flat_rows},
-                                    ensure_ascii=False,
-                                )
-                                scheduled = self._enqueue_replan_after_failure(
-                                    "quality",
-                                    failure_text,
-                                    auto_apply=auto_apply,
-                                    fallback_path=path,
-                                )
-                                if not scheduled:
-                                    self._forced_decisions.insert(
-                                        0,
-                                        {
-                                            "action": "finish",
-                                            "reason": "stop_max_replan_attempts",
-                                            "args": {
-                                                "summary": "Stopped: max replan attempts reached after quality failures"
-                                            },
-                                        },
-                                    )
-                                step.result = (
-                                    f"Applied {path}; quality gate failed; replan queued "
-                                    "in fix-until-green mode"
-                                )
-                            else:
-                                restore_ok = restore_backup(path, backup_path)
-                                if not restore_ok:
-                                    self.event_logger.log_failure(
-                                        "rollback",
-                                        "rollback_failed_after_apply_edit",
-                                        {"path": path, "backup_path": backup_path},
-                                    )
-                                step.result = f"Applied {path}; quality gate failed; rollback={'ok' if restore_ok else 'failed'}"
-
-                elif action == "apply_all_staged":
-                    if not self.staged_edits:
-                        step.result = "No staged edits"
-                    elif not auto_apply:
-                        step.result = (
-                            "Staged only. Re-run with --apply to apply transaction."
-                        )
-                    else:
-                        success, backups, msg = apply_transaction(self.staged_edits)
-                        if not success:
-                            self.event_logger.log_failure(
-                                "tool", "apply_transaction_failed", {"message": msg}
-                            )
-                            step.result = msg
-                        else:
-                            changed = list(self.staged_edits.keys())
-                            changed_scope = list(changed)
-                            if self._generate_tests:
-                                gen = apply_generated_tests(changed, limit=3)
-                                generated = gen.get("applied", [])
-                                if generated:
-                                    changed_scope.extend(generated)
-                                    self.event_logger.log(
-                                        "generated_tests",
-                                        {
-                                            "source_files": changed,
-                                            "generated_files": generated,
-                                            "quality_ok_rate": gen.get(
-                                                "quality_ok_rate", 0.0
-                                            ),
-                                        },
-                                    )
-                                    step.result = (
-                                        "Transaction applied; generated_tests="
-                                        + ",".join(generated)
-                                        + f"; tests_quality_ok_rate={gen.get('quality_ok_rate', 0.0)}"
-                                    )
-
-                            ok, details = run_quality_gate(
-                                changed_files=changed_scope, command_timeout=90
-                            )
-                            if ok:
-                                self.last_backups = backups
-                                if "generated_tests=" in step.result:
-                                    step.result += "; quality gate passed"
-                                else:
-                                    step.result = (
-                                        "Transaction applied; quality gate passed"
-                                    )
-                            else:
-                                self.event_logger.log_failure(
-                                    "test",
-                                    "quality_gate_failed_after_transaction",
-                                    {"details": details},
-                                )
-                                if self._fix_until_green:
-                                    normalized = run_quality_gate_normalized(
-                                        changed_files=changed, command_timeout=90
-                                    )
-                                    scheduled = self._enqueue_replan_after_failure(
-                                        "quality",
-                                        json.dumps(normalized, ensure_ascii=False),
-                                        auto_apply=auto_apply,
-                                        fallback_path=changed[0] if changed else None,
-                                    )
-                                    if not scheduled:
-                                        self._forced_decisions.insert(
-                                            0,
-                                            {
-                                                "action": "finish",
-                                                "reason": "stop_max_replan_attempts",
-                                                "args": {
-                                                    "summary": "Stopped: max replan attempts reached after quality failures"
-                                                },
-                                            },
-                                        )
-                                    step.result = (
-                                        "Transaction applied then failed quality gate; "
-                                        "replan queued in fix-until-green mode"
-                                    )
-                                else:
-                                    rb = rollback_transaction(backups)
-                                    if not rb:
-                                        self.event_logger.log_failure(
-                                            "rollback",
-                                            "rollback_transaction_failed",
-                                            {},
-                                        )
-                                    step.result = f"Transaction applied then failed quality gate; rollback={'ok' if rb else 'failed'}"
-
-                elif action == "run_tests":
-                    self._has_validation_action = True
-                    command = args.get("command", AUTO_TEST_COMMAND)
-                    step.result = run_tests(command)
-                    if "exit_code=0" not in step.result:
-                        self.event_logger.log_failure(
-                            "test",
-                            "run_tests_non_zero",
-                            {"command": command, "result": step.result[:500]},
-                        )
-                        scheduled = self._enqueue_replan_after_failure(
-                            "tests",
-                            step.result,
-                            auto_apply=auto_apply,
-                        )
-                        if not scheduled:
-                            self._forced_decisions.insert(
-                                0,
-                                {
-                                    "action": "finish",
-                                    "reason": "stop_max_replan_attempts",
-                                    "args": {
-                                        "summary": "Stopped: max replan attempts reached after test failures"
-                                    },
-                                },
-                            )
-                    elif self._replan_attempts > 0:
-                        recent = " | ".join(
-                            f"{s.action}:{s.reason}" for s in self.steps[-6:]
-                        )
-                        remember_fix_strategy(
-                            issue=f"tests failure recovered for goal: {goal[:120]}",
-                            strategy=recent,
-                            files=list(self.staged_edits.keys())[:6],
-                        )
-
-                elif action == "run_quality":
-                    self._has_validation_action = True
-                    changed_scope = list(self.staged_edits.keys()) or None
-                    normalized = run_quality_pipeline_normalized(
-                        mode="fast" if changed_scope else "full",
-                        changed_files=changed_scope,
-                        command_timeout=90,
-                    )
-                    ok = bool(normalized.get("ok"))
-                    details = normalized.get("raw", [])
-                    step.result = f"ok={ok}; failed_stage={normalized.get('failed_stage')}; details={details}"
-                    if not ok:
-                        self.event_logger.log_failure(
-                            "test", "run_quality_failed", {"details": normalized}
-                        )
-                        stage = normalized.get("failed_stage") or "quality"
-                        scheduled = self._enqueue_replan_after_failure(
-                            str(stage),
-                            json.dumps(normalized, ensure_ascii=False),
-                            auto_apply=auto_apply,
-                        )
-                        if not scheduled:
-                            self._forced_decisions.insert(
-                                0,
-                                {
-                                    "action": "finish",
-                                    "reason": "stop_max_replan_attempts",
-                                    "args": {
-                                        "summary": "Stopped: max replan attempts reached after quality failures"
-                                    },
-                                },
-                            )
-                    elif self._replan_attempts > 0:
-                        recent = " | ".join(
-                            f"{s.action}:{s.reason}" for s in self.steps[-6:]
-                        )
-                        remember_fix_strategy(
-                            issue=f"quality failure recovered for goal: {goal[:120]}",
-                            strategy=recent,
-                            files=list(self.staged_edits.keys())[:6],
-                        )
-
-                elif action == "project_map":
-                    step.result = render_project_map()
-
-                elif action == "git_branch":
-                    code, out = create_branch(args.get("name", "feature/agent-change"))
-                    step.result = f"exit={code}; {out[:600]}"
-
-                elif action == "git_commit":
-                    code, out = commit_all(args.get("message", "chore: agent update"))
-                    step.result = f"exit={code}; {out[:600]}"
-                    if "nothing to commit" in out.lower():
-                        recent_nothing = any(
-                            s.action == "git_commit"
-                            and "nothing to commit" in s.result.lower()
-                            for s in self.steps[-2:]
-                        )
-                        if recent_nothing:
-                            self._record(step)
-                            self._record(
-                                AutoStep(
-                                    index,
-                                    "finish",
-                                    "auto_stop_redundant_commit",
-                                    "No more changes to commit; stopping redundant git_commit loop",
-                                )
-                            )
-                            return self.render_summary(
-                                "No more changes to commit; stopping redundant git_commit loop"
-                            )
-
-                elif action == "git_diff":
-                    step.result = diff_summary()
-
-                elif action == "finish":
-                    step.result = args.get("summary") or "Task finished"
+                        self._record(AutoStep(
+                            index, "finish", "auto_stop_redundant_commit",
+                            "No more changes to commit; stopping redundant git_commit loop",
+                        ))
+                        return self.render_summary("No more changes to commit; stopping redundant git_commit loop")
+                # Special handling for finish action
+                if action == "finish":
+                    step.result = result
                     self._record(step)
                     elapsed = round((datetime.utcnow() - start_ts).total_seconds(), 1)
                     print(f"\n[stella] Terminé en {elapsed}s\n")
                     return self.render_summary(step.result)
-
-                else:
-                    self.event_logger.log_failure(
-                        "tool", "unknown_action", {"action": action, "args": args}
-                    )
+                # Unknown action
+                if result.startswith("Unknown action:"):
                     step.action = "unknown_action"
-                    step.result = f"Unknown action: {action}"
-
+                step.result = result
             except Exception as exc:
                 self.event_logger.log_failure(
-                    "tool",
-                    "tool_execution_exception",
+                    "tool", "tool_execution_exception",
                     {"action": action, "error": str(exc)},
                 )
                 step.result = f"Tool error: {exc}"
@@ -1800,7 +1112,27 @@ Rules:
         return self.render_summary("Reached max steps without finish action")
 
     def render_summary(self, final_message: str) -> str:
-        lines = [f"Final: {final_message}", "", "Decisions:"]
+        # Statistiques de session
+        total_steps = len(self.steps)
+        files_modified = list(self.staged_edits.keys())
+        actions_used = {}
         for s in self.steps:
-            lines.append(f"- step {s.step}: {s.action} | {s.reason} | {s.result[:180]}")
+            actions_used[s.action] = actions_used.get(s.action, 0) + 1
+
+        lines = [
+            f"Final: {final_message}",
+            "",
+            f"--- Resume de session ---",
+            f"  Etapes executees : {total_steps}/{self.max_steps}",
+            f"  Fichiers modifies : {len(files_modified)}",
+        ]
+        if files_modified:
+            for f in files_modified[:10]:
+                lines.append(f"    - {f}")
+        lines.append(f"  Cout total : {self._total_cost}/{self._max_cost}")
+        lines.append(f"  Replans : {self._replan_attempts}/{self._max_replan_attempts}")
+        lines.append("")
+        lines.append("Decisions:")
+        for s in self.steps:
+            lines.append(f"  {s.step}. [{s.action}] {s.reason} -> {s.result[:160]}")
         return "\n".join(lines)

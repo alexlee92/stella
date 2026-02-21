@@ -15,9 +15,24 @@ def _get(cfg: dict, section: str, key: str, default):
     return cfg.get(section, {}).get(key, default)
 
 
+def _detect_environment() -> str:
+    """P5.5 — Detect current environment from env var or settings."""
+    return os.getenv("STELLA_ENV", "development").lower()
+
+
 def load_settings() -> dict:
     root = os.path.abspath(os.getcwd())
     file_cfg = _read_toml(os.path.join(root, "settings.toml"))
+
+    # P5.5 — Environment-specific overrides
+    env = _detect_environment()
+    env_cfg = _read_toml(os.path.join(root, f"settings.{env}.toml"))
+    # Merge env-specific config over base (shallow per-section)
+    for section, values in env_cfg.items():
+        if isinstance(values, dict):
+            file_cfg.setdefault(section, {}).update(values)
+        else:
+            file_cfg[section] = values
 
     project_root = os.path.abspath(
         os.getenv("PROJECT_ROOT", _get(file_cfg, "project", "root", root))
@@ -139,6 +154,8 @@ def load_settings() -> dict:
             _get(file_cfg, "quality", "security_command", "python -m bandit -r . -ll"),
         ),
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
+        # P5.5 — Environment awareness
+        "STELLA_ENV": env,
     }
 
     return settings

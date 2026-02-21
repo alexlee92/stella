@@ -1,8 +1,45 @@
 ﻿from typing import List, Optional
 
+import re
+
 from agent.config import FORMAT_COMMAND, LINT_COMMAND, TEST_COMMAND, SECURITY_COMMAND
 from agent.test_selector import build_targeted_pytest_command
 from agent.tooling import run_safe_command
+
+
+# P3.8 — Patterns de secrets a detecter avant commit
+_SECRET_PATTERNS = [
+    (r"(?i)(?:api[_-]?key|secret[_-]?key|access[_-]?token|password)\s*=\s*['\"][^'\"]{8,}['\"]", "hardcoded_secret"),
+    (r"(?i)sk-[a-zA-Z0-9]{20,}", "openai_api_key"),
+    (r"(?i)ghp_[a-zA-Z0-9]{36}", "github_token"),
+    (r"(?i)(?:AKIA|ASIA)[A-Z0-9]{16}", "aws_key"),
+]
+
+
+def scan_secrets_in_files(file_paths: List[str]) -> List[dict]:
+    """P3.8 — Scan les fichiers pour des secrets hardcodes."""
+    import os
+    findings = []
+    for path in file_paths:
+        if not os.path.isfile(path):
+            continue
+        if any(path.endswith(ext) for ext in [".pyc", ".pyo", ".so", ".dll", ".exe"]):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read(50000)  # Limite a 50KB par fichier
+        except OSError:
+            continue
+        for pattern, secret_type in _SECRET_PATTERNS:
+            for match in re.finditer(pattern, content):
+                line_num = content[:match.start()].count("\n") + 1
+                findings.append({
+                    "file": path,
+                    "line": line_num,
+                    "type": secret_type,
+                    "excerpt": match.group()[:30] + "...",
+                })
+    return findings
 
 
 def _python_files(changed_files: Optional[List[str]]) -> List[str]:
@@ -101,6 +138,23 @@ def normalize_quality_results(ok: bool, results: List[dict]) -> dict:
     }
 
 
+def run_typecheck(
+    changed_files: Optional[List[str]] = None,
+    command_timeout: int = 60,
+) -> dict:
+    """P4.2 — Étape mypy optionnelle (type-checking).
+
+    Retourne {"ok": bool, "exit_code": int, "output": str}.
+    """
+    py_files = _python_files(changed_files)
+    if py_files:
+        cmd = "python -m mypy " + " ".join(py_files) + " --ignore-missing-imports"
+    else:
+        cmd = "python -m mypy . --ignore-missing-imports"
+    code, out = run_safe_command(cmd, timeout=command_timeout)
+    return {"ok": code == 0, "exit_code": code, "output": out[:2000], "command": cmd}
+
+
 def run_quality_pipeline(
     mode: str = "full",
     changed_files: Optional[List[str]] = None,
@@ -108,6 +162,7 @@ def run_quality_pipeline(
     lint_cmd: str = LINT_COMMAND,
     test_cmd: str = TEST_COMMAND,
     command_timeout: int = 180,
+    typecheck: bool = False,  # P4.2 — mypy optionnel
 ):
     results = []
 
@@ -146,12 +201,47 @@ def run_quality_pipeline(
         if py_files:
             effective_security = "python -m bandit " + " ".join(py_files) + " -ll"
 
-    for name, cmd in [
+    # P3.8 — Scan de secrets avant les autres etapes
+    if changed_files:
+        import os
+        abs_paths = [os.path.join(os.getcwd(), f) if not os.path.isabs(f) else f for f in changed_files]
+        secret_findings = scan_secrets_in_files(abs_paths)
+        if secret_findings:
+            findings_text = "\n".join(
+                f"  {f['file']}:{f['line']} [{f['type']}] {f['excerpt']}"
+                for f in secret_findings
+            )
+            print(f"\n  [!] SECRETS DETECTES dans les fichiers modifies :")
+            print(findings_text)
+            results.append({
+                "mode": mode,
+                "stage": "secrets_scan",
+                "command": "internal_scan",
+                "exit_code": 1,
+                "output": f"Found {len(secret_findings)} potential secret(s):\n{findings_text}",
+            })
+            # Warning mais ne bloque pas le pipeline (juste un avertissement)
+
+    stages_to_run = [
         ("format", effective_format),
         ("lint", effective_lint),
         ("security", effective_security),
         ("tests", effective_tests),
-    ]:
+    ]
+    # P4.2 — mypy comme étape optionnelle avant les tests
+    if typecheck:
+        tc = run_typecheck(changed_files=changed_files, command_timeout=command_timeout)
+        results.append({
+            "mode": mode,
+            "stage": "typecheck",
+            "command": tc["command"],
+            "exit_code": tc["exit_code"],
+            "output": tc["output"],
+        })
+        if not tc["ok"]:
+            return False, results
+
+    for name, cmd in stages_to_run:
         code, out = run_safe_command(cmd, timeout=command_timeout)
 
         # If formatting/linting on broad scope fails due FS permission, fallback to changed .py files.

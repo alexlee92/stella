@@ -1,13 +1,19 @@
-﻿import sys
+﻿import os
+import sys
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import argparse
 
+import signal
+import time as _time
+from datetime import datetime
+
 from agent.agent import (
     apply_suggestion,
     ask_project,
+    ask_project_stream,
     index_project,
     patch_risk,
     propose_file_update,
@@ -20,7 +26,8 @@ from agent.config import AUTO_MAX_STEPS
 from agent.dev_task import ide_shortcuts, run_dev_task
 from agent.doctor import format_doctor, run_doctor
 from agent.eval_runner import run_eval
-from agent.git_tools import changed_files, current_branch
+from agent.git_tools import changed_files, current_branch, git_log, git_stash, git_stash_pop
+from agent.llm_interface import ask_llm_stream_print
 from agent.patcher import find_latest_backup, restore_backup
 from agent.pr_ready import prepare_pr
 from agent.progress import summarize_progress
@@ -87,8 +94,8 @@ def _smart_dispatch(goal: str) -> None:
 
     if is_question:
         mode = "ask"
-        print(f"[stella] mode détecté : question — réponse directe\n")
-        print(ask_project(goal))
+        print(f"[stella] mode detecte : question -- reponse directe\n")
+        ask_project_stream(goal)
     elif is_creation:
         mode = "run"
         print(f"[stella] mode détecté : création — agent autonome\n")
@@ -262,6 +269,28 @@ def build_parser():
         "--no-git", action="store_true", help="Ne pas initialiser git"
     )
 
+    test_cmd = sub.add_parser(
+        "test",
+        help="Lancer les tests rapidement (alias de pytest -q)",
+    )
+    test_cmd.add_argument("args", nargs="*", default=[], help="Arguments pytest optionnels")
+
+    scaffold_cmd = sub.add_parser(
+        "scaffold",
+        help="Generer un fichier a partir d'un template (fastapi-endpoint, django-model, react-component, ...)",
+    )
+    scaffold_cmd.add_argument("type", help="Type de template")
+    scaffold_cmd.add_argument("name", help="Nom de l'entite")
+    scaffold_cmd.add_argument("--output-dir", default="", help="Dossier de sortie")
+
+    watch_cmd = sub.add_parser(
+        "watch",
+        help="Surveiller les fichiers et relancer les tests automatiquement",
+    )
+    watch_cmd.add_argument("--pattern", default="**/*.py", help="Glob pattern a surveiller")
+    watch_cmd.add_argument("--command", default="", help="Commande a lancer (defaut: pytest -q)")
+    watch_cmd.add_argument("--interval", type=float, default=2.0, help="Intervalle de scan en secondes")
+
     fix_cmd = sub.add_parser(
         "fix",
         help="Corriger / améliorer le code en langage naturel (mode standard, apply auto)",
@@ -281,17 +310,75 @@ def build_parser():
 
 _CHAT_HELP = """
 Commandes disponibles :
-  /run <objectif>     — Lancer l'agent autonome sur un objectif
-  /plan <objectif>    — Afficher le plan sans l'exécuter
-  /ask <question>     — Poser une question sur le codebase
-  /status             — Afficher l'état git (branche, fichiers modifiés)
-  /map                — Afficher la carte des symboles du projet
-  /undo <fichier>     — Annuler la dernière modification d'un fichier
-  /eval               — Lancer les tests rapides (pytest -q)
-  /decisions          — Afficher les dernières décisions de l'agent
-  /help               — Afficher cette aide
-  /exit               — Quitter le chat
+  /run <objectif>     -- Lancer l'agent autonome sur un objectif
+  /plan <objectif>    -- Afficher le plan sans l'executer
+  /ask <question>     -- Poser une question sur le codebase (streaming)
+  /status             -- Afficher l'etat git (branche, fichiers modifies)
+  /map                -- Afficher la carte des symboles du projet
+  /log [fichier]      -- Historique des commits recents
+  /stash [message]    -- Sauvegarder le travail en cours
+  /stash-pop          -- Restaurer le dernier stash
+  /undo <fichier>     -- Annuler la derniere modification d'un fichier
+  /eval               -- Lancer les tests rapides (pytest -q)
+  /decisions          -- Afficher les dernieres decisions de l'agent
+  /context            -- Voir ce que l'agent sait (memoire de session)
+  /goto <fichier> <symbole> -- Trouver la definition d'un symbole
+  /refs <fichier> <symbole> -- Trouver les references d'un symbole
+  /symbols <fichier>  -- Lister les symboles d'un fichier
+  /sessions           -- Lister les sessions precedentes
+  /replay [id]        -- Reprendre une session precedente
+  /help               -- Afficher cette aide
+  /exit               -- Quitter le chat
 """
+
+
+_CHAT_COMMANDS = [
+    "/run", "/plan", "/ask", "/status", "/map", "/log", "/stash",
+    "/stash-pop", "/undo", "/eval", "/decisions", "/context",
+    "/goto", "/refs", "/symbols", "/sessions", "/replay",
+    "/test", "/scaffold",
+    "/help", "/exit",
+]
+
+
+def _build_prompt_session():
+    """P4.2 — Build a prompt_toolkit session with auto-completion and history."""
+    try:
+        from prompt_toolkit import PromptSession
+        from prompt_toolkit.completion import WordCompleter
+        from prompt_toolkit.history import InMemoryHistory
+
+        completer = WordCompleter(_CHAT_COMMANDS, sentence=True)
+        return PromptSession(
+            completer=completer,
+            history=InMemoryHistory(),
+        )
+    except ImportError:
+        return None
+
+
+def _highlight_code(text: str) -> str:
+    """P4.1 — Highlight code blocks in agent output using rich if available."""
+    try:
+        from rich.console import Console
+        from rich.syntax import Syntax
+        import io
+        import re
+
+        # Find ```lang ... ``` blocks and colorize them
+        pattern = re.compile(r"```(\w+)?\n(.*?)```", re.DOTALL)
+
+        def _replace(m):
+            lang = m.group(1) or "python"
+            code = m.group(2).strip()
+            buf = io.StringIO()
+            console = Console(file=buf, force_terminal=True, width=100)
+            console.print(Syntax(code, lang, theme="monokai", line_numbers=False))
+            return buf.getvalue().strip()
+
+        return pattern.sub(_replace, text)
+    except Exception:
+        return text
 
 
 def run_chat(
@@ -303,11 +390,15 @@ def run_chat(
 ):
     index_project()
     session = ChatSession()
+    prompt_session = _build_prompt_session()
 
     print(_CHAT_HELP)
     while True:
         try:
-            user_input = input("you> ").strip()
+            if prompt_session:
+                user_input = prompt_session.prompt("you> ").strip()
+            else:
+                user_input = input("you> ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nSession ended")
             break
@@ -353,23 +444,43 @@ def run_chat(
             if not question:
                 print("[!] Usage : /ask <question>")
                 continue
-            print(ask_project(question))
+            ask_project_stream(question)
             continue
 
         if user_input == "/status":
             branch = current_branch() or "inconnue"
             changed = changed_files()
-            print(f"Branche : {branch}")
+            print(f"\n--- Status du projet ---")
+            print(f"  Branche : {branch}")
+            print(f"  Fichiers modifies : {len(changed)}")
             if changed:
-                print(f"Fichiers modifiés ({len(changed)}) :")
                 for f in changed[:20]:
-                    print(f"  {f}")
-            else:
-                print("Aucun fichier modifié.")
+                    ext = os.path.splitext(f)[1]
+                    print(f"    {f} ({ext})")
+                if len(changed) > 20:
+                    print(f"    ... et {len(changed) - 20} autres")
+            print(f"  Session chat : {len(session.messages)} messages, {len(session.decisions)} decisions")
+            print()
             continue
 
         if user_input == "/map":
             print(render_project_map())
+            continue
+
+        if user_input.startswith("/log"):
+            file_arg = user_input[len("/log"):].strip() or None
+            print(git_log(file_path=file_arg))
+            continue
+
+        if user_input.startswith("/stash-pop"):
+            code, out = git_stash_pop()
+            print(out)
+            continue
+
+        if user_input.startswith("/stash"):
+            msg = user_input[len("/stash"):].strip() or None
+            code, out = git_stash(message=msg)
+            print(out)
             continue
 
         if user_input.startswith("/undo "):
@@ -397,8 +508,106 @@ def run_chat(
             print(session.show_decisions())
             continue
 
+        if user_input == "/context":
+            print(session.show_context())
+            continue
+
+        if user_input.startswith("/goto "):
+            from agent.code_intelligence import goto_definition
+            parts = user_input[len("/goto "):].strip().split()
+            if len(parts) < 2:
+                print("  Usage: /goto <fichier> <symbole>")
+            else:
+                results = goto_definition(parts[0], parts[1])
+                for r in results:
+                    if "error" in r:
+                        print(f"  {r['error']}")
+                    else:
+                        print(f"  {r['file']}:{r['line']}:{r['column']} [{r['type']}] {r['name']}")
+            continue
+
+        if user_input.startswith("/refs "):
+            from agent.code_intelligence import find_references
+            parts = user_input[len("/refs "):].strip().split()
+            if len(parts) < 2:
+                print("  Usage: /refs <fichier> <symbole>")
+            else:
+                results = find_references(parts[0], parts[1])
+                for r in results:
+                    if "error" in r:
+                        print(f"  {r['error']}")
+                    else:
+                        print(f"  {r['file']}:{r['line']} {r['context']}")
+            continue
+
+        if user_input.startswith("/symbols "):
+            from agent.code_intelligence import list_symbols
+            file_arg = user_input[len("/symbols "):].strip()
+            if not file_arg:
+                print("  Usage: /symbols <fichier>")
+            else:
+                syms = list_symbols(file_arg)
+                if not syms:
+                    print("  Aucun symbole trouve.")
+                for s in syms:
+                    print(f"  L{s['line']} [{s['type']}] {s['name']}")
+            continue
+
+        # P2.2 — Session persistence commands
+        if user_input == "/sessions":
+            from agent.chat_session import list_sessions
+            sessions_list = list_sessions()
+            if not sessions_list:
+                print("  Aucune session sauvegardee.")
+            else:
+                print("\n--- Sessions precedentes ---")
+                for s in sessions_list:
+                    ts = datetime.fromtimestamp(s["mtime"]).strftime("%Y-%m-%d %H:%M") if s["mtime"] else "?"
+                    goal = s.get("goal", "")[:60]
+                    print(f"  {s['id']}  {ts}  {goal}")
+                print()
+            continue
+
+        if user_input.startswith("/replay"):
+            from agent.chat_session import get_latest_session_id
+            sid = user_input[len("/replay"):].strip()
+            if not sid:
+                sid = get_latest_session_id()
+                if not sid:
+                    print("  Aucune session a reprendre.")
+                    continue
+            ok = session.load_session(sid)
+            if ok:
+                print(f"  Session {sid} restauree : {len(session.messages)} messages, {len(session.staged_edits)} edits en attente.")
+                if session.staged_edits:
+                    print(f"  Fichiers staged : {', '.join(session.staged_edits.keys())}")
+            else:
+                print(f"  Session {sid} introuvable.")
+            continue
+
+        # P4.4 — /test alias for quick test run
+        if user_input == "/test" or user_input.startswith("/test "):
+            from agent.tooling import run_tests
+            test_args = user_input[len("/test"):].strip()
+            cmd = f"pytest -q {test_args}".strip()
+            print(f"Lancement : {cmd}")
+            print(run_tests(cmd))
+            continue
+
+        # P3.7 — /scaffold command
+        if user_input.startswith("/scaffold "):
+            from agent.scaffolder import scaffold
+            parts = user_input[len("/scaffold "):].strip().split(None, 1)
+            if len(parts) < 2:
+                print("  Usage: /scaffold <type> <name>")
+                print("  Types: fastapi-endpoint, django-model, django-view, react-component, python-module, test")
+            else:
+                result = scaffold(parts[0], parts[1])
+                print(result)
+            continue
+
         answer = session.ask(user_input)
-        print(answer)
+        print(_highlight_code(answer))
 
 
 def handle_edit_like(file_path: str, instruction: str, do_apply: bool):
@@ -438,10 +647,23 @@ _KNOWN_COMMANDS = {
     "edit",
     "init",
     "fix",
+    "test",
+    "scaffold",
+    "watch",
 }
 
 
+def _handle_sigint(signum, frame):
+    """P1.5 — Gestion gracieuse de Ctrl+C."""
+    print("\n\n[stella] Interruption detectee (Ctrl+C). Arret en cours...")
+    print("[stella] Les fichiers non appliques sont preserves dans staged_edits.")
+    raise SystemExit(130)
+
+
 def main():
+    # P1.5 — Gestion gracieuse de Ctrl+C
+    signal.signal(signal.SIGINT, _handle_sigint)
+
     # Entrée directe : python stella.py "mon goal" sans sous-commande
     # Si le premier argument n'est pas une sous-commande connue → dispatch auto
     if (
@@ -466,7 +688,7 @@ def main():
 
     if args.command == "ask":
         index_project()
-        print(ask_project(args.question))
+        ask_project_stream(args.question)
         return
 
     if args.command == "review":
@@ -510,7 +732,7 @@ def main():
     if args.command in {"run", "auto"}:
         index_project()
         print(
-            AutonomousAgent(max_steps=args.steps).run(
+            AutonomousAgent(max_steps=args.steps, interactive=True).run(
                 goal=args.goal,
                 auto_apply=args.apply,
                 fix_until_green=args.fix_until_green,
@@ -644,6 +866,33 @@ def main():
         summary_md = result.get("summary_md")
         if summary_md:
             print(f"Rapport complet : {summary_md}")
+        return
+
+    # P4.4 — stella test (alias rapide pour pytest)
+    if args.command == "test":
+        from agent.tooling import run_tests
+        extra = " ".join(args.args) if args.args else ""
+        cmd = f"pytest -q {extra}".strip()
+        print(f"=== Stella Test ===")
+        print(f"Commande : {cmd}\n")
+        print(run_tests(cmd))
+        return
+
+    # P3.7 — stella scaffold
+    if args.command == "scaffold":
+        from agent.scaffolder import scaffold as do_scaffold
+        result = do_scaffold(args.type, args.name, output_dir=args.output_dir)
+        print(result)
+        return
+
+    # P4.5 — stella watch
+    if args.command == "watch":
+        from agent.watcher import run_watch
+        run_watch(
+            pattern=args.pattern,
+            command=args.command if args.command else None,
+            interval=args.interval,
+        )
         return
 
 

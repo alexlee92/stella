@@ -1,7 +1,7 @@
 import json
 import re
 from collections import OrderedDict
-from typing import Any
+from typing import Any, Generator
 
 import requests
 
@@ -198,12 +198,17 @@ def _detect_task_type(prompt: str, system_prompt: str = "") -> str:
         return "frontend"
     if any(kw in full_text for kw in _BACKEND_KW):
         return "backend"
-    return "optimization"
+    # Default to analysis (detailed) rather than optimization (concise)
+    return "analysis"
 
 
 # Types de tâches "courtes" où le modèle doit être concis
-_CONCISE_TASK_TYPES = {"optimization", "debug", "frontend", "backend"}
+# Only apply concise suffix when the prompt doesn't explicitly ask for detailed output
+_CONCISE_TASK_TYPES = {"optimization", "debug"}
 _CONCISE_SUFFIX = "\n\nBe concise. Answer in 2-3 sentences maximum. No preamble."
+# Keywords that indicate the user wants a detailed answer — skip concise suffix
+_DETAIL_INDICATORS = {"not in json", "prose", "detail", "explain", "describe", "liste",
+                      "line by line", "all", "every", "comprehensive"}
 
 
 def ask_llm(
@@ -211,6 +216,7 @@ def ask_llm(
     system_prompt: str = "You are a helpful coding assistant.",
     task_type: str | None = None,
     concise: bool = False,
+    json_mode: bool = False,  # P1.2 — force Ollama format:json
 ) -> str:
     try:
         # Prioritize Orisha API if enabled
@@ -219,8 +225,10 @@ def ask_llm(
                 # task_type explicite prioritaire sur la détection automatique
                 effective_task_type = task_type or _detect_task_type(prompt, system_prompt)
                 full_prompt = f"{system_prompt}\n\n{prompt}"
-                # Mode concis : réduit la verbosité pour les questions simples
-                if concise or effective_task_type in _CONCISE_TASK_TYPES:
+                # Mode concis : réduit la verbosité sauf si le prompt demande du detail
+                prompt_lower = full_prompt.lower()
+                wants_detail = any(ind in prompt_lower for ind in _DETAIL_INDICATORS)
+                if not wants_detail and (concise or effective_task_type in _CONCISE_TASK_TYPES):
                     full_prompt += _CONCISE_SUFFIX
                 response = requests.post(
                     ORISHA_URL,
@@ -248,9 +256,12 @@ def ask_llm(
             )
             return response.choices[0].message.content
 
+        ollama_body: dict[str, Any] = {"model": MODEL, "messages": messages, "stream": False}
+        if json_mode:
+            ollama_body["format"] = "json"  # P1.2 — JSON schema enforcement
         response = requests.post(
             OLLAMA_URL,
-            json={"model": MODEL, "messages": messages, "stream": False},
+            json=ollama_body,
             timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
@@ -292,7 +303,7 @@ def ask_llm_json(
 
     for stage_prompt in stages:
         for _ in range(max_retries):
-            raw = ask_llm(stage_prompt, system_prompt=system_prompt, task_type=effective_task_type)
+            raw = ask_llm(stage_prompt, system_prompt=system_prompt, task_type=effective_task_type, json_mode=True)
             parsed, err = _parse_json_response(raw)
             if parsed is not None:
                 _JSON_CACHE[strict_prompt] = parsed
@@ -303,7 +314,7 @@ def ask_llm_json(
 
             attempt_errors.append(err)
             if raw:
-                repaired_raw = ask_llm(_repair_prompt(raw), task_type="json")
+                repaired_raw = ask_llm(_repair_prompt(raw), task_type="json", json_mode=True)
                 repaired, repaired_err = _parse_json_response(repaired_raw)
                 if repaired is not None:
                     _JSON_CACHE[strict_prompt] = repaired
@@ -315,3 +326,82 @@ def ask_llm_json(
 
     final_error = attempt_errors[-1] if attempt_errors else "unknown_parse_error"
     return _fallback_json_error(final_error, attempt_errors, prompt_class)
+
+
+def ask_llm_stream(
+    prompt: str,
+    system_prompt: str = "You are a helpful coding assistant.",
+    task_type: str | None = None,
+) -> Generator[str, None, None]:
+    """Génère les tokens LLM progressivement via Ollama streaming.
+
+    Tente d'abord Orisha (non-streaming fallback), puis Ollama en streaming.
+
+    Usage:
+        for token in ask_llm_stream(prompt):
+            print(token, end="", flush=True)
+    """
+    # Si Orisha est activé, fallback vers réponse complète (Orisha ne supporte pas le streaming)
+    if ORISHA_ENABLED:
+        try:
+            effective_task_type = task_type or _detect_task_type(prompt, system_prompt)
+            full_prompt = f"{system_prompt}\n\n{prompt}"
+            response = requests.post(
+                ORISHA_URL,
+                json={"prompt": full_prompt, "task_type": effective_task_type},
+                timeout=REQUEST_TIMEOUT,
+            )
+            response.raise_for_status()
+            data = response.json()
+            text = data.get("response", "")
+            if text:
+                # Simuler le streaming par chunks de mots
+                words = text.split(" ")
+                for i, word in enumerate(words):
+                    yield word + (" " if i < len(words) - 1 else "")
+                return
+        except Exception:
+            pass  # Fallback vers Ollama streaming
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    try:
+        response = requests.post(
+            OLLAMA_URL,
+            json={"model": MODEL, "messages": messages, "stream": True},
+            timeout=REQUEST_TIMEOUT,
+            stream=True,
+        )
+        response.raise_for_status()
+        for line in response.iter_lines():
+            if not line:
+                continue
+            try:
+                chunk = json.loads(line)
+                content = chunk.get("message", {}).get("content", "")
+                if content:
+                    yield content
+                if chunk.get("done"):
+                    break
+            except json.JSONDecodeError:
+                continue
+    except Exception as exc:
+        print(f"\n[llm] Stream error: {exc}")
+        return
+
+
+def ask_llm_stream_print(
+    prompt: str,
+    system_prompt: str = "You are a helpful coding assistant.",
+    task_type: str | None = None,
+) -> str:
+    """Stream les tokens vers stdout et retourne le texte complet."""
+    parts = []
+    for token in ask_llm_stream(prompt, system_prompt=system_prompt, task_type=task_type):
+        print(token, end="", flush=True)
+        parts.append(token)
+    print()  # newline finale
+    return "".join(parts)

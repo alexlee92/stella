@@ -2,16 +2,66 @@
 import re
 import shlex
 import subprocess
-from typing import List, Tuple
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, List, Tuple
 
 from agent.config import DRY_RUN, PROJECT_ROOT
 from agent.project_scan import get_python_files, get_source_files, load_file_content
+
+# P3.3 — TTL cache for read_file and list_files (30s TTL)
+_TOOL_CACHE_TTL = 30.0
+_read_file_cache: Dict[str, Tuple[float, str]] = {}
+_list_files_cache: Dict[str, Tuple[float, list]] = {}
+
+
+def _ttl_get(cache: dict, key: str):
+    entry = cache.get(key)
+    if entry and time.time() - entry[0] < _TOOL_CACHE_TTL:
+        return entry[1]
+    if entry:
+        del cache[key]
+    return None
+
+
+def _ttl_set(cache: dict, key: str, val):
+    cache[key] = (time.time(), val)
+
+
+def invalidate_tool_cache():
+    """Vide les caches TTL (à appeler après écriture de fichier)."""
+    _read_file_cache.clear()
+    _list_files_cache.clear()
 
 _ALLOWED_COMMAND_PREFIXES = [
     ["pytest"],
     ["python", "-m", "pytest"],
     ["python", "-m", "ruff"],
     ["python", "-m", "black"],
+    ["python", "-m", "mypy"],
+    ["python", "-m", "bandit"],
+    ["python", "-m", "pip", "install"],
+    ["python", "-m", "pip", "list"],
+    ["pip", "install"],
+    ["pip", "list"],
+    ["npm", "install"],
+    ["npm", "test"],
+    ["npm", "run"],
+    ["node"],
+    ["python"],
+    ["git", "status"],
+    ["git", "log"],
+    ["git", "diff"],
+    ["git", "blame"],
+    ["git", "stash"],
+]
+
+# Commandes dangereuses jamais autorisees
+_BLOCKED_PATTERNS = [
+    "rm -rf", "rmdir /s", "del /f", "format ",
+    "drop database", "drop table", "truncate table",
+    "> /dev/null", ":(){ :|:& };:",
+    "mkfs", "dd if=",
 ]
 
 
@@ -28,6 +78,27 @@ def _resolve_path(path: str) -> str:
     return abs_path
 
 
+def is_command_blocked(command: str) -> bool:
+    """Verifie si une commande est dans la blocklist de securite.
+
+    P5.5 — En production, bloque aussi les commandes destructives SQL.
+    """
+    low = command.lower()
+    if any(pat in low for pat in _BLOCKED_PATTERNS):
+        return True
+    # P5.5 — Extra safety in production/staging environments
+    try:
+        from agent.config import _CFG
+        env = _CFG.get("STELLA_ENV", "development")
+    except Exception:
+        env = "development"
+    if env in ("production", "staging"):
+        prod_blocked = ["drop ", "truncate ", "delete from", "alter table", "migrate"]
+        if any(pat in low for pat in prod_blocked):
+            return True
+    return False
+
+
 def is_command_allowed(command: str) -> bool:
     try:
         tokens = shlex.split(command)
@@ -41,9 +112,25 @@ def is_command_allowed(command: str) -> bool:
     return False
 
 
-def run_safe_command(command: str, timeout: int = 300) -> Tuple[int, str]:
+def run_safe_command(command: str, timeout: int = 300, ask_user: bool = False) -> Tuple[int, str]:
+    # P3.3 — Blocklist de securite
+    if is_command_blocked(command):
+        return 2, f"[BLOCKED] Commande dangereuse refusee : {command}"
+
     if not is_command_allowed(command):
-        return 2, f"Refused command: {command}"
+        if ask_user:
+            # P3.3 — Mode sandbox : demande confirmation pour les commandes inconnues
+            try:
+                answer = input(
+                    f"\n  [?] Commande non-whitelistee : {command}\n"
+                    f"      Autoriser l'execution ? [y/n] "
+                ).strip().lower()
+                if answer not in {"y", "yes", "o", "oui"}:
+                    return 2, f"Refused by user: {command}"
+            except (EOFError, KeyboardInterrupt):
+                return 2, f"Refused (interrupted): {command}"
+        else:
+            return 2, f"Refused command: {command}"
 
     if DRY_RUN and "pytest" not in command:
         return 0, f"[dry-run] skipped command: {command}"
@@ -60,6 +147,8 @@ def run_safe_command(command: str, timeout: int = 300) -> Tuple[int, str]:
             shell=True,
             check=False,
         )
+    except subprocess.TimeoutExpired:
+        return 2, f"Command timed out after {timeout}s: {command}"
     except Exception as exc:
         return 2, f"Command failed to run: {exc}"
 
@@ -69,23 +158,38 @@ def run_safe_command(command: str, timeout: int = 300) -> Tuple[int, str]:
 
 def read_file(path: str, max_chars: int = 6000) -> str:
     abs_path = _resolve_path(path)
+    # P3.3 — TTL cache
+    cache_key = f"{abs_path}:{max_chars}"
+    cached = _ttl_get(_read_file_cache, cache_key)
+    if cached is not None:
+        return cached
     content = load_file_content(abs_path)
-    if len(content) <= max_chars:
-        return content
-    return content[:max_chars] + "\n\n...[truncated]"
+    result = content if len(content) <= max_chars else content[:max_chars] + "\n\n...[truncated]"
+    _ttl_set(_read_file_cache, cache_key, result)
+    return result
 
 
 def read_many(
     paths: List[str], max_chars_per_file: int = 2500, max_total_chars: int = 9000
 ) -> str:
-    chunks = []
-    total = 0
-    for path in paths:
+    # P3.2 — parallel reads via ThreadPoolExecutor
+    def _read_one(path: str) -> Tuple[str, str]:
         try:
             content = read_file(path, max_chars=max_chars_per_file)
         except Exception as exc:
             content = f"[error] {exc}"
+        return path, content
 
+    results: Dict[str, str] = {}
+    if paths:
+        with ThreadPoolExecutor(max_workers=min(8, len(paths))) as executor:
+            for path, content in executor.map(_read_one, paths):
+                results[path] = content
+
+    chunks = []
+    total = 0
+    for path in paths:
+        content = results.get(path, "[error] not read")
         block = f"FILE: {path}\n{content}\n"
         if total + len(block) > max_total_chars:
             break
@@ -120,6 +224,11 @@ def list_python_files(limit: int = 200) -> List[str]:
 
 
 def list_files(limit: int = 200, contains: str = "", ext: str = ".py") -> List[str]:
+    # P3.3 — TTL cache
+    cache_key = f"list:{limit}:{contains}:{ext}"
+    cached = _ttl_get(_list_files_cache, cache_key)
+    if cached is not None:
+        return cached
     extensions = {ext} if ext else _SOURCE_EXTENSIONS
     files = get_source_files(PROJECT_ROOT, extensions=extensions)
     out = []
@@ -130,6 +239,7 @@ def list_files(limit: int = 200, contains: str = "", ext: str = ".py") -> List[s
         out.append(rel)
         if len(out) >= limit:
             break
+    _ttl_set(_list_files_cache, cache_key, out)
     return out
 
 
@@ -151,6 +261,7 @@ def search_code(pattern: str, limit: int = 30) -> List[str]:
             encoding="utf-8",
             errors="replace",
             check=False,
+            timeout=10,  # P1.1 — timeout individuel
         )
         lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
         return lines[:limit]

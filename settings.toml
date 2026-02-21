@@ -39,3 +39,9 @@ test_command = "pytest -q"
 [session]
 history_path = ".stella/session_history.jsonl"
 log_path = ".stella/agent_events.jsonl"
+
+[aliases]
+# Custom command aliases: alias = "stella command args"
+# Example: t = "test"
+# Example: r = "run"
+# Example: q = "fix --safe"
