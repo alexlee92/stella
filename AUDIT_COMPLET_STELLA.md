@@ -11,6 +11,9 @@
 5. [Tests proposés](#5-tests-proposés)
 6. [Benchmarks proposés](#6-benchmarks-proposés)
 7. [Plan de corrections prioritaires](#7-plan-de-corrections-prioritaires)
+8. [Résultats des benchmarks (mesures réelles)](#8-résultats-des-benchmarks-mesures-réelles)
+9. [System prompts finaux et guide des commandes](#9-system-prompts-finaux-et-guide-des-commandes-p4-a--p4-e)
+10. [Session 2026-02-21 — Nouvelles capacités](#10-session-2026-02-21--nouvelles-capacités)
 
 ---
 
@@ -1166,6 +1169,231 @@ ollama create Orisha-Oba1.0 -f Modelfile-Oba
 
 ---
 
+---
+
+## 10. Session 2026-02-21 — Nouvelles capacités
+
+### 10.1 Validation langue française
+
+**Contexte :** Question ouverte — Stella peut-elle opérer efficacement avec des goals en français ?
+
+**Tests réalisés :**
+
+| Type de goal | Résultat | Durée |
+|---|---|---|
+| Question d'analyse (`ask`) | ✅ Réponse correcte en français | ~5s |
+| Modification de code (`fix`) | ✅ 3 étapes propres (read → propose_edit → finish) | ~27s |
+| Goal d'analyse uniquement (`run`) | ⚠️ Loop détecté (résolu — voir §8.2) | — |
+
+**Conclusion :** Le routing bilingue est fonctionnel. Stella comprend et traite les instructions françaises. Seul le cas du goal d'analyse pure déclenchait une boucle, corrigé par le mécanisme de synthèse (§8.2).
+
+---
+
+### 10.2 Correction des boucles planner
+
+Deux types de boucles infinis identifiés et corrigés dans `agent/auto_agent.py`.
+
+#### Boucle read-only (goal d'analyse)
+**Symptôme :** Stella répète indéfiniment `read_file` / `search_code` sans jamais terminer.
+
+**Cause :** Le planner ne voyait pas de résultat de modification à valider → continuait à lire.
+
+**Fix — `_decision_loop_detected()` + résolution :**
+```python
+_read_only = {"read_file", "read_many", "search_code", "list_files"}
+if action in _read_only and self.steps:
+    last_result = next(
+        (s.result for s in reversed(self.steps) if s.result and s.action in _read_only),
+        None,
+    )
+    if last_result:
+        synthesis_prompt = (
+            f"Goal: {goal}\n\nCollected context:\n{last_result[:3000]}\n\n"
+            "Based on the context above, answer the goal concisely and clearly."
+        )
+        summary = ask_llm(synthesis_prompt, task_type="analysis")
+        self._record(AutoStep(index, "finish", "loop_resolved_read_only", summary))
+        return self.render_summary(summary)
+```
+Au lieu de retourner une erreur, Stella synthétise une réponse depuis le contexte collecté.
+
+#### Boucle propose_edit (même fichier)
+**Symptôme :** Stella répète `propose_edit` sur le même fichier avec des descriptions légèrement différentes.
+
+**Fix — compteur par chemin :**
+```python
+if action == "propose_edit":
+    path = args.get("path", "")
+    recent = self._decision_signatures[-6:]
+    propose_count = sum(
+        1 for s in recent
+        if json.loads(s).get("a") == "propose_edit"
+        and json.loads(s).get("g", {}).get("path") == path
+    )
+    if propose_count >= 3:
+        return True  # loop detected
+```
+
+---
+
+### 10.3 Nouvelle action `create_file`
+
+Stella peut désormais créer de nouveaux fichiers (backend, frontend, modules) depuis zéro.
+
+#### Fichiers modifiés
+
+**`agent/action_schema.py`**
+```python
+ALLOWED_ACTIONS = {
+    ...,
+    "create_file",  # NEW
+}
+# Validation :
+"create_file": {
+    "required": {"path": "str", "description": "str"},
+    "optional": {},
+},
+```
+
+**`agent/tooling.py`** — `write_new_file(path, content)`
+```python
+def write_new_file(path: str, content: str) -> str:
+    abs_path = _resolve_path(path)
+    parent = os.path.dirname(abs_path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(abs_path, "w", encoding="utf-8") as fh:
+        fh.write(content)
+    return f"ok:{abs_path}"
+```
+
+**`agent/auto_agent.py`** — handler create_file dans le run loop :
+- Guard anti-récréation : si `path` déjà dans `staged_edits` → skip
+- Génération du contenu via `_generate_file_content()` (LLM Oba1.0)
+- Écriture via `write_new_file()`
+- Indexation immédiate via `index_file_in_session()`
+- Détection + installation des dépendances via `detect_and_install_deps()`
+- Chaînage automatique du fichier suivant via `_extract_all_target_files_from_goal()`
+
+#### Multi-fichiers (`_extract_all_target_files_from_goal`)
+```python
+def _extract_all_target_files_from_goal(self, goal: str) -> List[str]:
+    found = re.findall(r"([A-Za-z0-9_./\\-]+\.[a-zA-Z]{1,5})", goal)
+    # filtre par extension connue + déduplique
+    return out  # tous les fichiers cibles dans l'ordre
+```
+Quand un goal mentionne plusieurs fichiers, Stella les crée séquentiellement en forçant le suivant dans `_forced_decisions`.
+
+#### Aliases reconnus
+`create`, `new_file`, `write_file`, `generate_file`, `create_module` → `create_file`
+
+#### Résultats de test — module utilisateurs + frontend React
+
+| Fichier généré | Contenu | Verdict |
+|---|---|---|
+| `users/models.py` | SQLAlchemy `User` (id, email, hashed_password, created_at, is_active, `to_dict()`) | ✅ Correct |
+| `users/api.py` | Flask Blueprint CRUD (create/get/update/delete/login/logout) + bcrypt | ✅ Fonctionnel |
+| `frontend/components/UserList.jsx` | React useState + useEffect + axios.get | ✅ Correct |
+| `frontend/components/UserForm.jsx` | React form + useState + axios.post + error handling | ✅ Correct |
+| `frontend/App.jsx` | Compose UserList + UserForm avec imports relatifs corrects | ✅ Correct |
+
+---
+
+### 10.4 Amélioration de la recherche de contexte
+
+Stella peut maintenant référencer les fichiers créés plus tôt dans la même session.
+
+#### `agent/memory.py` — `index_file_in_session()`
+```python
+def index_file_in_session(path: str, content: str) -> int:
+    chunks = _chunk_for_file(path, content)
+    for idx, (chunk, symbol) in enumerate(chunks):
+        vec = embed(chunk)
+        documents.append(MemoryDoc(path=path, chunk_id=idx, text=chunk, symbol=symbol))
+        vectors.append(vec)
+    _rebuild_lexical_stats()
+    _query_cache.clear()
+    return added
+```
+Les fichiers générés sont ajoutés à l'index vectoriel en temps réel, sans reconstruire l'index complet.
+
+#### `agent/auto_agent.py` — recherche multi-angle
+```python
+def _summarize_context_multi(self, goal, path, description):
+    queries = [goal, os.path.dirname(path), description, self._session_context()]
+    results = [search_memory(q, top_k=3) for q in queries if q]
+    # fusionne et déduplique
+```
+
+`_session_context()` retourne le contenu de tous les fichiers déjà créés/édités dans la session courante, permettant une cohérence entre modules (ex : `api.py` peut référencer correctement `models.py`).
+
+---
+
+### 10.5 Détection et installation automatique des dépendances
+
+Nouveau fichier : **`agent/deps.py`**
+
+Analyse les imports d'un fichier généré, détecte les packages manquants, les installe automatiquement.
+
+#### Architecture
+```
+detect_and_install_deps(path, content)
+    ├── .py  → _missing_python_packages() → _install_python() [pip]
+    └── .js/.jsx/.ts/.tsx → _missing_npm_packages() → _install_npm() [npm]
+```
+
+#### Filtrage intelligent
+- `_STDLIB` : tous les modules de la bibliothèque standard Python (ignorés)
+- `_PROJECT_LOCAL` : `agent`, `models`, `users`, `settings`, `config`, etc. (ignorés)
+- `_is_valid_package_name()` : rejette les faux positifs courants
+
+```python
+_local_hints = {
+    "database", "config", "settings", "models", "utils", "helpers",
+    "constants", "exceptions", "errors", "middleware", "routes",
+    "schemas", "serializers", "validators", "db",
+}
+```
+
+#### Aliases PyPI (extrait)
+| Import Python | Package PyPI |
+|---|---|
+| `PIL` | `Pillow` |
+| `sklearn` | `scikit-learn` |
+| `yaml` | `PyYAML` |
+| `flask` | `Flask` |
+| `sqlalchemy` | `SQLAlchemy` |
+| `bs4` | `beautifulsoup4` |
+| `cv2` | `opencv-python` |
+
+#### Résultat lors du test
+- `flask`, `werkzeug` → déjà installés ✅
+- `sqlalchemy` → installé automatiquement via pip ✅
+- `bcrypt` → installé automatiquement via pip ✅
+- `Flask 3.1.3` + `Werkzeug 3.1.6` confirmés en production
+
+#### Note encoding Windows
+Le caractère `→` causait `UnicodeEncodeError: 'charmap' codec can't encode character '\u2192'` sur les terminaux Windows (cp1252). Tous les return strings utilisent `->` ASCII.
+
+---
+
+### 10.6 Résumé des changements de cette session
+
+| Fichier | Type | Changement |
+|---|---|---|
+| `agent/auto_agent.py` | Modifié | Boucles, create_file, multi-fichiers, contexte session |
+| `agent/action_schema.py` | Modifié | Ajout `create_file` + règles de validation |
+| `agent/tooling.py` | Modifié | Ajout `write_new_file()` |
+| `agent/memory.py` | Modifié | Ajout `index_file_in_session()` |
+| `agent/deps.py` | **Nouveau** | Détection + installation Python/JS |
+| `users/models.py` | **Généré par Stella** | SQLAlchemy User model |
+| `users/api.py` | **Généré par Stella** | Flask Blueprint CRUD complet |
+| `frontend/components/UserList.jsx` | **Généré par Stella** | React UserList |
+| `frontend/components/UserForm.jsx` | **Généré par Stella** | React UserForm |
+| `frontend/App.jsx` | **Généré par Stella** | React App root |
+
+---
+
 ## Résumé exécutif
 
 ### État initial (avant corrections)
@@ -1183,8 +1411,8 @@ ollama create Orisha-Oba1.0 -f Modelfile-Oba
 - Contexte sous-exploité (4 500 chars vs 16 384 tokens disponibles)
 - Serveur Flask utilisait subprocess au lieu de l'API HTTP Ollama
 
-### État actuel (après corrections P1+P2+P3+P4 partiel)
-**Corrections appliquées :**
+### État actuel (après corrections P1+P2+P3+P4 + session 2026-02-21)
+**Corrections appliquées (P1→P4) :**
 - ✅ 51 tests unitaires opérationnels (0.16s, sans Ollama)
 - ✅ Routing bilingue (FR + EN) avec 6 types de tâche bien détectés
 - ✅ Planner → Ifa1.0, génération → Oba1.0, JSON → Ifa1.0 (routing explicite)
@@ -1195,15 +1423,26 @@ ollama create Orisha-Oba1.0 -f Modelfile-Oba
 - ✅ `health_check.py` avec messages d'aide clairs si Ollama/Orisha inaccessible
 - ✅ 3 scripts de benchmark complets avec mode `--direct` Ollama
 
+**Nouvelles capacités (session 2026-02-21) :**
+- ✅ French language validation : goals FR traités nativement (analyse + modification)
+- ✅ Boucle read-only corrigée : synthèse LLM au lieu d'erreur
+- ✅ Boucle propose_edit corrigée : compteur par chemin (≥3 = loop)
+- ✅ Action `create_file` : génère backend + frontend complets depuis zéro
+- ✅ Création multi-fichiers : chaînage automatique de tous les fichiers d'un goal
+- ✅ Contexte inter-fichiers : `index_file_in_session` + `_session_context` + `_summarize_context_multi`
+- ✅ Détection et installation automatique des dépendances (pip + npm) via `agent/deps.py`
+- ✅ Test réel complet : module users (SQLAlchemy + Flask CRUD) + frontend React (5 fichiers générés)
+
 **Résultats benchmarks réels (via serveur Orisha Flask) :**
 - JSON stabilité : **100%** sur 5 types de prompts — 3-4s par prompt ← excellent
+- JSON parallèle : **87% global**, action_read_file 100%, critique_approve 67% sous charge
 - Debug : Oba1.0 100% vs Ifa1.0 80% ← routing `debug`→Oba justifié
 - Latences cibles atteintes : `json_strict` 9.11s ✅, `planning_json` 5.14s ✅, `analyse_longue` 29.79s ✅
 - Latences hors cible : `simple_question` 20s (sur-explication), `generation_complexe` 93s (hardware-bound)
 
-**Toutes les tâches P1 → P4 sont complètes. Améliorations post-benchmark appliquées.**
+**Toutes les tâches P1 → P4 sont complètes. Session 2026-02-21 : génération de code ajoutée.**
 
-**Verdict final :** Stella est un agent local fiable, bilingue (FR+EN), avec routing modèle justifié et validé. JSON 100% séquentiel / 93% parallèle. Latences critiques stables même sous charge (planning 5s, json 8s, refactor 9s). Deux axes d'amélioration hardware-bound (génération complexe 105s) et software (system prompts concision Oba1.0) sont documentés et partiellement adressés.
+**Verdict final :** Stella est un agent local fiable, bilingue (FR+EN), capable de générer des modules complets (backend Flask + frontend React) depuis une description en langage naturel. Il gère automatiquement les dépendances manquantes, indexe les fichiers créés pour maintenir la cohérence entre modules, et résout les boucles planner par synthèse intelligente. Deux axes d'amélioration hardware-bound (génération complexe 105s) et software (précision multi-fichiers complexes) restent ouverts.
 
 ---
 

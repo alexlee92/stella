@@ -2,7 +2,9 @@
 Autonomous agent loop for Stella.
 Handles planning, tool execution, and self-correction.
 """
+
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -14,11 +16,17 @@ from agent.action_schema import (
     validate_decision_schema,
 )
 from agent.agent import apply_suggestion, patch_risk, propose_file_update
-from agent.config import AUTO_TEST_COMMAND, MAX_RETRIES_JSON, TOP_K_RESULTS
+from agent.config import (
+    AUTO_TEST_COMMAND,
+    MAX_RETRIES_JSON,
+    PROJECT_ROOT,
+    TOP_K_RESULTS,
+)
 from agent.event_logger import EventLogger
 from agent.git_tools import commit_all, create_branch, diff_summary
 from agent.llm_interface import ask_llm_json
-from agent.memory import remember_fix_strategy, search_memory
+from agent.deps import detect_and_install_deps
+from agent.memory import index_file_in_session, remember_fix_strategy, search_memory
 from agent.patcher import apply_transaction, restore_backup, rollback_transaction
 from agent.project_map import render_project_map
 from agent.quality import (
@@ -35,6 +43,7 @@ from agent.tooling import (
     read_many,
     run_tests,
     search_code,
+    write_new_file,
 )
 
 
@@ -52,6 +61,7 @@ class AutonomousAgent:
     An agent that can run multiple steps to achieve a goal.
     It uses a Planner to decide on actions and a Critique to validate them.
     """
+
     def __init__(
         self,
         top_k: int = TOP_K_RESULTS,
@@ -86,7 +96,18 @@ class AutonomousAgent:
         root_args = {
             k: v
             for k, v in decision.items()
-            if k not in {"action", "tool", "name", "decision", "reason", "why", "args", "parameters", "input"}
+            if k
+            not in {
+                "action",
+                "tool",
+                "name",
+                "decision",
+                "reason",
+                "why",
+                "args",
+                "parameters",
+                "input",
+            }
             and not (isinstance(k, str) and k.startswith("_"))
         }
 
@@ -103,6 +124,12 @@ class AutonomousAgent:
             "read_files": "read_many",
             "search": "search_code",
             "grep": "search_code",
+            "create": "create_file",
+            "new_file": "create_file",
+            "write_file": "create_file",
+            "generate_file": "create_file",
+            "create_module": "create_file",
+            "write_new_file": "create_file",
             "edit": "propose_edit",
             "propose": "propose_edit",
             "propose_patch": "propose_edit",
@@ -179,6 +206,7 @@ class AutonomousAgent:
             "read_file": {"path"},
             "read_many": {"paths"},
             "search_code": {"pattern", "limit"},
+            "create_file": {"path", "description"},
             "propose_edit": {"path", "instruction"},
             "apply_edit": {"path"},
             "apply_all_staged": set(),
@@ -233,9 +261,7 @@ class AutonomousAgent:
             return "read_file", {"path": target}
 
         text_blob = " ".join(
-            str(v)
-            for v in args.values()
-            if isinstance(v, (str, int, float, bool))
+            str(v) for v in args.values() if isinstance(v, (str, int, float, bool))
         ).lower()
         combined = f"{low_goal} {text_blob}"
 
@@ -311,6 +337,16 @@ class AutonomousAgent:
         corrected["reason"] = str(corrected.get("reason") or "auto_corrected_schema")
         return corrected
 
+    def _session_context(self, max_chars_per_file: int = 2000) -> str:
+        """Retourne le contenu des fichiers créés/modifiés dans cette session."""
+        if not self.staged_edits:
+            return ""
+        chunks = []
+        for path, content in self.staged_edits.items():
+            preview = (content or "")[:max_chars_per_file]
+            chunks.append(f"FILE (this session): {path}\n{preview}")
+        return "\n\n".join(chunks)
+
     def _summarize_context(self, goal: str) -> str:
         docs = search_memory(goal, k=self.top_k)
         if not docs:
@@ -320,6 +356,48 @@ class AutonomousAgent:
         for path, content in docs:
             chunks.append(f"FILE: {path}\n{content[:900]}")
         return "\n\n".join(chunks)
+
+    def _summarize_context_multi(
+        self, goal: str, path: str = "", description: str = ""
+    ) -> str:
+        """Recherche de contexte multi-angle : goal + chemin + description.
+
+        Combine les résultats des 3 requêtes et déduplique par chemin de fichier.
+        Inclut aussi les fichiers créés dans la session courante.
+        """
+        import os as _os
+
+        seen_paths: set[str] = set()
+        all_chunks: list[str] = []
+
+        def _add_docs(query: str):
+            if not query.strip():
+                return
+            for fpath, content in search_memory(query, k=self.top_k):
+                rel = _os.path.relpath(fpath, ".").replace("\\", "/")
+                if rel not in seen_paths:
+                    seen_paths.add(rel)
+                    all_chunks.append(f"FILE: {rel}\n{content[:900]}")
+
+        # 1. Recherche par goal principal
+        _add_docs(goal)
+
+        # 2. Recherche par répertoire/nom de fichier cible
+        if path:
+            dir_name = _os.path.dirname(path)
+            base_name = _os.path.splitext(_os.path.basename(path))[0]
+            _add_docs(dir_name or base_name)
+
+        # 3. Recherche par mots-clés de la description
+        if description:
+            _add_docs(description[:200])
+
+        # 4. Fichiers de la session courante (priorité haute — toujours inclus)
+        session = self._session_context(max_chars_per_file=1500)
+        if session:
+            all_chunks.insert(0, session)
+
+        return "\n\n".join(all_chunks) if all_chunks else "No indexed context found"
 
     def _planner_prompt(self, goal: str) -> str:
         history = (
@@ -333,6 +411,7 @@ class AutonomousAgent:
         files = list_python_files(limit=40)
         files_text = "\n".join(files) if files else "no python files"
         context = self._summarize_context(goal)
+        session_ctx = self._session_context(max_chars_per_file=400)
 
         return f"""
 You are an autonomous coding agent.
@@ -343,6 +422,7 @@ You can use one action at a time:
 - read_file: {{"path": "relative/path.py"}}
 - read_many: {{"paths": ["a.py", "b.py"]}}
 - search_code: {{"pattern": "regex or text", "limit": 20}}
+- create_file: {{"path": "relative/path.ext", "description": "complete description of what the file must contain and do"}}
 - propose_edit: {{"path": "relative/path.py", "instruction": "change request. You can use SEARCH/REPLACE blocks for surgical edits."}}
 - apply_edit: {{"path": "relative/path.py"}}
 - apply_all_staged: {{}}
@@ -357,14 +437,21 @@ You can use one action at a time:
 Rules:
 - Return strict JSON only.
 - Use only listed actions and valid args.
+- Use create_file to generate NEW files (backend, frontend, modules, configs) — any extension (.py, .js, .ts, .html, .css, etc.).
+- Use propose_edit only to MODIFY existing files.
 - Keep edits minimal and safe.
-- Prefer read/search/propose/apply actions first.
 - Use git actions only when the goal explicitly asks for git/commit/pr operations.
+- When goal says "generate tests for X/Y.py", create "tests/test_Y.py" (mirror the source filename with test_ prefix under tests/).
+- Never create a file that already exists on disk — use propose_edit instead.
 
 Return format:
 {{"action":"...","reason":"short reason","args":{{...}}}}
 
 Valid examples:
+{{"action":"create_file","reason":"generate tests for users/api.py","args":{{"path":"tests/test_api.py","description":"pytest tests for users/api.py Flask Blueprint: test create/get/update/delete/login endpoints using Flask test client"}}}}
+{{"action":"create_file","reason":"create user model","args":{{"path":"users/models.py","description":"SQLAlchemy User model with id, email, hashed_password, created_at fields and CRUD methods"}}}}
+{{"action":"create_file","reason":"create REST API","args":{{"path":"users/api.py","description":"Flask Blueprint with GET /users, POST /users, PUT /users/<id>, DELETE /users/<id> endpoints using bcrypt for password hashing"}}}}
+{{"action":"create_file","reason":"create frontend component","args":{{"path":"frontend/components/UserForm.jsx","description":"React component for user registration form with email and password fields, validation, and API call"}}}}
 {{"action":"search_code","reason":"find implementation points","args":{{"pattern":"run_quality_pipeline","limit":20}}}}
 {{"action":"read_file","reason":"inspect target file","args":{{"path":"agent/auto_agent.py"}}}}
 {{"action":"propose_edit","reason":"prepare safe minimal change","args":{{"path":"agent/eval_runner.py","instruction":"Add parse KPI details"}}}}
@@ -376,11 +463,16 @@ Project files:
 Relevant indexed context:
 {context}
 
+Files created in this session (use their content as context for new files):
+{session_ctx if session_ctx else "none yet"}
+
 Recent steps:
 {history}
 """
 
-    def _schema_repair_prompt(self, goal: str, decision: dict, schema_error: str) -> str:
+    def _schema_repair_prompt(
+        self, goal: str, decision: dict, schema_error: str
+    ) -> str:
         return f"""
 You must repair this planner JSON to satisfy a strict schema.
 Goal: {goal}
@@ -410,13 +502,40 @@ Rules:
 
     def _extract_target_file_from_goal(self, goal: str) -> Optional[str]:
         low = goal.strip()
-        m = re.search(r"([A-Za-z0-9_./\\-]+\.py)", low)
+        m = re.search(r"([A-Za-z0-9_./\\-]+\.[a-zA-Z]{1,5})", low)
         if not m:
             return None
         path = m.group(1).replace("\\", "/")
         if path.startswith("./"):
             path = path[2:]
         return path
+
+    def _extract_all_target_files_from_goal(self, goal: str) -> List[str]:
+        """Extrait les chemins de fichiers à CRÉER depuis le goal.
+
+        Exclut les fichiers qui existent déjà sur disque (ils sont seulement
+        référencés comme contexte, pas comme cibles de création).
+        """
+        found = re.findall(r"([A-Za-z0-9_./\\-]+\.[a-zA-Z]{1,5})", goal)
+        seen: set[str] = set()
+        out: List[str] = []
+        for raw in found:
+            path = raw.replace("\\", "/")
+            if path.startswith("./"):
+                path = path[2:]
+            # Filtrer les faux positifs (e.g. "1.0", "e.g")
+            if not re.match(
+                r".+\.(py|js|ts|jsx|tsx|html|css|scss|json|yaml|yml|toml|sql|md)$", path
+            ):
+                continue
+            # Ne pas inclure les fichiers qui existent déjà sur disque
+            abs_path = os.path.join(PROJECT_ROOT, path)
+            if os.path.isfile(abs_path):
+                continue
+            if path not in seen:
+                seen.add(path)
+                out.append(path)
+        return out
 
     def _is_code_edit_goal(self, goal: str) -> bool:
         low = (goal or "").lower()
@@ -575,8 +694,10 @@ Rules:
             path = args.get("path", "")
             recent = self._decision_signatures[-6:]
             propose_count = sum(
-                1 for s in recent
-                if json.loads(s).get("a") == "propose_edit" and json.loads(s).get("g", {}).get("path") == path
+                1
+                for s in recent
+                if json.loads(s).get("a") == "propose_edit"
+                and json.loads(s).get("g", {}).get("path") == path
             )
             if propose_count >= 3:
                 return True
@@ -611,7 +732,9 @@ Rules:
             "no files found" in low or "no matches" in low
         ):
             return True
-        if action in {"read_file", "read_many"} and ("[error]" in low or not low.strip()):
+        if action in {"read_file", "read_many"} and (
+            "[error]" in low or not low.strip()
+        ):
             return True
         if action in {"unknown_action", "loop_guard"}:
             return True
@@ -677,13 +800,18 @@ Rules:
                 {
                     "action": "search_code",
                     "reason": f"replan_after_{failure_kind}",
-                    "args": {"pattern": "test_|assert|ruff|black|traceback", "limit": 20},
+                    "args": {
+                        "pattern": "test_|assert|ruff|black|traceback",
+                        "limit": 20,
+                    },
                 }
             )
 
         queue.append(
             {
-                "action": "run_quality" if failure_kind in {"lint", "format"} else "run_tests",
+                "action": (
+                    "run_quality" if failure_kind in {"lint", "format"} else "run_tests"
+                ),
                 "reason": f"verify_after_{failure_kind}_replan",
                 "args": {},
             }
@@ -780,6 +908,7 @@ Rules:
                     return self._fallback_decision(goal, reason=f"schema_invalid:{msg}")
 
         import time as _time
+
         _t0_critique = _time.time()
         raw_critique = ask_llm_json(
             self._critique_prompt(goal, decision),
@@ -789,7 +918,9 @@ Rules:
         )
         _critique_elapsed = round(_time.time() - _t0_critique, 1)
         if _critique_elapsed > 60:
-            print(f"  [critique] lente ({_critique_elapsed}s) — charge élevée sur Ifa1.0")
+            print(
+                f"  [critique] lente ({_critique_elapsed}s) — charge élevée sur Ifa1.0"
+            )
         if (
             isinstance(raw_critique, dict)
             and raw_critique.get("_error_type") == "parse"
@@ -929,6 +1060,62 @@ Rules:
             "args": {"limit": 40, "ext": ".py"},
         }
 
+    def _generate_file_content(self, goal: str, path: str, description: str) -> str:
+        """Génère le contenu complet d'un nouveau fichier via le LLM."""
+        from agent.llm_interface import ask_llm
+        import os as _os
+
+        ext = _os.path.splitext(path)[1].lower()
+        lang_hints = {
+            ".py": "Python",
+            ".js": "JavaScript (ES modules)",
+            ".ts": "TypeScript",
+            ".jsx": "React JSX",
+            ".tsx": "React TSX with TypeScript",
+            ".html": "HTML5",
+            ".css": "CSS",
+            ".scss": "SCSS",
+            ".json": "JSON",
+            ".md": "Markdown",
+            ".sql": "SQL",
+            ".yaml": "YAML",
+            ".yml": "YAML",
+            ".toml": "TOML",
+        }
+        lang = lang_hints.get(ext, "plain text")
+        context = self._summarize_context_multi(
+            goal, path=path, description=description
+        )
+
+        prompt = (
+            f"You are an expert software engineer. Generate the COMPLETE content of a new file.\n\n"
+            f"File path  : {path}\n"
+            f"Language   : {lang}\n"
+            f"Description: {description}\n\n"
+            f"Overall project goal: {goal}\n\n"
+            f"Relevant project context (including files already created this session):\n{context}\n\n"
+            f"Rules:\n"
+            f"- Return ONLY the raw file content. No explanation, no markdown fences.\n"
+            f"- The file must be complete and functional — no TODOs, no stubs.\n"
+            f"- Follow best practices for {lang}.\n"
+            f"- Include all necessary imports/dependencies.\n"
+            f"- For Python: use type hints, docstrings, proper error handling.\n"
+            f"- For JS/TS/JSX: use modern syntax, proper exports.\n"
+            f"- For HTML: include <!DOCTYPE html> and full document structure.\n"
+        )
+        raw = ask_llm(prompt, task_type="backend")
+        # Retirer les éventuelles fences markdown que le modèle pourrait ajouter
+        raw = (raw or "").strip()
+        if raw.startswith("```"):
+            lines = raw.splitlines()
+            end = next(
+                (i for i in range(len(lines) - 1, 0, -1) if lines[i].strip() == "```"),
+                -1,
+            )
+            if end > 0:
+                raw = "\n".join(lines[1:end]).strip()
+        return raw
+
     def plan_once(self, goal: str) -> dict:
         return self._plan_with_critique(goal)
 
@@ -952,11 +1139,16 @@ Rules:
         start_ts = datetime.utcnow()
 
         print(f"\n[stella] Démarrage de l'agent — objectif : {goal[:80]}")
-        print(f"[stella] Paramètres : max_steps={self.max_steps}, apply={auto_apply}, fix={fix_until_green}, tests={generate_tests}")
+        print(
+            f"[stella] Paramètres : max_steps={self.max_steps}, apply={auto_apply}, fix={fix_until_green}, tests={generate_tests}"
+        )
         print()
 
         for index in range(1, self.max_steps + 1):
-            if max_seconds and (datetime.utcnow() - start_ts).total_seconds() > max_seconds:
+            if (
+                max_seconds
+                and (datetime.utcnow() - start_ts).total_seconds() > max_seconds
+            ):
                 self._record(
                     AutoStep(
                         index,
@@ -980,6 +1172,7 @@ Rules:
                 "read_file": f"lit {args.get('path', '')}",
                 "read_many": f"lit {len(args.get('paths', []))} fichier(s)",
                 "search_code": f"cherche « {args.get('pattern', '')} »",
+                "create_file": f"crée {args.get('path', '')}",
                 "propose_edit": f"prépare un patch pour {args.get('path', '')}",
                 "apply_edit": f"applique le patch sur {args.get('path', '')}",
                 "apply_all_staged": "applique tous les patches en attente",
@@ -1036,11 +1229,16 @@ Rules:
                 _read_only = {"read_file", "read_many", "search_code", "list_files"}
                 if action in _read_only and self.steps:
                     last_result = next(
-                        (s.result for s in reversed(self.steps) if s.result and s.action in _read_only),
+                        (
+                            s.result
+                            for s in reversed(self.steps)
+                            if s.result and s.action in _read_only
+                        ),
                         None,
                     )
                     if last_result:
                         from agent.llm_interface import ask_llm
+
                         synthesis_prompt = (
                             f"Goal: {goal}\n\n"
                             f"Collected context:\n{last_result[:3000]}\n\n"
@@ -1050,8 +1248,14 @@ Rules:
                         summary = ask_llm(synthesis_prompt, task_type="analysis")
                         if not summary:
                             summary = last_result[:2000]
-                        self._record(AutoStep(index, "finish", "loop_resolved_read_only", summary))
-                        elapsed = round((datetime.utcnow() - start_ts).total_seconds(), 1)
+                        self._record(
+                            AutoStep(
+                                index, "finish", "loop_resolved_read_only", summary
+                            )
+                        )
+                        elapsed = round(
+                            (datetime.utcnow() - start_ts).total_seconds(), 1
+                        )
                         print(f"\n[stella] Terminé en {elapsed}s\n")
                         return self.render_summary(summary)
                 summary = "Stopped repeated decision loop; recommend narrowing goal to a concrete file-level change request"
@@ -1086,6 +1290,94 @@ Rules:
                     limit = int(args.get("limit", 20))
                     matches = search_code(pattern, limit=limit) if pattern else []
                     step.result = "\n".join(matches) if matches else "No matches"
+
+                elif action == "create_file":
+                    path = args.get("path", "")
+                    description = args.get("description", "")
+                    if not path or not description:
+                        step.result = (
+                            "[error] create_file requires 'path' and 'description'"
+                        )
+                    elif path in self.staged_edits:
+                        # Fichier déjà créé dans cette session → skip
+                        step.result = f"Skipped: {path} already created this session"
+                    elif os.path.isfile(os.path.join(PROJECT_ROOT, path)):
+                        # Fichier pré-existant sur disque → skip, puis vérifier si tous les
+                        # fichiers cibles du goal existent → finish automatique
+                        step.result = f"Skipped: {path} already exists on disk (use fix to modify it)"
+                        all_targets = self._extract_all_target_files_from_goal(goal)
+                        if not all_targets and not self._forced_decisions:
+                            # Tous les fichiers mentionnés dans le goal existent déjà → finish
+                            self._forced_decisions.insert(
+                                0,
+                                {
+                                    "action": "finish",
+                                    "reason": "all_target_files_already_exist",
+                                    "args": {
+                                        "summary": f"All target files already exist on disk: {path}"
+                                    },
+                                },
+                            )
+                    else:
+                        print(f"     génère le contenu de {path}...", flush=True)
+                        content = self._generate_file_content(goal, path, description)
+                        if not content:
+                            step.result = (
+                                f"[error] LLM returned empty content for {path}"
+                            )
+                        else:
+                            write_result = write_new_file(path, content)
+                            if write_result.startswith("ok:"):
+                                self.staged_edits[path] = content
+                                risk = patch_risk(path, content)
+                                # Indexer immédiatement le fichier créé dans la mémoire
+                                # pour qu'il soit trouvable par les prochaines créations.
+                                n_chunks = index_file_in_session(path, content)
+                                # Détecter et installer les dépendances manquantes.
+                                deps_result = detect_and_install_deps(path, content)
+                                step.result = (
+                                    f"Created {path} ({len(content)} chars), "
+                                    f"risk={risk['level']}:{risk['score']}, "
+                                    f"indexed={n_chunks} chunks, "
+                                    f"{deps_result}"
+                                )
+                                # Enchaîner automatiquement les autres fichiers du goal.
+                                all_targets = self._extract_all_target_files_from_goal(
+                                    goal
+                                )
+                                pending = [
+                                    t for t in all_targets if t not in self.staged_edits
+                                ]
+                                if pending:
+                                    # Forcer le prochain fichier comme prochaine décision
+                                    next_path = pending[0]
+                                    self._forced_decisions.insert(
+                                        0,
+                                        {
+                                            "action": "create_file",
+                                            "reason": "multi_file_goal_continuation",
+                                            "args": {
+                                                "path": next_path,
+                                                "description": (
+                                                    f"{goal[:400]} "
+                                                    f"(already created: {', '.join(self.staged_edits.keys())})"
+                                                ),
+                                            },
+                                        },
+                                    )
+                                else:
+                                    # Tous les fichiers du goal sont créés → finish
+                                    created = ", ".join(self.staged_edits.keys())
+                                    self._forced_decisions.insert(
+                                        0,
+                                        {
+                                            "action": "finish",
+                                            "reason": "all_files_created",
+                                            "args": {"summary": f"Created: {created}"},
+                                        },
+                                    )
+                            else:
+                                step.result = f"[error] write failed: {write_result}"
 
                 elif action == "propose_edit":
                     path = args.get("path", "")
@@ -1180,7 +1472,9 @@ Rules:
                                     {
                                         "source_files": [path],
                                         "generated_files": generated,
-                                        "quality_ok_rate": gen.get("quality_ok_rate", 0.0),
+                                        "quality_ok_rate": gen.get(
+                                            "quality_ok_rate", 0.0
+                                        ),
                                     },
                                 )
                                 step.result = (
@@ -1207,7 +1501,9 @@ Rules:
                                 flat_rows.extend(details.get("fast", []))
                                 flat_rows.extend(details.get("full", []))
                                 normalized = run_quality_pipeline_normalized(
-                                    mode="fast", changed_files=[path], command_timeout=90
+                                    mode="fast",
+                                    changed_files=[path],
+                                    command_timeout=90,
                                 )
                                 failure_text = json.dumps(
                                     normalized if normalized else {"rows": flat_rows},
@@ -1271,7 +1567,9 @@ Rules:
                                         {
                                             "source_files": changed,
                                             "generated_files": generated,
-                                            "quality_ok_rate": gen.get("quality_ok_rate", 0.0),
+                                            "quality_ok_rate": gen.get(
+                                                "quality_ok_rate", 0.0
+                                            ),
                                         },
                                     )
                                     step.result = (
@@ -1288,7 +1586,9 @@ Rules:
                                 if "generated_tests=" in step.result:
                                     step.result += "; quality gate passed"
                                 else:
-                                    step.result = "Transaction applied; quality gate passed"
+                                    step.result = (
+                                        "Transaction applied; quality gate passed"
+                                    )
                             else:
                                 self.event_logger.log_failure(
                                     "test",
@@ -1324,7 +1624,9 @@ Rules:
                                     rb = rollback_transaction(backups)
                                     if not rb:
                                         self.event_logger.log_failure(
-                                            "rollback", "rollback_transaction_failed", {}
+                                            "rollback",
+                                            "rollback_transaction_failed",
+                                            {},
                                         )
                                     step.result = f"Transaction applied then failed quality gate; rollback={'ok' if rb else 'failed'}"
 

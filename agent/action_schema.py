@@ -5,6 +5,7 @@ ALLOWED_ACTIONS = {
     "read_file",
     "read_many",
     "search_code",
+    "create_file",
     "propose_edit",
     "apply_edit",
     "apply_all_staged",
@@ -57,6 +58,10 @@ def validate_decision_schema(decision: dict) -> tuple[bool, str]:
         "read_file": {"required": {"path": "str"}, "optional": {}},
         "read_many": {"required": {"paths": "list_str"}, "optional": {}},
         "search_code": {"required": {"pattern": "str"}, "optional": {"limit": "int"}},
+        "create_file": {
+            "required": {"path": "str", "description": "str"},
+            "optional": {},
+        },
         "propose_edit": {
             "required": {"path": "str", "instruction": "str"},
             "optional": {},

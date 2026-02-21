@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python:*)",
       "Bash(PYTHONIOENCODING=utf-8 python:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(ls:*)"
     ]
   }
 }

@@ -40,20 +40,66 @@ def index_project(project_root=PROJECT_ROOT, force_rebuild: bool = False):
     build_memory(project_root, force_rebuild=force_rebuild)
 
 
+def _resolve_file_fuzzy(path: str) -> str | None:
+    """Essaie de résoudre un chemin de fichier, en testant des variantes (pluriel, etc.)."""
+    candidates = [path]
+    # Essai avec s final sur le premier segment (user → users)
+    parts = path.replace("\\", "/").split("/")
+    if parts:
+        candidates.append("/".join([parts[0] + "s"] + parts[1:]))
+        candidates.append("/".join([parts[0].rstrip("s")] + parts[1:]))
+    for candidate in candidates:
+        abs_path = _to_abs(candidate)
+        if os.path.isfile(abs_path):
+            return abs_path
+    return None
+
+
+def _extract_file_refs(question: str) -> list[str]:
+    """Extrait les chemins de fichiers mentionnés dans une question."""
+    pattern = (
+        r"([A-Za-z0-9_./\\-]+\.(?:py|js|ts|jsx|tsx|html|css|json|yaml|yml|md|toml|sql))"
+    )
+    return list(dict.fromkeys(re.findall(pattern, question)))
+
+
 def ask_project(question: str, k: int = TOP_K_RESULTS) -> str:
     context = budget_context(question, k=max(4, k))
 
-    prompt = f"""
-You are a senior coding assistant.
-Answer using the project context only when possible.
-If uncertain, say what is missing.
+    # Lire directement les fichiers mentionnés dans la question
+    file_sections: list[str] = []
+    for ref in _extract_file_refs(question):
+        abs_path = _resolve_file_fuzzy(ref)
+        if abs_path:
+            try:
+                content = load_file_content(abs_path)
+                rel = os.path.relpath(abs_path, PROJECT_ROOT)
+                # Ajouter les numéros de ligne pour que le LLM ne les invente pas
+                numbered = "\n".join(
+                    f"{i+1:4d} | {line}" for i, line in enumerate(content.splitlines())
+                )
+                file_sections.append(f"=== {rel} ===\n{numbered}")
+            except OSError:
+                pass
 
-Question:
-{question}
+    file_context = "\n\n".join(file_sections)
 
-Project context:
+    prompt = f"""Tu es un assistant de développement senior. Réponds en prose claire, PAS en JSON.
+
+Question: {question}
+{f"""
+Voici le contenu exact du fichier mentionné — analyse-le ligne par ligne:
+{file_context}
+
+Instructions:
+- Liste uniquement les vraies erreurs (NameError, ImportError, logique incorrecte).
+- Pour chaque erreur: numéro de ligne, description courte, correction proposée en code.
+- Si le fichier est correct, dis-le explicitement.
+- Ne réinvente pas des erreurs qui n'existent pas.
+""" if file_context else f"""
+Contexte du projet:
 {context}
-"""
+"""}"""
     return ask_llm(prompt, task_type="analysis").strip()
 
 

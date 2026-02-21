@@ -1,4 +1,9 @@
-﻿import argparse
+﻿import sys
+
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+import argparse
 
 from agent.agent import (
     apply_suggestion,
@@ -22,9 +27,94 @@ from agent.progress import summarize_progress
 from agent.project_map import render_project_map
 
 
+def _smart_dispatch(goal: str) -> None:
+    """Route automatiquement vers ask / run / fix selon l'intention détectée."""
+    index_project()
+    low = goal.strip().lower()
+
+    # --- Question (lecture seule, réponse rapide) ---
+    question_starters = (
+        "qu'est",
+        "qu'",
+        "c'est quoi",
+        "c'est quoi",
+        "qu est",
+        "quel",
+        "quelle",
+        "comment",
+        "pourquoi",
+        "explique",
+        "expliques",
+        "dis moi",
+        "dis-moi",
+        "what ",
+        "how ",
+        "why ",
+        "explain",
+        "is there",
+        "does ",
+        "where ",
+        "where is",
+        "show me",
+        "liste ",
+        "listes ",
+    )
+    is_question = goal.strip().endswith("?") or any(
+        low.startswith(s) for s in question_starters
+    )
+
+    # --- Création de nouveaux fichiers (agent autonome multi-étapes) ---
+    create_keywords = (
+        "crée ",
+        "génère ",
+        "implémente ",
+        "implémente un",
+        "ajoute un module",
+        "creer ",
+        "créer ",
+        "genere ",
+        "générer ",
+        "implemente ",
+        "create ",
+        "generate ",
+        "scaffold",
+        "nouveau module",
+        "new module",
+        "nouveau fichier",
+        "new file",
+    )
+    is_creation = any(kw in low for kw in create_keywords)
+
+    if is_question:
+        mode = "ask"
+        print(f"[stella] mode détecté : question — réponse directe\n")
+        print(ask_project(goal))
+    elif is_creation:
+        mode = "run"
+        print(f"[stella] mode détecté : création — agent autonome\n")
+        print(AutonomousAgent(max_steps=10).run(goal=goal))
+    else:
+        mode = "fix"
+        print(f"[stella] mode détecté : modification — fix standard\n")
+        result = run_dev_task(goal=goal, profile="standard")
+        status = result.get("status", "?")
+        changed = result.get("changed_files_count", 0)
+        next_action = result.get("next_action", "")
+        print(f"\nStatut    : {status}")
+        print(f"Fichiers  : {changed} modifié(s)")
+        if next_action:
+            print(f"Prochaine étape : {next_action}")
+        summary_md = result.get("summary_md")
+        if summary_md:
+            print(f"Rapport complet : {summary_md}")
+
+
 def build_parser():
-    parser = argparse.ArgumentParser(description="Local coding agent (DeepSeek/Ollama)")
-    sub = parser.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser(
+        description="Local coding agent (DeepSeek/Ollama)",
+        usage='stella.py [command] [goal]  — ou simplement : stella.py "<ton goal>"',
+    )
+    sub = parser.add_subparsers(dest="command", required=False)
 
     idx = sub.add_parser(
         "index", help="Index project files into persistent vector memory"
@@ -234,7 +324,7 @@ def run_chat(
             continue
 
         if user_input.startswith("/run "):
-            goal = user_input[len("/run "):].strip()
+            goal = user_input[len("/run ") :].strip()
             if not goal:
                 print("[!] Usage : /run <objectif>")
                 continue
@@ -250,7 +340,7 @@ def run_chat(
             continue
 
         if user_input.startswith("/plan "):
-            goal = user_input[len("/plan "):].strip()
+            goal = user_input[len("/plan ") :].strip()
             if not goal:
                 print("[!] Usage : /plan <objectif>")
                 continue
@@ -259,7 +349,7 @@ def run_chat(
             continue
 
         if user_input.startswith("/ask "):
-            question = user_input[len("/ask "):].strip()
+            question = user_input[len("/ask ") :].strip()
             if not question:
                 print("[!] Usage : /ask <question>")
                 continue
@@ -283,7 +373,7 @@ def run_chat(
             continue
 
         if user_input.startswith("/undo "):
-            filepath = user_input[len("/undo "):].strip()
+            filepath = user_input[len("/undo ") :].strip()
             if not filepath:
                 print("[!] Usage : /undo <fichier>")
                 continue
@@ -297,6 +387,7 @@ def run_chat(
 
         if user_input == "/eval":
             from agent.tooling import run_tests
+
             print("Lancement des tests...")
             result = run_tests("pytest -q")
             print(result)
@@ -325,9 +416,49 @@ def handle_edit_like(file_path: str, instruction: str, do_apply: bool):
         apply_suggestion(file_path, code, interactive=True)
 
 
+_KNOWN_COMMANDS = {
+    "index",
+    "ask",
+    "review",
+    "apply",
+    "undo",
+    "plan",
+    "run",
+    "pr-ready",
+    "chat",
+    "bootstrap",
+    "map",
+    "eval",
+    "doctor",
+    "ci",
+    "progress",
+    "dev-task",
+    "ide-shortcuts",
+    "auto",
+    "edit",
+    "init",
+    "fix",
+}
+
+
 def main():
+    # Entrée directe : python stella.py "mon goal" sans sous-commande
+    # Si le premier argument n'est pas une sous-commande connue → dispatch auto
+    if (
+        len(sys.argv) >= 2
+        and sys.argv[1] not in _KNOWN_COMMANDS
+        and not sys.argv[1].startswith("-")
+    ):
+        goal = " ".join(sys.argv[1:])
+        _smart_dispatch(goal)
+        return
+
     parser = build_parser()
     args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return
 
     if args.command == "index":
         index_project(force_rebuild=args.rebuild)
@@ -487,7 +618,7 @@ def main():
         print(format_bootstrap(report))
         if report.get("ok"):
             print("\nProchaines étapes :")
-            print("  python stella.py fix \"<décris ce que tu veux faire>\"")
+            print('  python stella.py fix "<décris ce que tu veux faire>"')
             print("  python stella.py chat          — mode interactif")
             print("  python stella.py doctor        — diagnostics environnement")
         else:
@@ -495,7 +626,9 @@ def main():
         return
 
     if args.command == "fix":
-        profile = "safe" if args.safe else ("aggressive" if args.aggressive else "standard")
+        profile = (
+            "safe" if args.safe else ("aggressive" if args.aggressive else "standard")
+        )
         print(f"=== Stella Fix — profil : {profile} ===")
         print(f"Objectif : {args.description}\n")
         result = run_dev_task(

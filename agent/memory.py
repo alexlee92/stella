@@ -2,6 +2,7 @@
 Vector memory and indexing for Stella.
 Supports semantic search (Ollama embeddings) and lexical search (BM25).
 """
+
 import hashlib
 import json
 import os
@@ -109,7 +110,9 @@ def _load_fix_strategy_docs(limit: int = 8) -> List[Tuple[str, str]]:
                 strategy = str(obj.get("strategy", ""))
                 files = obj.get("files") or []
                 files_text = ", ".join(files[:4]) if isinstance(files, list) else ""
-                text = f"issue: {issue}\nstrategy: {strategy}\nfiles: {files_text}".strip()
+                text = (
+                    f"issue: {issue}\nstrategy: {strategy}\nfiles: {files_text}".strip()
+                )
                 rows.append(("memory://fix_strategies", text))
     except OSError:
         return []
@@ -342,7 +345,7 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
 
     files = get_source_files(project_root, extensions=SOURCE_EXTENSIONS)
     file_hashes = {}
-    all_chunks_to_embed = [] # list of (path, idx, text, symbol)
+    all_chunks_to_embed = []  # list of (path, idx, text, symbol)
 
     for file_path in files:
         content = load_file_content(file_path)
@@ -354,7 +357,9 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
         for idx, (chunk, symbol) in enumerate(chunks):
             all_chunks_to_embed.append((file_path, idx, chunk, symbol))
 
-    print(f"[memory] embedding {len(all_chunks_to_embed)} chunks using parallel workers...")
+    print(
+        f"[memory] embedding {len(all_chunks_to_embed)} chunks using parallel workers..."
+    )
 
     def _embed_and_wrap(item):
         path, idx, text, symbol = item
@@ -364,7 +369,13 @@ def build_memory(project_root: str = PROJECT_ROOT, force_rebuild: bool = False):
         return MemoryDoc(path=path, chunk_id=idx, text=text, symbol=symbol), vec
 
     with ThreadPoolExecutor(max_workers=8) as executor:
-        results = list(tqdm(executor.map(_embed_and_wrap, all_chunks_to_embed), total=len(all_chunks_to_embed), desc="Embedding chunks"))
+        results = list(
+            tqdm(
+                executor.map(_embed_and_wrap, all_chunks_to_embed),
+                total=len(all_chunks_to_embed),
+                desc="Embedding chunks",
+            )
+        )
 
     for res in results:
         if res:
@@ -453,7 +464,9 @@ def _build_hot_path_signals(limit: int = 20) -> tuple[set[str], set[str]]:
             hot.add(norm)
             abs_path = os.path.join(PROJECT_ROOT, rel)
             if os.path.exists(abs_path):
-                import_tokens.update(_extract_import_tokens(norm, load_file_content(abs_path)))
+                import_tokens.update(
+                    _extract_import_tokens(norm, load_file_content(abs_path))
+                )
     except Exception:
         pass
 
@@ -521,6 +534,33 @@ def search_memory(query: str, k: int = 3):
         out = out[:k]
     _cache_put(cache_key, out)
     return out
+
+
+def index_file_in_session(path: str, content: str) -> int:
+    """Indexe immédiatement un fichier créé/modifié en session sans rebuild complet.
+
+    Les chunks sont ajoutés aux listes globales `documents` et `vectors`,
+    rendant le fichier trouvable par `search_memory` dans la même session.
+    Retourne le nombre de chunks indexés.
+    """
+    if not content.strip():
+        return 0
+
+    chunks = _chunk_for_file(path, content)
+    added = 0
+    for idx, (chunk, symbol) in enumerate(chunks):
+        vec = embed(chunk)
+        if vec is None:
+            continue
+        documents.append(MemoryDoc(path=path, chunk_id=idx, text=chunk, symbol=symbol))
+        vectors.append(vec)
+        added += 1
+
+    if added > 0:
+        _rebuild_lexical_stats()
+        _query_cache.clear()  # invalider le cache pour forcer re-recherche
+
+    return added
 
 
 def budget_context(query: str, k: int = 6, budget_chars: int = CONTEXT_BUDGET_CHARS):

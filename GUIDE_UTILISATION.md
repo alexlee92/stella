@@ -1,124 +1,150 @@
 # Guide d'Utilisation : Stella Agent
 
-Ce guide explique comment utiliser Stella Agent comme assistant de programmation pour vos projets. Stella est optimisé pour fonctionner localement avec Ollama ou via l'API OpenAI.
+Stella est un agent de code local qui tourne avec les modèles Orisha (deepseek-coder-v2 + qwen2.5-coder via Ollama).
 
 ---
 
-## 1. Installation et Configuration
+## 1. Installation
 
 ### Prérequis
 - **Python 3.11+**
-- **Ollama** (pour l'usage local) : [ollama.com](https://ollama.com)
-  - Modèle recommandé : `ollama pull deepseek-coder:6.7b`
+- **Ollama** : [ollama.com](https://ollama.com)
+  - Modèles Orisha : `ollama create Orisha-Ifa1.0 -f Modelfile-Ifa` et `ollama create Orisha-Oba1.0 -f Modelfile-Oba`
   - Modèle d'embedding : `ollama pull nomic-embed-text`
 
 ### Installation
-Clonez Stella dans un dossier, puis dans votre projet cible (ou dans le dossier de Stella pour travailler sur Stella lui-même) :
-
 ```bash
-# Créer l'environnement virtuel
 python -m venv .venv
-source .venv/bin/activate  # Ou .venv\Scripts\activate sur Windows
+.venv\Scripts\activate        # Windows
+# ou : source .venv/bin/activate  # Linux/Mac
 
-# Installer les dépendances (maintenant incluant tqdm, ruff, black, etc.)
 pip install -e .
 ```
 
-### Configuration (`settings.toml`)
-Configurez vos préférences dans le fichier `settings.toml` à la racine :
-
-```toml
-[models]
-main = "deepseek-coder:6.7b" # Ou "gpt-4" si vous avez une clé
-embed = "nomic-embed-text"
-
-[ollama]
-base_url = "http://localhost:11434"
-
-[agent]
-# Pour utiliser OpenAI (optionnel)
-# OPENAI_API_KEY = "sk-..." 
+### Première utilisation
+```bash
+python stella.py init         # indexe le projet + vérifie l'environnement
 ```
 
 ---
 
-## 2. Étape 1 : Indexer votre projet
-Avant de poser des questions complexes, Stella doit "apprendre" votre code. 
+## 2. Utilisation — syntaxe simple
+
+**Tu n'as pas besoin de choisir la commande.** Envoie juste ton goal et Stella détecte l'intention :
 
 ```bash
-python stella.py index
-```
-*Note : Grâce à la mise à jour, une barre de progression s'affiche et l'indexation est parallélisée.*
-
----
-
-## 3. Étape 2 : Mode Interactif (Quick Tasks)
-
-### Poser une question sur le code
-Stella utilise sa mémoire sémantique pour trouver les fichiers pertinents.
-```bash
-python stella.py ask "Comment est gérée l'authentification dans ce projet ?"
+python stella.py "ton goal en langage naturel"
 ```
 
-### Proposer une modification (Review)
-Pour voir ce que Stella changerait sans appliquer la modification :
+| Intention détectée | Routé vers | Exemples de déclencheur |
+| :--- | :--- | :--- |
+| **Question** | réponse directe | `?`, "comment", "qu'est-ce que", "explique", "pourquoi" |
+| **Création** | agent autonome | "crée", "génère", "implémente", "nouveau module" |
+| **Modification** | fix standard | tout le reste (corrige, ajoute, refactor, bug...) |
+
+### Exemples concrets
 ```bash
-python stella.py review chemin/vers/fichier.py "Ajoute une validation pour l'email"
-```
+# Question → réponse immédiate (pas de modification)
+python stella.py "comment fonctionne le memory index ?"
+python stella.py "qu'est-ce que fait la fonction ask_project ?"
 
-### Appliquer une modification
-Stella va maintenant privilégier les blocs **SEARCH/REPLACE** pour ne modifier que les lignes nécessaires sans reformatage global.
-```bash
-python stella.py apply chemin/vers/fichier.py "Refactorise la boucle pour utiliser une liste en compréhension"
-```
+# Création → génère les fichiers + installe les dépendances
+python stella.py "génère un module auth avec JWT"
+python stella.py "crée les tests pour users/api.py"
+python stella.py "génère un composant React UserDashboard"
 
----
-
-## 4. Étape 3 : Mode Autonome (Agentic Mode)
-
-C'est ici que Stella devient un véritable agent. Il peut lire plusieurs fichiers, chercher dans le code et exécuter des tests jusqu'à ce que la solution soit trouvée.
-
-### Résoudre un bug ou implémenter une feature
-```bash
-python stella.py run "Fixe le bug de timeout dans le module de téléchargement" --apply --steps 10
-```
-
-### Mode Robuste (Auto-correction)
-Stella va essayer de corriger le code jusqu'à ce que les tests passent :
-```bash
-python stella.py run "Crée un nouveau endpoint API pour les rapports" --apply --with-tests --fix-until-green
+# Modification → lit, patche, applique, teste
+python stella.py "corrige les erreurs dans users/api.py"
+python stella.py "ajoute la validation email dans users/api.py"
+python stella.py "refactorise la boucle dans agent/memory.py"
 ```
 
 ---
 
-## 5. Étape 4 : Mode Chat Continu
+## 3. Commandes explicites (avancé)
 
-Pour une expérience proche de ChatGPT/Claude mais avec accès à vos fichiers :
+Si tu veux forcer un mode précis :
+
+| Commande | Usage | Description |
+| :--- | :--- | :--- |
+| `ask "question"` | lecture seule | Réponse sur le codebase, lit les fichiers mentionnés |
+| `fix "description"` | modification | Corrige/améliore, applique les patches |
+| `run "goal"` | autonome multi-étapes | Lecture + création + modification + tests |
+| `chat` | interactif | Mode conversationnel continu avec `/run`, `/ask`, `/map`... |
+| `index` | mémoire | Réindexe tous les fichiers du projet |
+| `map` | lecture | Affiche la carte des symboles du projet |
+| `doctor` | diagnostic | Vérifie Ollama, modèles, dépendances |
 
 ```bash
-python stella.py chat --apply
+python stella.py ask "comment est gérée l'authentification ?"
+python stella.py fix "corrige le bug de timeout dans agent/auto_agent.py"
+python stella.py run "implémente un système de cache Redis" --apply --with-tests
+python stella.py chat
+python stella.py index --rebuild
 ```
-**Commandes dans le chat :**
-- `/plan <but>` : Demander à l'agent de réfléchir à une stratégie.
-- `/run <but>` : Lancer l'exécution autonome.
-- `Votre message` : Chat normal avec contexte du code.
 
 ---
 
-## 6. Bonnes Pratiques pour Stella
+## 4. Préparer une Pull Request
 
-1.  **Soyez spécifique** : Au lieu de "Améliore le code", dites "Améliore la gestion des erreurs dans `auth.py` en ajoutant des blocs try/except".
-2.  **Utilisez le Quality Pipeline** : Laissez Stella exécuter ses tests. S'il fait une erreur, il fera un **rollback** automatique pour ne pas laisser votre projet dans un état instable.
-3.  **Vérifiez les Diff** : Même si Stella est intelligent, vérifiez toujours les modifications appliquées (via `git diff`) avant de commiter.
-4.  **Indexation régulière** : Si vous modifiez beaucoup de fichiers manuellement, relancez `python stella.py index` pour mettre à jour sa mémoire.
+Après avoir fait des modifications avec Stella :
+
+```bash
+python stella.py pr-ready "description de la PR"
+```
+
+Ce que fait `pr-ready` :
+1. Vérifie qu'il y a des changements (`git status`)
+2. Lance le quality gate (format + lint + tests)
+3. Crée une branche auto-nommée : `agent/YYYYMMDD-description`
+4. Commite tous les fichiers modifiés
+5. Génère un fichier `.stella/last_pr.md` avec le résumé, le diff et la checklist
+
+```bash
+# Options
+python stella.py pr-ready "ajout module auth JWT" --branch "feature/auth" --message "feat(auth): add JWT module"
+```
 
 ---
 
-## 7. Exemples de commandes courantes
+## 5. Mode Chat
+
+Pour une session interactive (comme un terminal Claude/Codex) :
+
+```bash
+python stella.py chat
+```
+
+**Commandes disponibles dans le chat :**
+- `/run <but>` — lance l'agent autonome
+- `/ask <question>` — pose une question sur le code
+- `/plan <but>` — affiche le plan sans l'exécuter
+- `/status` — état git (branche, fichiers modifiés)
+- `/map` — carte des symboles du projet
+- `/undo <fichier>` — annule la dernière modification d'un fichier
+- `/eval` — lance les tests rapides
+- `/help` — liste des commandes
+
+---
+
+## 6. Sécurité et bonnes pratiques
+
+- **Backups automatiques** : chaque fichier modifié est sauvegardé dans `<fichier>.bak_YYYYMMDD_HHMMSS` avant application
+- **Rollback** : si les tests échouent, Stella restaure le fichier précédent
+- **Undo manuel** : `python stella.py undo chemin/vers/fichier.py`
+- **Vérification** : après modification, fais toujours un `git diff` avant de commiter
+
+---
+
+## 7. Résumé — cas d'usage rapide
 
 | Besoin | Commande |
 | :--- | :--- |
-| **Expliquer un bug** | `python stella.py ask "Pourquoi j'ai une erreur NullPointer ici ?"` |
-| **Générer des tests** | `python stella.py apply mon_script.py "Génère des tests pytest exhaustifs"` |
-| **Nettoyer le code** | `python stella.py run "Passe ruff sur tout le projet et fixe les erreurs" --apply` |
-| **Préparer une PR** | `python stella.py pr-ready "Ajout du module de logs"` |
+| Poser une question | `python stella.py "comment fonctionne X ?"` |
+| Corriger un bug | `python stella.py "corrige le bug dans fichier.py"` |
+| Créer un module | `python stella.py "génère un module de gestion des logs"` |
+| Générer des tests | `python stella.py "crée les tests pour mon_module.py"` |
+| Nettoyer le code | `python stella.py "passe ruff sur tout le projet et fixe les erreurs"` |
+| Préparer une PR | `python stella.py pr-ready "description"` |
+| Mode interactif | `python stella.py chat` |
+| Diagnostics | `python stella.py doctor` |

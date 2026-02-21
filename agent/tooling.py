@@ -96,8 +96,19 @@ def read_many(
 
 
 _SOURCE_EXTENSIONS = {
-    ".py", ".js", ".jsx", ".ts", ".tsx", ".json", ".toml", ".yaml", ".yml",
-    ".md", ".html", ".css", ".scss",
+    ".py",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".json",
+    ".toml",
+    ".yaml",
+    ".yml",
+    ".md",
+    ".html",
+    ".css",
+    ".scss",
 }
 
 
@@ -161,6 +172,23 @@ def search_code(pattern: str, limit: int = 30) -> List[str]:
                 if len(output) >= limit:
                     return output
     return output
+
+
+def write_new_file(path: str, content: str) -> str:
+    """Écrit un nouveau fichier sur disque, crée les dossiers parents si nécessaire.
+
+    Retourne un message de résultat (success ou erreur).
+    """
+    abs_path = _resolve_path(path)
+    parent = os.path.dirname(abs_path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    try:
+        with open(abs_path, "w", encoding="utf-8") as fh:
+            fh.write(content)
+        return f"ok:{abs_path}"
+    except OSError as exc:
+        return f"error:{exc}"
 
 
 def run_tests_detailed(
