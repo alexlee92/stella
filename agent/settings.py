@@ -26,6 +26,13 @@ def load_settings() -> dict:
         "OLLAMA_BASE_URL",
         _get(file_cfg, "ollama", "base_url", "http://localhost:11434"),
     )
+    orisha_base_url = os.getenv(
+        "ORISHA_BASE_URL",
+        _get(file_cfg, "orisha", "base_url", "http://localhost:5000"),
+    )
+    orisha_enabled = str(
+        os.getenv("ORISHA_ENABLED", _get(file_cfg, "orisha", "enabled", False))
+    ).lower() in {"1", "true", "yes"}
 
     settings = {
         "MODEL": os.getenv(
@@ -43,6 +50,9 @@ def load_settings() -> dict:
         "OLLAMA_BASE_URL": base_url,
         "OLLAMA_URL": f"{base_url}/api/chat",
         "OLLAMA_EMBED_URL": f"{base_url}/api/embeddings",
+        "ORISHA_BASE_URL": orisha_base_url,
+        "ORISHA_URL": f"{orisha_base_url}/query",
+        "ORISHA_ENABLED": orisha_enabled,
         "REQUEST_TIMEOUT": int(
             os.getenv(
                 "REQUEST_TIMEOUT", _get(file_cfg, "ollama", "request_timeout", 120)
@@ -123,6 +133,10 @@ def load_settings() -> dict:
         ),
         "TEST_COMMAND": os.getenv(
             "TEST_COMMAND", _get(file_cfg, "quality", "test_command", "pytest -q")
+        ),
+        "SECURITY_COMMAND": os.getenv(
+            "SECURITY_COMMAND",
+            _get(file_cfg, "quality", "security_command", "python -m bandit -r . -ll"),
         ),
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
     }

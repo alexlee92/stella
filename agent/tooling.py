@@ -5,7 +5,7 @@ import subprocess
 from typing import List, Tuple
 
 from agent.config import DRY_RUN, PROJECT_ROOT
-from agent.project_scan import get_python_files, load_file_content
+from agent.project_scan import get_python_files, get_source_files, load_file_content
 
 _ALLOWED_COMMAND_PREFIXES = [
     ["pytest"],
@@ -95,6 +95,12 @@ def read_many(
     return "\n".join(chunks) if chunks else "No files read"
 
 
+_SOURCE_EXTENSIONS = {
+    ".py", ".js", ".jsx", ".ts", ".tsx", ".json", ".toml", ".yaml", ".yml",
+    ".md", ".html", ".css", ".scss",
+}
+
+
 def list_python_files(limit: int = 200) -> List[str]:
     files = get_python_files(PROJECT_ROOT)
     rel = [os.path.relpath(p, PROJECT_ROOT) for p in files]
@@ -103,11 +109,11 @@ def list_python_files(limit: int = 200) -> List[str]:
 
 
 def list_files(limit: int = 200, contains: str = "", ext: str = ".py") -> List[str]:
-    files = list_python_files(limit=100000)
+    extensions = {ext} if ext else _SOURCE_EXTENSIONS
+    files = get_source_files(PROJECT_ROOT, extensions=extensions)
     out = []
-    for rel in files:
-        if ext and not rel.endswith(ext):
-            continue
+    for abs_path in sorted(files):
+        rel = os.path.relpath(abs_path, PROJECT_ROOT)
         if contains and contains not in rel:
             continue
         out.append(rel)

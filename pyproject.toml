@@ -18,4 +18,4 @@ dependencies = [
 ]
 
 [project.scripts]
-stella-agent = "main:main"
+stella-agent = "stella:main"

@@ -46,7 +46,7 @@ base_url = "http://localhost:11434"
 Avant de poser des questions complexes, Stella doit "apprendre" votre code. 
 
 ```bash
-python main.py index
+python stella.py index
 ```
 *Note : Grâce à la mise à jour, une barre de progression s'affiche et l'indexation est parallélisée.*
 
@@ -57,19 +57,19 @@ python main.py index
 ### Poser une question sur le code
 Stella utilise sa mémoire sémantique pour trouver les fichiers pertinents.
 ```bash
-python main.py ask "Comment est gérée l'authentification dans ce projet ?"
+python stella.py ask "Comment est gérée l'authentification dans ce projet ?"
 ```
 
 ### Proposer une modification (Review)
 Pour voir ce que Stella changerait sans appliquer la modification :
 ```bash
-python main.py review chemin/vers/fichier.py "Ajoute une validation pour l'email"
+python stella.py review chemin/vers/fichier.py "Ajoute une validation pour l'email"
 ```
 
 ### Appliquer une modification
 Stella va maintenant privilégier les blocs **SEARCH/REPLACE** pour ne modifier que les lignes nécessaires sans reformatage global.
 ```bash
-python main.py apply chemin/vers/fichier.py "Refactorise la boucle pour utiliser une liste en compréhension"
+python stella.py apply chemin/vers/fichier.py "Refactorise la boucle pour utiliser une liste en compréhension"
 ```
 
 ---
@@ -80,13 +80,13 @@ C'est ici que Stella devient un véritable agent. Il peut lire plusieurs fichier
 
 ### Résoudre un bug ou implémenter une feature
 ```bash
-python main.py run "Fixe le bug de timeout dans le module de téléchargement" --apply --steps 10
+python stella.py run "Fixe le bug de timeout dans le module de téléchargement" --apply --steps 10
 ```
 
 ### Mode Robuste (Auto-correction)
 Stella va essayer de corriger le code jusqu'à ce que les tests passent :
 ```bash
-python main.py run "Crée un nouveau endpoint API pour les rapports" --apply --with-tests --fix-until-green
+python stella.py run "Crée un nouveau endpoint API pour les rapports" --apply --with-tests --fix-until-green
 ```
 
 ---
@@ -96,7 +96,7 @@ python main.py run "Crée un nouveau endpoint API pour les rapports" --apply --w
 Pour une expérience proche de ChatGPT/Claude mais avec accès à vos fichiers :
 
 ```bash
-python main.py chat --apply
+python stella.py chat --apply
 ```
 **Commandes dans le chat :**
 - `/plan <but>` : Demander à l'agent de réfléchir à une stratégie.
@@ -110,7 +110,7 @@ python main.py chat --apply
 1.  **Soyez spécifique** : Au lieu de "Améliore le code", dites "Améliore la gestion des erreurs dans `auth.py` en ajoutant des blocs try/except".
 2.  **Utilisez le Quality Pipeline** : Laissez Stella exécuter ses tests. S'il fait une erreur, il fera un **rollback** automatique pour ne pas laisser votre projet dans un état instable.
 3.  **Vérifiez les Diff** : Même si Stella est intelligent, vérifiez toujours les modifications appliquées (via `git diff`) avant de commiter.
-4.  **Indexation régulière** : Si vous modifiez beaucoup de fichiers manuellement, relancez `python main.py index` pour mettre à jour sa mémoire.
+4.  **Indexation régulière** : Si vous modifiez beaucoup de fichiers manuellement, relancez `python stella.py index` pour mettre à jour sa mémoire.
 
 ---
 
@@ -118,7 +118,7 @@ python main.py chat --apply
 
 | Besoin | Commande |
 | :--- | :--- |
-| **Expliquer un bug** | `python main.py ask "Pourquoi j'ai une erreur NullPointer ici ?"` |
-| **Générer des tests** | `python main.py apply mon_script.py "Génère des tests pytest exhaustifs"` |
-| **Nettoyer le code** | `python main.py run "Passe ruff sur tout le projet et fixe les erreurs" --apply` |
-| **Préparer une PR** | `python main.py pr-ready "Ajout du module de logs"` |
+| **Expliquer un bug** | `python stella.py ask "Pourquoi j'ai une erreur NullPointer ici ?"` |
+| **Générer des tests** | `python stella.py apply mon_script.py "Génère des tests pytest exhaustifs"` |
+| **Nettoyer le code** | `python stella.py run "Passe ruff sur tout le projet et fixe les erreurs" --apply` |
+| **Préparer une PR** | `python stella.py pr-ready "Ajout du module de logs"` |

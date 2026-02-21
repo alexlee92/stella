@@ -5,7 +5,7 @@
         "prompt":  "Donne un resume de l architecture du projet (cas 1)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -14,10 +14,10 @@
     {
         "name":  "ask_task_2",
         "mode":  "ask",
-        "prompt":  "Explique le role de main.py dans ce projet (cas 2)",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 2)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -29,7 +29,7 @@
         "prompt":  "Quels modules gerent la memoire et le RAG (cas 3)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -41,7 +41,7 @@
         "prompt":  "Comment fonctionne la boucle autonome (cas 4)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -53,7 +53,7 @@
         "prompt":  "Ou est geree la qualite format lint tests (cas 5)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -65,7 +65,7 @@
         "prompt":  "Comment fonctionne la securite des commandes shell (cas 6)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -77,7 +77,7 @@
         "prompt":  "Explique le systeme de rollback en cas d echec (cas 7)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -89,7 +89,7 @@
         "prompt":  "Ou sont stockes les logs de session (cas 8)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -101,7 +101,7 @@
         "prompt":  "Comment fonctionne la commande pr-ready (cas 9)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -113,7 +113,7 @@
         "prompt":  "Comment fonctionne le mode chat continu (cas 10)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -125,7 +125,7 @@
         "prompt":  "Donne un resume de l architecture du projet (cas 11)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -134,10 +134,10 @@
     {
         "name":  "ask_task_12",
         "mode":  "ask",
-        "prompt":  "Explique le role de main.py dans ce projet (cas 12)",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 12)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -149,7 +149,7 @@
         "prompt":  "Quels modules gerent la memoire et le RAG (cas 13)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -161,7 +161,7 @@
         "prompt":  "Comment fonctionne la boucle autonome (cas 14)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -173,7 +173,7 @@
         "prompt":  "Ou est geree la qualite format lint tests (cas 15)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -185,7 +185,7 @@
         "prompt":  "Comment fonctionne la securite des commandes shell (cas 16)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -197,7 +197,7 @@
         "prompt":  "Explique le systeme de rollback en cas d echec (cas 17)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -209,7 +209,7 @@
         "prompt":  "Ou sont stockes les logs de session (cas 18)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -221,7 +221,7 @@
         "prompt":  "Comment fonctionne la commande pr-ready (cas 19)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -233,7 +233,7 @@
         "prompt":  "Comment fonctionne le mode chat continu (cas 20)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -245,7 +245,7 @@
         "prompt":  "Donne un resume de l architecture du projet (cas 21)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -254,10 +254,10 @@
     {
         "name":  "ask_task_22",
         "mode":  "ask",
-        "prompt":  "Explique le role de main.py dans ce projet (cas 22)",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 22)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -269,7 +269,7 @@
         "prompt":  "Quels modules gerent la memoire et le RAG (cas 23)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -281,7 +281,7 @@
         "prompt":  "Comment fonctionne la boucle autonome (cas 24)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -293,7 +293,7 @@
         "prompt":  "Ou est geree la qualite format lint tests (cas 25)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -305,7 +305,7 @@
         "prompt":  "Comment fonctionne la securite des commandes shell (cas 26)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -317,7 +317,7 @@
         "prompt":  "Explique le systeme de rollback en cas d echec (cas 27)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -329,7 +329,7 @@
         "prompt":  "Ou sont stockes les logs de session (cas 28)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -341,7 +341,7 @@
         "prompt":  "Comment fonctionne la commande pr-ready (cas 29)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -353,7 +353,7 @@
         "prompt":  "Comment fonctionne le mode chat continu (cas 30)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -365,7 +365,7 @@
         "prompt":  "Donne un resume de l architecture du projet (cas 31)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -374,10 +374,10 @@
     {
         "name":  "ask_task_32",
         "mode":  "ask",
-        "prompt":  "Explique le role de main.py dans ce projet (cas 32)",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 32)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -389,7 +389,7 @@
         "prompt":  "Quels modules gerent la memoire et le RAG (cas 33)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -401,7 +401,7 @@
         "prompt":  "Comment fonctionne la boucle autonome (cas 34)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -413,7 +413,7 @@
         "prompt":  "Ou est geree la qualite format lint tests (cas 35)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -425,7 +425,7 @@
         "prompt":  "Comment fonctionne la securite des commandes shell (cas 36)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -437,7 +437,7 @@
         "prompt":  "Explique le systeme de rollback en cas d echec (cas 37)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -449,7 +449,7 @@
         "prompt":  "Ou sont stockes les logs de session (cas 38)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -461,7 +461,7 @@
         "prompt":  "Comment fonctionne la commande pr-ready (cas 39)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"
@@ -473,7 +473,7 @@
         "prompt":  "Comment fonctionne le mode chat continu (cas 40)",
         "must_contain_any":  [
                                  "agent",
-                                 "main.py",
+                                 "stella.py",
                                  "memory",
                                  "run",
                                  "chat"

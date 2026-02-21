@@ -147,7 +147,7 @@ Atteindre un agent "tres fiable pour usage personnel" avec:
 - Notes:
   - calcul KPI borne a la fenetre temporelle du run eval courant
   - probe `pr-ready` automatique en `dry_run` + `quick_validate` pour mesurer l'utilisabilite a chaque eval
-  - snapshot complet lance via `python main.py eval`
+  - snapshot complet lance via `python stella.py eval`
 
 ---
 
@@ -168,11 +168,11 @@ Une tache est "Done" si:
 - [x] Creation du plan 30 jours
 - [x] Lancement Semaine 1
 - [x] Completion Semaine 1 (schema + critique + loop guard + logs echecs)
-- [x] Ajout commande `python main.py progress`
+- [x] Ajout commande `python stella.py progress`
 - [x] Completion Semaine 2 (AST patch + tests cibles + quality fast/full + risk score)
 - [x] Completion Semaine 3 (chunking symbolique + reranking hybride + context budget + query cache)
 - [x] Completion Semaine 4 (benchmark 50 + KPI auto + doctor + pr-ready checklist)
-- [x] Snapshot KPI rapide via `python main.py eval --limit 8`
+- [x] Snapshot KPI rapide via `python stella.py eval --limit 8`
 - Notes:
   - suivi automatisable via le markdown + commande CLI
   - eval complete 50 taches possible mais plus longue; snapshot rapide utilise pour mesure immediate
@@ -184,7 +184,7 @@ Une tache est "Done" si:
 - [x] KPI eval borne a la fenetre du run courant (pas d'historique stale)
 - [x] Probe `pr-ready` automatique pendant eval
 - [x] Compat git sandbox (`safe.directory`) dans outillage git
-- [x] Eval complete 50 taches lancee (`python main.py eval`) avec snapshot KPI complet
+- [x] Eval complete 50 taches lancee (`python stella.py eval`) avec snapshot KPI complet
 - [x] Axe 1 demarre: retries JSON adaptatifs (strict + constrained + repair)
 - [x] Axe 1 demarre: auto-correction schema planner/critique (pre-validation)
 - [x] Axe 1 demarre: KPI parse detaille par classe + prompt_class
@@ -338,14 +338,14 @@ Livrables:
 - [x] Rendre sortie terminal plus actionnable (prochaine action, risque, statut)
 
 Livrables:
-- [x] `main.py` nouvelle commande `dev-task`
+- [x] `stella.py` nouvelle commande `dev-task`
 - [x] resume standardise de run dans `.stella/`
 - [x] reduction du nombre d'actions manuelles par tache
 - Notes:
-  - nouvelle commande: `python main.py dev-task "<goal>" --apply --with-tests --fix-until-green`
+  - nouvelle commande: `python stella.py dev-task "<goal>" --apply --with-tests --fix-until-green`
   - sortie actionnable: `status`, `changed_files_count`, `next_action`, chemins vers resumes
   - artefacts de run standardises: `.stella/last_dev_task.json` + `.stella/last_dev_task.md`
-  - commande IDE: `python main.py ide-shortcuts` (raccourcis run/review/pr-ready + fichiers de sortie)
+  - commande IDE: `python stella.py ide-shortcuts` (raccourcis run/review/pr-ready + fichiers de sortie)
 
 ### KPI cibles sprint (10 jours)
 

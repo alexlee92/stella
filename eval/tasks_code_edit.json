@@ -3,7 +3,7 @@
         "name":  "code_edit_task_1",
         "mode":  "code_edit",
         "track":  "code_edit",
-        "prompt":  "Dans main.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 1) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "prompt":  "Dans stella.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 1) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
         "must_contain_any":  [
                                  "Decisions",
                                  "step",
@@ -14,7 +14,7 @@
         "with_tests":  true,
         "max_steps":  4,
         "expected_edit_paths":  [
-                                    "main.py"
+                                    "stella.py"
                                 ]
     },
     {
@@ -183,7 +183,7 @@
         "name":  "code_edit_task_11",
         "mode":  "code_edit",
         "track":  "code_edit",
-        "prompt":  "Dans main.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 11) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "prompt":  "Dans stella.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 11) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
         "must_contain_any":  [
                                  "Decisions",
                                  "step",
@@ -194,7 +194,7 @@
         "with_tests":  true,
         "max_steps":  4,
         "expected_edit_paths":  [
-                                    "main.py"
+                                    "stella.py"
                                 ]
     },
     {
@@ -363,7 +363,7 @@
         "name":  "code_edit_task_21",
         "mode":  "code_edit",
         "track":  "code_edit",
-        "prompt":  "Dans main.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 21) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "prompt":  "Dans stella.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 21) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
         "must_contain_any":  [
                                  "Decisions",
                                  "step",
@@ -374,7 +374,7 @@
         "with_tests":  true,
         "max_steps":  4,
         "expected_edit_paths":  [
-                                    "main.py"
+                                    "stella.py"
                                 ]
     },
     {

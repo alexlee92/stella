@@ -568,7 +568,19 @@ Rules:
 
     def _decision_loop_detected(self, action: str, args: dict) -> bool:
         sig = self._signature(action, args)
-        return self._decision_signatures[-4:].count(sig) >= 2
+        if self._decision_signatures[-4:].count(sig) >= 2:
+            return True
+        # Détecter les propose_edit répétés sur le même fichier sans apply_edit entre deux
+        if action == "propose_edit":
+            path = args.get("path", "")
+            recent = self._decision_signatures[-6:]
+            propose_count = sum(
+                1 for s in recent
+                if json.loads(s).get("a") == "propose_edit" and json.loads(s).get("g", {}).get("path") == path
+            )
+            if propose_count >= 3:
+                return True
+        return False
 
     def _outcome_loop_detected(self, action: str, args: dict, result: str) -> bool:
         sig = self._signature(action, args, result)
@@ -703,6 +715,7 @@ Rules:
             self._planner_prompt(goal),
             retries=MAX_RETRIES_JSON,
             prompt_class="planner",
+            task_type="planning",
         )
         decision = self._normalize_decision(raw_decision)
         self.event_logger.log("plan", {"goal": goal, "decision": decision})
@@ -743,6 +756,7 @@ Rules:
                     self._schema_repair_prompt(goal, decision, msg),
                     retries=1,
                     prompt_class="planner_schema_repair",
+                    task_type="planning",
                 )
                 repaired = self._normalize_decision(repaired)
                 r_ok, r_msg = validate_decision_schema(repaired)
@@ -765,11 +779,17 @@ Rules:
                     )
                     return self._fallback_decision(goal, reason=f"schema_invalid:{msg}")
 
+        import time as _time
+        _t0_critique = _time.time()
         raw_critique = ask_llm_json(
             self._critique_prompt(goal, decision),
-            retries=MAX_RETRIES_JSON,
+            retries=1,  # 1 seul retry : si échec, on auto-approuve (fallback sûr)
             prompt_class="critique",
+            task_type="analysis",
         )
+        _critique_elapsed = round(_time.time() - _t0_critique, 1)
+        if _critique_elapsed > 60:
+            print(f"  [critique] lente ({_critique_elapsed}s) — charge élevée sur Ifa1.0")
         if (
             isinstance(raw_critique, dict)
             and raw_critique.get("_error_type") == "parse"
@@ -931,6 +951,10 @@ Rules:
         self._bootstrap_code_edit_decisions(goal, auto_apply=auto_apply)
         start_ts = datetime.utcnow()
 
+        print(f"\n[stella] Démarrage de l'agent — objectif : {goal[:80]}")
+        print(f"[stella] Paramètres : max_steps={self.max_steps}, apply={auto_apply}, fix={fix_until_green}, tests={generate_tests}")
+        print()
+
         for index in range(1, self.max_steps + 1):
             if max_seconds and (datetime.utcnow() - start_ts).total_seconds() > max_seconds:
                 self._record(
@@ -949,6 +973,26 @@ Rules:
             action = decision.get("action", "")
             reason = decision.get("reason", "")
             args = decision.get("args", {}) or {}
+
+            # Feedback visuel pour l'utilisateur
+            _action_labels = {
+                "list_files": "liste les fichiers",
+                "read_file": f"lit {args.get('path', '')}",
+                "read_many": f"lit {len(args.get('paths', []))} fichier(s)",
+                "search_code": f"cherche « {args.get('pattern', '')} »",
+                "propose_edit": f"prépare un patch pour {args.get('path', '')}",
+                "apply_edit": f"applique le patch sur {args.get('path', '')}",
+                "apply_all_staged": "applique tous les patches en attente",
+                "run_tests": "exécute les tests",
+                "run_quality": "vérifie la qualité du code",
+                "project_map": "génère la carte du projet",
+                "git_branch": f"crée la branche {args.get('name', '')}",
+                "git_commit": "committe les changements",
+                "git_diff": "affiche le diff git",
+                "finish": "finalise la tâche",
+            }
+            label = _action_labels.get(action, action)
+            print(f"  [{index}/{self.max_steps}] {label}...", flush=True)
 
             if (
                 index == self.max_steps
@@ -987,6 +1031,29 @@ Rules:
                         "Stopped repeated decision loop",
                     )
                 )
+                # Pour les actions de lecture (read-only), synthétiser une réponse
+                # en lien avec le goal plutôt que de retourner une erreur.
+                _read_only = {"read_file", "read_many", "search_code", "list_files"}
+                if action in _read_only and self.steps:
+                    last_result = next(
+                        (s.result for s in reversed(self.steps) if s.result and s.action in _read_only),
+                        None,
+                    )
+                    if last_result:
+                        from agent.llm_interface import ask_llm
+                        synthesis_prompt = (
+                            f"Goal: {goal}\n\n"
+                            f"Collected context:\n{last_result[:3000]}\n\n"
+                            "Based on the context above, answer the goal concisely and clearly. "
+                            "Do not repeat the code verbatim — summarize and explain."
+                        )
+                        summary = ask_llm(synthesis_prompt, task_type="analysis")
+                        if not summary:
+                            summary = last_result[:2000]
+                        self._record(AutoStep(index, "finish", "loop_resolved_read_only", summary))
+                        elapsed = round((datetime.utcnow() - start_ts).total_seconds(), 1)
+                        print(f"\n[stella] Terminé en {elapsed}s\n")
+                        return self.render_summary(summary)
                 summary = "Stopped repeated decision loop; recommend narrowing goal to a concrete file-level change request"
                 self._record(AutoStep(index, "finish", "auto_stop_repeat", summary))
                 return self.render_summary(summary)
@@ -1375,6 +1442,8 @@ Rules:
                 elif action == "finish":
                     step.result = args.get("summary") or "Task finished"
                     self._record(step)
+                    elapsed = round((datetime.utcnow() - start_ts).total_seconds(), 1)
+                    print(f"\n[stella] Terminé en {elapsed}s\n")
                     return self.render_summary(step.result)
 
                 else:

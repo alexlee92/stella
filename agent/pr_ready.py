@@ -110,7 +110,7 @@ def prepare_pr(
         summary = (
             "PR Ready: no\n"
             "Reason: current folder is not a git repository\n"
-            "Action: run `git init` (or clone repo), then retry `python main.py pr-ready ...`"
+            "Action: run `git init` (or clone repo), then retry `python stella.py pr-ready ...`"
         )
         logger.log("pr_ready", {"ok": False, "reason": "not_git_repo"})
         return {"ok": False, "summary": summary}
@@ -120,7 +120,7 @@ def prepare_pr(
         summary = (
             "PR Ready: no\n"
             "Reason: no local changes to commit\n"
-            "Action: run `python main.py run ... --apply` or edit files, then retry `pr-ready`"
+            "Action: run `python stella.py run ... --apply` or edit files, then retry `pr-ready`"
         )
         logger.log("pr_ready", {"ok": False, "reason": "no_changes"})
         return {"ok": False, "summary": summary}

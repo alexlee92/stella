@@ -15,6 +15,7 @@ from agent.config import AUTO_MAX_STEPS
 from agent.dev_task import ide_shortcuts, run_dev_task
 from agent.doctor import format_doctor, run_doctor
 from agent.eval_runner import run_eval
+from agent.git_tools import changed_files, current_branch
 from agent.patcher import find_latest_backup, restore_backup
 from agent.pr_ready import prepare_pr
 from agent.progress import summarize_progress
@@ -162,7 +163,45 @@ def build_parser():
     edit.add_argument("instruction")
     edit.add_argument("--apply", action="store_true")
 
+    # Commandes simplifiées pour non-experts
+    init_cmd = sub.add_parser(
+        "init",
+        help="Initialiser Stella sur ce projet (git + index + outils) — pour débutants",
+    )
+    init_cmd.add_argument(
+        "--no-git", action="store_true", help="Ne pas initialiser git"
+    )
+
+    fix_cmd = sub.add_parser(
+        "fix",
+        help="Corriger / améliorer le code en langage naturel (mode standard, apply auto)",
+    )
+    fix_cmd.add_argument("description", help="Ce que tu veux faire ou corriger")
+    fix_cmd.add_argument(
+        "--safe", action="store_true", help="Mode prudent : propose sans appliquer"
+    )
+    fix_cmd.add_argument(
+        "--aggressive",
+        action="store_true",
+        help="Mode agressif : correction itérative jusqu'aux tests verts",
+    )
+
     return parser
+
+
+_CHAT_HELP = """
+Commandes disponibles :
+  /run <objectif>     — Lancer l'agent autonome sur un objectif
+  /plan <objectif>    — Afficher le plan sans l'exécuter
+  /ask <question>     — Poser une question sur le codebase
+  /status             — Afficher l'état git (branche, fichiers modifiés)
+  /map                — Afficher la carte des symboles du projet
+  /undo <fichier>     — Annuler la dernière modification d'un fichier
+  /eval               — Lancer les tests rapides (pytest -q)
+  /decisions          — Afficher les dernières décisions de l'agent
+  /help               — Afficher cette aide
+  /exit               — Quitter le chat
+"""
 
 
 def run_chat(
@@ -175,9 +214,14 @@ def run_chat(
     index_project()
     session = ChatSession()
 
-    print("Chat mode started. Commands: /run <goal>, /plan <goal>, /decisions, /exit")
+    print(_CHAT_HELP)
     while True:
-        user_input = input("you> ").strip()
+        try:
+            user_input = input("you> ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\nSession ended")
+            break
+
         if not user_input:
             continue
 
@@ -185,8 +229,15 @@ def run_chat(
             print("Session ended")
             break
 
+        if user_input == "/help":
+            print(_CHAT_HELP)
+            continue
+
         if user_input.startswith("/run "):
-            goal = user_input[len("/run ") :].strip()
+            goal = user_input[len("/run "):].strip()
+            if not goal:
+                print("[!] Usage : /run <objectif>")
+                continue
             summary = session.run_auto(
                 goal=goal,
                 auto_apply=auto_apply,
@@ -199,9 +250,56 @@ def run_chat(
             continue
 
         if user_input.startswith("/plan "):
-            goal = user_input[len("/plan ") :].strip()
+            goal = user_input[len("/plan "):].strip()
+            if not goal:
+                print("[!] Usage : /plan <objectif>")
+                continue
             decision = AutonomousAgent(max_steps=1).plan_once(goal)
             print(decision)
+            continue
+
+        if user_input.startswith("/ask "):
+            question = user_input[len("/ask "):].strip()
+            if not question:
+                print("[!] Usage : /ask <question>")
+                continue
+            print(ask_project(question))
+            continue
+
+        if user_input == "/status":
+            branch = current_branch() or "inconnue"
+            changed = changed_files()
+            print(f"Branche : {branch}")
+            if changed:
+                print(f"Fichiers modifiés ({len(changed)}) :")
+                for f in changed[:20]:
+                    print(f"  {f}")
+            else:
+                print("Aucun fichier modifié.")
+            continue
+
+        if user_input == "/map":
+            print(render_project_map())
+            continue
+
+        if user_input.startswith("/undo "):
+            filepath = user_input[len("/undo "):].strip()
+            if not filepath:
+                print("[!] Usage : /undo <fichier>")
+                continue
+            backup = find_latest_backup(filepath)
+            if not backup:
+                print(f"[!] Aucun backup trouvé pour {filepath}")
+            else:
+                ok = restore_backup(filepath, backup)
+                print("Annulé avec succès." if ok else "[!] Échec de l'annulation.")
+            continue
+
+        if user_input == "/eval":
+            from agent.tooling import run_tests
+            print("Lancement des tests...")
+            result = run_tests("pytest -q")
+            print(result)
             continue
 
         if user_input == "/decisions":
@@ -377,6 +475,43 @@ def main():
 
     if args.command == "edit":
         handle_edit_like(args.file, args.instruction, do_apply=args.apply)
+        return
+
+    if args.command == "init":
+        print("=== Stella — Initialisation du projet ===\n")
+        report = run_bootstrap(
+            init_git=not args.no_git,
+            rebuild_index=True,
+            install_tools=True,
+        )
+        print(format_bootstrap(report))
+        if report.get("ok"):
+            print("\nProchaines étapes :")
+            print("  python stella.py fix \"<décris ce que tu veux faire>\"")
+            print("  python stella.py chat          — mode interactif")
+            print("  python stella.py doctor        — diagnostics environnement")
+        else:
+            raise SystemExit(1)
+        return
+
+    if args.command == "fix":
+        profile = "safe" if args.safe else ("aggressive" if args.aggressive else "standard")
+        print(f"=== Stella Fix — profil : {profile} ===")
+        print(f"Objectif : {args.description}\n")
+        result = run_dev_task(
+            goal=args.description,
+            profile=profile,
+        )
+        status = result.get("status", "?")
+        changed = result.get("changed_files_count", 0)
+        next_action = result.get("next_action", "")
+        print(f"\nStatut    : {status}")
+        print(f"Fichiers  : {changed} modifié(s)")
+        print(f"Prochaine étape : {next_action}")
+        summary_md = result.get("summary_md")
+        if summary_md:
+            print(f"Rapport complet : {summary_md}")
+        return
 
 
 if __name__ == "__main__":

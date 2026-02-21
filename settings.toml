@@ -4,7 +4,11 @@ embed = "nomic-embed-text"
 
 [ollama]
 base_url = "http://localhost:11434"
-request_timeout = 120
+request_timeout = 200
+
+[orisha]
+base_url = "http://localhost:5000"
+enabled = true
 
 [project]
 root = "."
@@ -22,9 +26,9 @@ index_dir = ".stella/memory"
 chunk_size = 1200
 chunk_overlap = 180
 max_chunks_per_file = 30
-context_budget_chars = 4500
-context_max_chunks = 6
-context_max_per_file = 2
+context_budget_chars = 8000
+context_max_chunks = 10
+context_max_per_file = 3
 query_cache_size = 128
 
 [quality]

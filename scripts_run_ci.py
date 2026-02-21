@@ -19,7 +19,7 @@ def run(command: list[str]):
 
 def main():
     steps = [
-        [sys.executable, "-m", "py_compile", "main.py"],
+        [sys.executable, "-m", "py_compile", "stella.py"],
         [
             sys.executable,
             "-m",

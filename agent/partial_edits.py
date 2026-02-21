@@ -51,12 +51,8 @@ def parse_partial_edit(text: str) -> list[tuple[str, str]]:
     >>>>>>> REPLACE
     """
     pattern = re.compile(
-        r"<<<<<<< SEARCH
-(.*?)
-=======
-(.*?)
->>>>>>> REPLACE", 
-        re.DOTALL
+        r"<<<<<<< SEARCH\n(.*?)\n=======\n(.*?)\n>>>>>>> REPLACE",
+        re.DOTALL,
     )
     matches = pattern.findall(text)
     return matches

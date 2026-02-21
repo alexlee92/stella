@@ -1,6 +1,6 @@
 ﻿from typing import List, Optional
 
-from agent.config import FORMAT_COMMAND, LINT_COMMAND, TEST_COMMAND
+from agent.config import FORMAT_COMMAND, LINT_COMMAND, TEST_COMMAND, SECURITY_COMMAND
 from agent.test_selector import build_targeted_pytest_command
 from agent.tooling import run_safe_command
 
@@ -138,10 +138,18 @@ def run_quality_pipeline(
         if mode == "fast"
         else test_cmd
     )
+    
+    # Define effective security command
+    effective_security = SECURITY_COMMAND
+    if changed_files:
+        py_files = _python_files(changed_files)
+        if py_files:
+            effective_security = "python -m bandit " + " ".join(py_files) + " -ll"
 
     for name, cmd in [
         ("format", effective_format),
         ("lint", effective_lint),
+        ("security", effective_security),
         ("tests", effective_tests),
     ]:
         code, out = run_safe_command(cmd, timeout=command_timeout)

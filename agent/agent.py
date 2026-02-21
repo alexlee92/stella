@@ -54,7 +54,7 @@ Question:
 Project context:
 {context}
 """
-    return ask_llm(prompt).strip()
+    return ask_llm(prompt, task_type="analysis").strip()
 
 
 def propose_file_update(
@@ -92,7 +92,7 @@ Related project context:
 {context}
 """
 
-    suggestion = ask_llm(prompt)
+    suggestion = ask_llm(prompt, task_type="optimization")
     return _strip_code_fences(suggestion)
 
 
