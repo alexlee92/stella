@@ -1,0 +1,47 @@
+﻿[models]
+main = "qwen2.5-coder:14b-instruct-q5_K_M"
+embed = "nomic-embed-text"
+
+[ollama]
+base_url = "http://localhost:11434"
+request_timeout = 200
+
+[routing]
+base_url = "http://localhost:5000"
+enabled = false
+
+[project]
+root = "."
+max_file_size = 120000
+
+[agent]
+top_k_results = 5
+auto_max_steps = 10
+auto_test_command = "python -m pytest -q"
+dry_run = false
+max_retries_json = 3
+
+[memory]
+index_dir = ".stella/memory"
+chunk_size = 1200
+chunk_overlap = 180
+max_chunks_per_file = 30
+context_budget_chars = 8000
+context_max_chunks = 10
+context_max_per_file = 3
+query_cache_size = 128
+
+[quality]
+format_command = "python -m ruff format ."
+lint_command = "python -m ruff check ."
+test_command = "python -m pytest -q"
+
+[session]
+history_path = ".stella/session_history.jsonl"
+log_path = ".stella/agent_events.jsonl"
+
+[aliases]
+# Custom command aliases: alias = "stella command args"
+# Example: t = "test"
+# Example: r = "run"
+# Example: q = "fix --safe"

@@ -1,0 +1,582 @@
+﻿[
+    {
+        "name":  "ask_task_1",
+        "mode":  "ask",
+        "prompt":  "Donne un resume de l architecture du projet (cas 1)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_2",
+        "mode":  "ask",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 2)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_3",
+        "mode":  "ask",
+        "prompt":  "Quels modules gerent la memoire et le RAG (cas 3)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_4",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la boucle autonome (cas 4)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_5",
+        "mode":  "ask",
+        "prompt":  "Ou est geree la qualite format lint tests (cas 5)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_6",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la securite des commandes shell (cas 6)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_7",
+        "mode":  "ask",
+        "prompt":  "Explique le systeme de rollback en cas d echec (cas 7)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_8",
+        "mode":  "ask",
+        "prompt":  "Ou sont stockes les logs de session (cas 8)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_9",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la commande pr-ready (cas 9)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_10",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne le mode chat continu (cas 10)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_11",
+        "mode":  "ask",
+        "prompt":  "Donne un resume de l architecture du projet (cas 11)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_12",
+        "mode":  "ask",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 12)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_13",
+        "mode":  "ask",
+        "prompt":  "Quels modules gerent la memoire et le RAG (cas 13)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_14",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la boucle autonome (cas 14)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_15",
+        "mode":  "ask",
+        "prompt":  "Ou est geree la qualite format lint tests (cas 15)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_16",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la securite des commandes shell (cas 16)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_17",
+        "mode":  "ask",
+        "prompt":  "Explique le systeme de rollback en cas d echec (cas 17)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_18",
+        "mode":  "ask",
+        "prompt":  "Ou sont stockes les logs de session (cas 18)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_19",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la commande pr-ready (cas 19)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_20",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne le mode chat continu (cas 20)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_21",
+        "mode":  "ask",
+        "prompt":  "Donne un resume de l architecture du projet (cas 21)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_22",
+        "mode":  "ask",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 22)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_23",
+        "mode":  "ask",
+        "prompt":  "Quels modules gerent la memoire et le RAG (cas 23)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_24",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la boucle autonome (cas 24)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_25",
+        "mode":  "ask",
+        "prompt":  "Ou est geree la qualite format lint tests (cas 25)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_26",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la securite des commandes shell (cas 26)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_27",
+        "mode":  "ask",
+        "prompt":  "Explique le systeme de rollback en cas d echec (cas 27)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_28",
+        "mode":  "ask",
+        "prompt":  "Ou sont stockes les logs de session (cas 28)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_29",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la commande pr-ready (cas 29)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_30",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne le mode chat continu (cas 30)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_31",
+        "mode":  "ask",
+        "prompt":  "Donne un resume de l architecture du projet (cas 31)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_32",
+        "mode":  "ask",
+        "prompt":  "Explique le role de stella.py dans ce projet (cas 32)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_33",
+        "mode":  "ask",
+        "prompt":  "Quels modules gerent la memoire et le RAG (cas 33)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_34",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la boucle autonome (cas 34)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_35",
+        "mode":  "ask",
+        "prompt":  "Ou est geree la qualite format lint tests (cas 35)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_36",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la securite des commandes shell (cas 36)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_37",
+        "mode":  "ask",
+        "prompt":  "Explique le systeme de rollback en cas d echec (cas 37)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_38",
+        "mode":  "ask",
+        "prompt":  "Ou sont stockes les logs de session (cas 38)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_39",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne la commande pr-ready (cas 39)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "ask_task_40",
+        "mode":  "ask",
+        "prompt":  "Comment fonctionne le mode chat continu (cas 40)",
+        "must_contain_any":  [
+                                 "agent",
+                                 "stella.py",
+                                 "memory",
+                                 "run",
+                                 "chat"
+                             ]
+    },
+    {
+        "name":  "auto_task_1",
+        "mode":  "auto",
+        "prompt":  "Propose une amelioration de robustesse sans appliquer de patch (scenario 1)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_2",
+        "mode":  "auto",
+        "prompt":  "Analyse les risques et propose un plan de refactor (scenario 2)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_3",
+        "mode":  "auto",
+        "prompt":  "Propose une amelioration de l ergonomie CLI sans appliquer (scenario 3)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_4",
+        "mode":  "auto",
+        "prompt":  "Inspecte le code et suggere une optimisation de performance (scenario 4)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_5",
+        "mode":  "auto",
+        "prompt":  "Suggere des ameliorations pour la fiabilite des tests (scenario 5)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_6",
+        "mode":  "auto",
+        "prompt":  "Propose une amelioration de robustesse sans appliquer de patch (scenario 6)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_7",
+        "mode":  "auto",
+        "prompt":  "Analyse les risques et propose un plan de refactor (scenario 7)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_8",
+        "mode":  "auto",
+        "prompt":  "Propose une amelioration de l ergonomie CLI sans appliquer (scenario 8)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_9",
+        "mode":  "auto",
+        "prompt":  "Inspecte le code et suggere une optimisation de performance (scenario 9)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    },
+    {
+        "name":  "auto_task_10",
+        "mode":  "auto",
+        "prompt":  "Suggere des ameliorations pour la fiabilite des tests (scenario 10)",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ]
+    }
+]

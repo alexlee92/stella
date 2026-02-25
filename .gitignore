@@ -1,0 +1,38 @@
+# --- Dossier runtime Stella ---
+.stella/
+*.bak_*
+
+# --- Environnements Python ---
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+
+# --- Variables d'environnement (ne jamais committer) ---
+.env
+.env.local
+.env.*.local
+
+# --- Fichiers générés / sorties de runs ---
+eval/last_report.json
+
+# --- IDE ---
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Claude Code (config locale machine) ---
+.claude/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini

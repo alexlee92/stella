@@ -1,0 +1,692 @@
+﻿[
+    {
+        "name":  "code_edit_task_1",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans stella.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 1) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "stella.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_2",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/eval_runner.py, propose une amelioration de robustesse du scoring (scenario code-edit 2) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/eval_runner.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_3",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/auto_agent.py, propose une reduction de complexite d\u0027une fonction longue (scenario code-edit 3) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/auto_agent.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_4",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/tooling.py, propose une amelioration de gestion d\u0027erreur subprocess (scenario code-edit 4) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/tooling.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_5",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/pr_ready.py, propose une simplification du resume PR (scenario code-edit 5) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/pr_ready.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_6",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/quality.py, propose une amelioration de lisibilite de pipeline (scenario code-edit 6) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/quality.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_7",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/memory.py, propose une optimisation mineure de recherche (scenario code-edit 7) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/memory.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_8",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/git_tools.py, propose une amelioration defensive sur commandes git (scenario code-edit 8) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/git_tools.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_9",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/chat_session.py, propose un nettoyage de logique de persistance (scenario code-edit 9) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/chat_session.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_10",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/progress.py, propose un refactor de calcul de sections (scenario code-edit 10) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/progress.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_11",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans stella.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 11) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "stella.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_12",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/eval_runner.py, propose une amelioration de robustesse du scoring (scenario code-edit 12) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/eval_runner.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_13",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/auto_agent.py, propose une reduction de complexite d\u0027une fonction longue (scenario code-edit 13) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/auto_agent.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_14",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/tooling.py, propose une amelioration de gestion d\u0027erreur subprocess (scenario code-edit 14) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/tooling.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_15",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/pr_ready.py, propose une simplification du resume PR (scenario code-edit 15) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/pr_ready.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_16",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/quality.py, propose une amelioration de lisibilite de pipeline (scenario code-edit 16) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/quality.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_17",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/memory.py, propose une optimisation mineure de recherche (scenario code-edit 17) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/memory.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_18",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/git_tools.py, propose une amelioration defensive sur commandes git (scenario code-edit 18) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/git_tools.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_19",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/chat_session.py, propose un nettoyage de logique de persistance (scenario code-edit 19) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/chat_session.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_20",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/progress.py, propose un refactor de calcul de sections (scenario code-edit 20) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/progress.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_21",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans stella.py, propose un refactor minimal pour rendre la commande eval plus lisible (scenario code-edit 21) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "stella.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_22",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/eval_runner.py, propose une amelioration de robustesse du scoring (scenario code-edit 22) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/eval_runner.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_23",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/auto_agent.py, propose une reduction de complexite d\u0027une fonction longue (scenario code-edit 23) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/auto_agent.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_24",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/tooling.py, propose une amelioration de gestion d\u0027erreur subprocess (scenario code-edit 24) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/tooling.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_25",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/pr_ready.py, propose une simplification du resume PR (scenario code-edit 25) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/pr_ready.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_26",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/quality.py, propose une amelioration de lisibilite de pipeline (scenario code-edit 26) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/quality.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_27",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/memory.py, propose une optimisation mineure de recherche (scenario code-edit 27) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/memory.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_28",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/git_tools.py, propose une amelioration defensive sur commandes git (scenario code-edit 28) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/git_tools.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_29",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/chat_session.py, propose un nettoyage de logique de persistance (scenario code-edit 29) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/chat_session.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    },
+    {
+        "name":  "code_edit_task_30",
+        "mode":  "code_edit",
+        "track":  "code_edit",
+        "prompt":  "Dans agent/progress.py, propose un refactor de calcul de sections (scenario code-edit 30) Puis applique le patch et execute run_quality ou run_tests jusqu\u0027a validation.",
+        "must_contain_any":  [
+                                 "Decisions",
+                                 "step",
+                                 "Final"
+                             ],
+        "auto_apply":  true,
+        "fix_until_green":  true,
+        "with_tests":  true,
+        "max_steps":  6,
+        "expected_edit_paths":  [
+                                    "agent/progress.py"
+                                ],
+        "max_seconds":  60,
+        "strict_scope":  true,
+        "require_tests_green":  true,
+        "require_patch_with_tests":  true,
+        "require_generated_tests_quality":  true
+    }
+]
