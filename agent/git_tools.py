@@ -1,4 +1,4 @@
-﻿import os
+import os
 import subprocess
 from typing import Optional
 
@@ -101,10 +101,11 @@ def diff_summary(target: Optional[str] = None):
 
 # --- P3.1 : Git avance ---
 
+
 def git_stash(message: Optional[str] = None):
     """Sauvegarde le travail en cours dans le stash."""
     if DRY_RUN:
-        return 0, f"[dry-run] git stash"
+        return 0, "[dry-run] git stash"
     args = ["stash", "push"]
     if message:
         args.extend(["-m", message])
@@ -114,7 +115,7 @@ def git_stash(message: Optional[str] = None):
 def git_stash_pop():
     """Restaure le dernier stash."""
     if DRY_RUN:
-        return 0, f"[dry-run] git stash pop"
+        return 0, "[dry-run] git stash pop"
     return _run_git(["stash", "pop"])
 
 
@@ -125,7 +126,7 @@ def git_stash_list():
 
 def git_log(file_path: Optional[str] = None, limit: int = 10):
     """Historique des commits (optionnellement filtre par fichier)."""
-    args = ["log", f"--oneline", f"-{limit}", "--no-color"]
+    args = ["log", "--oneline", f"-{limit}", "--no-color"]
     if file_path:
         args.extend(["--", file_path])
     code, out = _run_git(args)

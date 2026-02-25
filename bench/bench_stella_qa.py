@@ -12,7 +12,6 @@ Usage:
   python bench/bench_stella_qa.py [--level N] [--verbose]
 """
 
-import json
 import os
 import sys
 import time
@@ -34,21 +33,42 @@ TESTS = [
         "level": 1,
         "name": "Lister les endpoints",
         "question": "Quels sont les endpoints HTTP definis dans users/api.py ? Liste-les avec leurs methodes HTTP.",
-        "expected_keywords": ["POST", "GET", "PUT", "DELETE", "/users", "login", "logout"],
+        "expected_keywords": [
+            "POST",
+            "GET",
+            "PUT",
+            "DELETE",
+            "/users",
+            "login",
+            "logout",
+        ],
         "min_keywords": 4,
     },
     {
         "level": 1,
         "name": "Identifier le modele ORM",
         "question": "Quelle est la structure du modele User dans users/models.py ? Quels champs a-t-il ?",
-        "expected_keywords": ["id", "email", "hashed_password", "created_at", "is_active", "Column"],
+        "expected_keywords": [
+            "id",
+            "email",
+            "hashed_password",
+            "created_at",
+            "is_active",
+            "Column",
+        ],
         "min_keywords": 4,
     },
     {
         "level": 1,
         "name": "Trouver un import",
         "question": "Quelles bibliotheques sont importees dans users/api.py ?",
-        "expected_keywords": ["flask", "sqlalchemy", "werkzeug", "Blueprint", "jsonify"],
+        "expected_keywords": [
+            "flask",
+            "sqlalchemy",
+            "werkzeug",
+            "Blueprint",
+            "jsonify",
+        ],
         "min_keywords": 3,
     },
     # --- NIVEAU 2 : Comprehension de la logique ---
@@ -56,7 +76,13 @@ TESTS = [
         "level": 2,
         "name": "Comprendre le flow d'authentification",
         "question": "Comment fonctionne le processus de login dans users/api.py ? Decris les etapes.",
-        "expected_keywords": ["email", "password", "check_password_hash", "401", "credentials"],
+        "expected_keywords": [
+            "email",
+            "password",
+            "check_password_hash",
+            "401",
+            "credentials",
+        ],
         "min_keywords": 3,
     },
     {
@@ -115,14 +141,28 @@ TESTS = [
         "level": 5,
         "name": "Generer un middleware d'auth",
         "question": "Ecris un decorateur Flask pour proteger les routes avec un JWT token. Il doit verifier le header Authorization et extraire l'utilisateur.",
-        "expected_keywords": ["def ", "decorator", "token", "Authorization", "Bearer", "return"],
+        "expected_keywords": [
+            "def ",
+            "decorator",
+            "token",
+            "Authorization",
+            "Bearer",
+            "return",
+        ],
         "min_keywords": 3,
     },
     {
         "level": 5,
         "name": "Generer des tests unitaires",
         "question": "Ecris des tests pytest pour l'endpoint POST /users de users/api.py. Utilise un client de test Flask et mocke la base de donnees.",
-        "expected_keywords": ["def test_", "pytest", "client", "post", "assert", "json"],
+        "expected_keywords": [
+            "def test_",
+            "pytest",
+            "client",
+            "post",
+            "assert",
+            "json",
+        ],
         "min_keywords": 3,
     },
 ]
@@ -150,7 +190,8 @@ def _read_explicit_files(question: str) -> str:
                     content = load_file_content(abs_path)
                     rel = os.path.relpath(abs_path, _ROOT)
                     numbered = "\n".join(
-                        f"{i+1:4d} | {line}" for i, line in enumerate(content.splitlines())
+                        f"{i + 1:4d} | {line}"
+                        for i, line in enumerate(content.splitlines())
                     )
                     sections.append(f"=== {rel} (full source) ===\n{numbered}")
                 except OSError:
@@ -248,7 +289,7 @@ Answer in detail:"""
     }
 
     if verbose:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"[L{test['level']}] {test['name']}")
         print(f"Question: {question[:100]}...")
         print(f"Reponse ({len(answer)} chars, {elapsed}s):")
@@ -256,16 +297,18 @@ Answer in detail:"""
         print(f"Keywords trouves: {found_keywords}")
         print(f"Keywords manquants: {missing_keywords}")
         status = "[OK]" if passed else "[KO]"
-        print(f"Resultat: {status} {score}/{len(test['expected_keywords'])} (min: {min_required})")
+        print(
+            f"Resultat: {status} {score}/{len(test['expected_keywords'])} (min: {min_required})"
+        )
 
     return result
 
 
 def run_benchmark(max_level: int = 5, verbose: bool = False):
     """Lance tous les tests jusqu'au niveau specifie."""
-    print("="*70)
+    print("=" * 70)
     print("BENCHMARK STELLA QA — Tests progressifs")
-    print("="*70)
+    print("=" * 70)
     print(f"Niveaux: 1-{max_level}")
     print(f"Tests: {sum(1 for t in TESTS if t['level'] <= max_level)}")
     print()
@@ -292,10 +335,13 @@ def run_benchmark(max_level: int = 5, verbose: bool = False):
         }
 
         if level not in results_by_level:
-            results_by_level[level] = {"passed": 0, "total": 0, "label": level_names.get(level, f"Niveau {level}")}
+            results_by_level[level] = {
+                "passed": 0,
+                "total": 0,
+                "label": level_names.get(level, f"Niveau {level}"),
+            }
             print(f"\n--- Niveau {level}: {level_names.get(level, '?')} ---")
 
-        status_char = "." if not verbose else ""
         result = run_single_test(test, verbose=verbose)
         all_results.append(result)
         results_by_level[level]["total"] += 1
@@ -306,12 +352,14 @@ def run_benchmark(max_level: int = 5, verbose: bool = False):
                 print(f"  [OK] {test['name']} ({result['score']}, {result['elapsed']})")
         else:
             if not verbose:
-                print(f"  [KO] {test['name']} ({result['score']}, {result['elapsed']}) — manquants: {result['missing']}")
+                print(
+                    f"  [KO] {test['name']} ({result['score']}, {result['elapsed']}) — manquants: {result['missing']}"
+                )
 
     # Resume
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("RESUME")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     total_passed = 0
     total_tests = 0
@@ -321,7 +369,9 @@ def run_benchmark(max_level: int = 5, verbose: bool = False):
         total_tests += info["total"]
         pct = round(info["passed"] / info["total"] * 100) if info["total"] else 0
         bar = "#" * info["passed"] + "." * (info["total"] - info["passed"])
-        print(f"  Niveau {level} ({info['label']:20s}): [{bar}] {info['passed']}/{info['total']} ({pct}%)")
+        print(
+            f"  Niveau {level} ({info['label']:20s}): [{bar}] {info['passed']}/{info['total']} ({pct}%)"
+        )
 
     overall_pct = round(total_passed / total_tests * 100) if total_tests else 0
     print(f"\n  TOTAL: {total_passed}/{total_tests} ({overall_pct}%)")
@@ -331,7 +381,9 @@ def run_benchmark(max_level: int = 5, verbose: bool = False):
     avg_latency = round(sum(latencies) / len(latencies), 1) if latencies else 0
     max_latency = round(max(latencies), 1) if latencies else 0
     print(f"  Latence moyenne: {avg_latency}s | max: {max_latency}s")
-    print(f"  Longueur moyenne reponse: {round(sum(r['answer_length'] for r in all_results) / len(all_results))} chars")
+    print(
+        f"  Longueur moyenne reponse: {round(sum(r['answer_length'] for r in all_results) / len(all_results))} chars"
+    )
 
     # Verdict
     print()
@@ -347,9 +399,12 @@ def run_benchmark(max_level: int = 5, verbose: bool = False):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, default=5, help="Niveau max (1-5)")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Afficher les reponses completes")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Afficher les reponses completes"
+    )
     args = parser.parse_args()
 
     run_benchmark(max_level=args.level, verbose=args.verbose)

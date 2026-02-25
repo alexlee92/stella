@@ -1,4 +1,4 @@
-﻿import subprocess
+import subprocess
 import sys
 
 
@@ -19,15 +19,9 @@ def run(command: list[str]):
 
 def main():
     steps = [
-        [sys.executable, "-m", "py_compile", "stella.py"],
-        [
-            sys.executable,
-            "-m",
-            "py_compile",
-            "agent\\agent.py",
-            "agent\\auto_agent.py",
-            "agent\\chat_session.py",
-        ],
+        [sys.executable, "-m", "ruff", "format", "--check", "."],
+        [sys.executable, "-m", "ruff", "check", "."],
+        [sys.executable, "-m", "pytest", "-q"],
     ]
 
     for cmd in steps:

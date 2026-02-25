@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -7,12 +7,10 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 import argparse
 
 import signal
-import time as _time
 from datetime import datetime
 
 from agent.agent import (
     apply_suggestion,
-    ask_project,
     ask_project_stream,
     index_project,
     patch_risk,
@@ -26,8 +24,13 @@ from agent.config import AUTO_MAX_STEPS
 from agent.dev_task import ide_shortcuts, run_dev_task
 from agent.doctor import format_doctor, run_doctor
 from agent.eval_runner import run_eval
-from agent.git_tools import changed_files, current_branch, git_log, git_stash, git_stash_pop
-from agent.llm_interface import ask_llm_stream_print
+from agent.git_tools import (
+    changed_files,
+    current_branch,
+    git_log,
+    git_stash,
+    git_stash_pop,
+)
 from agent.patcher import find_latest_backup, restore_backup
 from agent.pr_ready import prepare_pr
 from agent.progress import summarize_progress
@@ -93,16 +96,13 @@ def _smart_dispatch(goal: str) -> None:
     is_creation = any(kw in low for kw in create_keywords)
 
     if is_question:
-        mode = "ask"
-        print(f"[stella] mode detecte : question -- reponse directe\n")
+        print("[stella] mode detecte : question -- reponse directe\n")
         ask_project_stream(goal)
     elif is_creation:
-        mode = "run"
-        print(f"[stella] mode détecté : création — agent autonome\n")
+        print("[stella] mode détecté : création — agent autonome\n")
         print(AutonomousAgent(max_steps=10).run(goal=goal))
     else:
-        mode = "fix"
-        print(f"[stella] mode détecté : modification — fix standard\n")
+        print("[stella] mode détecté : modification — fix standard\n")
         result = run_dev_task(goal=goal, profile="standard")
         status = result.get("status", "?")
         changed = result.get("changed_files_count", 0)
@@ -273,7 +273,9 @@ def build_parser():
         "test",
         help="Lancer les tests rapidement (alias de pytest -q)",
     )
-    test_cmd.add_argument("args", nargs="*", default=[], help="Arguments pytest optionnels")
+    test_cmd.add_argument(
+        "args", nargs="*", default=[], help="Arguments pytest optionnels"
+    )
 
     scaffold_cmd = sub.add_parser(
         "scaffold",
@@ -287,9 +289,18 @@ def build_parser():
         "watch",
         help="Surveiller les fichiers et relancer les tests automatiquement",
     )
-    watch_cmd.add_argument("--pattern", default="**/*.py", help="Glob pattern a surveiller")
-    watch_cmd.add_argument("--command", default="", help="Commande a lancer (defaut: pytest -q)")
-    watch_cmd.add_argument("--interval", type=float, default=2.0, help="Intervalle de scan en secondes")
+    watch_cmd.add_argument(
+        "--pattern", default="**/*.py", help="Glob pattern a surveiller"
+    )
+    watch_cmd.add_argument(
+        "--command",
+        dest="watch_command",
+        default="",
+        help="Commande a lancer (defaut: python -m pytest -q)",
+    )
+    watch_cmd.add_argument(
+        "--interval", type=float, default=2.0, help="Intervalle de scan en secondes"
+    )
 
     fix_cmd = sub.add_parser(
         "fix",
@@ -333,11 +344,27 @@ Commandes disponibles :
 
 
 _CHAT_COMMANDS = [
-    "/run", "/plan", "/ask", "/status", "/map", "/log", "/stash",
-    "/stash-pop", "/undo", "/eval", "/decisions", "/context",
-    "/goto", "/refs", "/symbols", "/sessions", "/replay",
-    "/test", "/scaffold",
-    "/help", "/exit",
+    "/run",
+    "/plan",
+    "/ask",
+    "/status",
+    "/map",
+    "/log",
+    "/stash",
+    "/stash-pop",
+    "/undo",
+    "/eval",
+    "/decisions",
+    "/context",
+    "/goto",
+    "/refs",
+    "/symbols",
+    "/sessions",
+    "/replay",
+    "/test",
+    "/scaffold",
+    "/help",
+    "/exit",
 ]
 
 
@@ -450,7 +477,7 @@ def run_chat(
         if user_input == "/status":
             branch = current_branch() or "inconnue"
             changed = changed_files()
-            print(f"\n--- Status du projet ---")
+            print("\n--- Status du projet ---")
             print(f"  Branche : {branch}")
             print(f"  Fichiers modifies : {len(changed)}")
             if changed:
@@ -459,7 +486,9 @@ def run_chat(
                     print(f"    {f} ({ext})")
                 if len(changed) > 20:
                     print(f"    ... et {len(changed) - 20} autres")
-            print(f"  Session chat : {len(session.messages)} messages, {len(session.decisions)} decisions")
+            print(
+                f"  Session chat : {len(session.messages)} messages, {len(session.decisions)} decisions"
+            )
             print()
             continue
 
@@ -468,7 +497,7 @@ def run_chat(
             continue
 
         if user_input.startswith("/log"):
-            file_arg = user_input[len("/log"):].strip() or None
+            file_arg = user_input[len("/log") :].strip() or None
             print(git_log(file_path=file_arg))
             continue
 
@@ -478,7 +507,7 @@ def run_chat(
             continue
 
         if user_input.startswith("/stash"):
-            msg = user_input[len("/stash"):].strip() or None
+            msg = user_input[len("/stash") :].strip() or None
             code, out = git_stash(message=msg)
             print(out)
             continue
@@ -514,7 +543,8 @@ def run_chat(
 
         if user_input.startswith("/goto "):
             from agent.code_intelligence import goto_definition
-            parts = user_input[len("/goto "):].strip().split()
+
+            parts = user_input[len("/goto ") :].strip().split()
             if len(parts) < 2:
                 print("  Usage: /goto <fichier> <symbole>")
             else:
@@ -523,12 +553,15 @@ def run_chat(
                     if "error" in r:
                         print(f"  {r['error']}")
                     else:
-                        print(f"  {r['file']}:{r['line']}:{r['column']} [{r['type']}] {r['name']}")
+                        print(
+                            f"  {r['file']}:{r['line']}:{r['column']} [{r['type']}] {r['name']}"
+                        )
             continue
 
         if user_input.startswith("/refs "):
             from agent.code_intelligence import find_references
-            parts = user_input[len("/refs "):].strip().split()
+
+            parts = user_input[len("/refs ") :].strip().split()
             if len(parts) < 2:
                 print("  Usage: /refs <fichier> <symbole>")
             else:
@@ -542,7 +575,8 @@ def run_chat(
 
         if user_input.startswith("/symbols "):
             from agent.code_intelligence import list_symbols
-            file_arg = user_input[len("/symbols "):].strip()
+
+            file_arg = user_input[len("/symbols ") :].strip()
             if not file_arg:
                 print("  Usage: /symbols <fichier>")
             else:
@@ -556,13 +590,18 @@ def run_chat(
         # P2.2 — Session persistence commands
         if user_input == "/sessions":
             from agent.chat_session import list_sessions
+
             sessions_list = list_sessions()
             if not sessions_list:
                 print("  Aucune session sauvegardee.")
             else:
                 print("\n--- Sessions precedentes ---")
                 for s in sessions_list:
-                    ts = datetime.fromtimestamp(s["mtime"]).strftime("%Y-%m-%d %H:%M") if s["mtime"] else "?"
+                    ts = (
+                        datetime.fromtimestamp(s["mtime"]).strftime("%Y-%m-%d %H:%M")
+                        if s["mtime"]
+                        else "?"
+                    )
                     goal = s.get("goal", "")[:60]
                     print(f"  {s['id']}  {ts}  {goal}")
                 print()
@@ -570,7 +609,8 @@ def run_chat(
 
         if user_input.startswith("/replay"):
             from agent.chat_session import get_latest_session_id
-            sid = user_input[len("/replay"):].strip()
+
+            sid = user_input[len("/replay") :].strip()
             if not sid:
                 sid = get_latest_session_id()
                 if not sid:
@@ -578,9 +618,13 @@ def run_chat(
                     continue
             ok = session.load_session(sid)
             if ok:
-                print(f"  Session {sid} restauree : {len(session.messages)} messages, {len(session.staged_edits)} edits en attente.")
+                print(
+                    f"  Session {sid} restauree : {len(session.messages)} messages, {len(session.staged_edits)} edits en attente."
+                )
                 if session.staged_edits:
-                    print(f"  Fichiers staged : {', '.join(session.staged_edits.keys())}")
+                    print(
+                        f"  Fichiers staged : {', '.join(session.staged_edits.keys())}"
+                    )
             else:
                 print(f"  Session {sid} introuvable.")
             continue
@@ -588,7 +632,8 @@ def run_chat(
         # P4.4 — /test alias for quick test run
         if user_input == "/test" or user_input.startswith("/test "):
             from agent.tooling import run_tests
-            test_args = user_input[len("/test"):].strip()
+
+            test_args = user_input[len("/test") :].strip()
             cmd = f"pytest -q {test_args}".strip()
             print(f"Lancement : {cmd}")
             print(run_tests(cmd))
@@ -597,10 +642,13 @@ def run_chat(
         # P3.7 — /scaffold command
         if user_input.startswith("/scaffold "):
             from agent.scaffolder import scaffold
-            parts = user_input[len("/scaffold "):].strip().split(None, 1)
+
+            parts = user_input[len("/scaffold ") :].strip().split(None, 1)
             if len(parts) < 2:
                 print("  Usage: /scaffold <type> <name>")
-                print("  Types: fastapi-endpoint, django-model, django-view, react-component, python-module, test")
+                print(
+                    "  Types: fastapi-endpoint, django-model, django-view, react-component, python-module, test"
+                )
             else:
                 result = scaffold(parts[0], parts[1])
                 print(result)
@@ -871,9 +919,10 @@ def main():
     # P4.4 — stella test (alias rapide pour pytest)
     if args.command == "test":
         from agent.tooling import run_tests
+
         extra = " ".join(args.args) if args.args else ""
-        cmd = f"pytest -q {extra}".strip()
-        print(f"=== Stella Test ===")
+        cmd = f"python -m pytest -q {extra}".strip()
+        print("=== Stella Test ===")
         print(f"Commande : {cmd}\n")
         print(run_tests(cmd))
         return
@@ -881,6 +930,7 @@ def main():
     # P3.7 — stella scaffold
     if args.command == "scaffold":
         from agent.scaffolder import scaffold as do_scaffold
+
         result = do_scaffold(args.type, args.name, output_dir=args.output_dir)
         print(result)
         return
@@ -888,9 +938,10 @@ def main():
     # P4.5 — stella watch
     if args.command == "watch":
         from agent.watcher import run_watch
+
         run_watch(
             pattern=args.pattern,
-            command=args.command if args.command else None,
+            command=args.watch_command if args.watch_command else None,
             interval=args.interval,
         )
         return

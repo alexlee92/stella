@@ -8,7 +8,7 @@ Extensions : .js .jsx .ts .tsx
 """
 
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 # Pattern pour détecter un symbole de haut niveau
 _TOP_LEVEL = re.compile(
@@ -114,8 +114,7 @@ def ts_merge(old_code: str, new_code: str) -> Tuple[str, bool, str]:
         result_lines.append("")
         result_lines.extend(add_text.splitlines())
 
-    merged = "\n".join(result_lines)
-    changed = len(replacements) + len(additions)
+    merged = "\n".join(result_lines) + "\n"
     reason = f"replaced={len(replacements)},added={len(additions)}"
     return merged, True, reason
 

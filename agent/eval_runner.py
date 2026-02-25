@@ -1,8 +1,8 @@
-﻿import json
+import json
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 
 from agent.agent import ask_project, index_project
 from agent.auto_agent import AutonomousAgent
@@ -46,32 +46,56 @@ def _task_int(task: dict, key: str, default: int) -> int:
 def _extract_actions_from_summary(output: str) -> list[str]:
     actions = []
     for line in (output or "").splitlines():
-        m = re.match(r"^- step \d+:\s*([a-zA-Z0-9_]+)\s*\|", line.strip())
-        if m:
-            actions.append(m.group(1).strip().lower())
+        # Old format: - step 1: read_file | reason
+        m_old = re.match(r"^- step \d+:\s*([a-zA-Z0-9_]+)\s*\|", line.strip())
+        if m_old:
+            actions.append(m_old.group(1).strip().lower())
+            continue
+
+        # New format: 1. [read_file] reason -> result
+        m_new = re.match(r"^\d+\.\s*\[([a-zA-Z0-9_]+)\]", line.strip())
+        if m_new:
+            actions.append(m_new.group(1).strip().lower())
+
     return actions
 
 
 def _extract_steps_from_summary(output: str) -> list[dict]:
     steps = []
     for line in (output or "").splitlines():
-        m = re.match(r"^- step \d+:\s*([a-zA-Z0-9_]+)\s*\|\s*(.*)$", line.strip())
-        if not m:
+        line = line.strip()
+
+        # Old format: - step 1: read_file | reason | result
+        m_old = re.match(r"^- step \d+:\s*([a-zA-Z0-9_]+)\s*\|\s*(.*)$", line)
+        if m_old:
+            action = m_old.group(1).strip().lower()
+            tail = m_old.group(2)
+            parts = [p.strip() for p in tail.split("|", 1)]
+            reason = parts[0] if parts else ""
+            result = parts[1] if len(parts) > 1 else ""
+            steps.append({"action": action, "reason": reason, "result": result})
             continue
-        action = m.group(1).strip().lower()
-        tail = m.group(2)
-        parts = [p.strip() for p in tail.split("|", 1)]
-        reason = parts[0] if parts else ""
-        result = parts[1] if len(parts) > 1 else ""
-        steps.append({"action": action, "reason": reason, "result": result})
+
+        # New format: 1. [read_file] reason -> result
+        m_new = re.match(r"^\d+\.\s*\[([a-zA-Z0-9_]+)\]\s*(.*)$", line)
+        if m_new:
+            action = m_new.group(1).strip().lower()
+            tail = m_new.group(2)
+            parts = [p.strip() for p in tail.split("->", 1)]
+            reason = parts[0] if parts else ""
+            result = parts[1] if len(parts) > 1 else ""
+            steps.append({"action": action, "reason": reason, "result": result})
+
     return steps
 
 
 def _is_test_path(path: str) -> bool:
     low = (path or "").replace("\\", "/").lower()
     name = os.path.basename(low)
-    return low.startswith("tests/") or name.startswith("test_") or name.endswith(
-        "_test.py"
+    return (
+        low.startswith("tests/")
+        or name.startswith("test_")
+        or name.endswith("_test.py")
     )
 
 
@@ -164,9 +188,7 @@ def _compute_code_edit_validation(task: dict, output: str, signals: dict) -> dic
                 pass
     tests_quality_ok = (max(quality_rates) if quality_rates else 0.0) >= 70.0
 
-    score = (
-        int(has_edit_action) + int(expected_diff_match) + int(tests_green)
-    ) / 3.0
+    score = (int(has_edit_action) + int(expected_diff_match) + int(tests_green)) / 3.0
     return {
         "expected_edit_paths": expected_paths,
         "touched_paths": touched_paths,
@@ -236,7 +258,9 @@ def _summarize_tracks(results: list[dict]) -> dict:
             expected_diff_match_count = sum(
                 1
                 for r in rows
-                if bool((r.get("code_edit_validation") or {}).get("expected_diff_match"))
+                if bool(
+                    (r.get("code_edit_validation") or {}).get("expected_diff_match")
+                )
             )
             patch_with_tests_count = sum(
                 1
@@ -254,18 +278,18 @@ def _summarize_tracks(results: list[dict]) -> dict:
             out[track]["avg_valid_patch_score"] = (
                 round(sum(valid_scores) / len(valid_scores), 2) if valid_scores else 0.0
             )
-            out[track]["tests_green_rate"] = round(
-                (tests_green_count / total) * 100, 2
-            ) if total else 0.0
-            out[track]["expected_diff_match_rate"] = round(
-                (expected_diff_match_count / total) * 100, 2
-            ) if total else 0.0
-            out[track]["patch_with_tests_rate"] = round(
-                (patch_with_tests_count / total) * 100, 2
-            ) if total else 0.0
-            out[track]["generated_tests_quality_rate"] = round(
-                (tests_quality_ok_count / total) * 100, 2
-            ) if total else 0.0
+            out[track]["tests_green_rate"] = (
+                round((tests_green_count / total) * 100, 2) if total else 0.0
+            )
+            out[track]["expected_diff_match_rate"] = (
+                round((expected_diff_match_count / total) * 100, 2) if total else 0.0
+            )
+            out[track]["patch_with_tests_rate"] = (
+                round((patch_with_tests_count / total) * 100, 2) if total else 0.0
+            )
+            out[track]["generated_tests_quality_rate"] = (
+                round((tests_quality_ok_count / total) * 100, 2) if total else 0.0
+            )
     return out
 
 
@@ -385,7 +409,9 @@ def _compute_kpis(
                 sum(
                     1
                     for r in code_edit_rows
-                    if bool((r.get("code_edit_validation") or {}).get("patch_with_tests"))
+                    if bool(
+                        (r.get("code_edit_validation") or {}).get("patch_with_tests")
+                    )
                 )
                 / max(1, len(code_edit_rows))
             )
@@ -401,7 +427,9 @@ def _compute_kpis(
                 sum(
                     1
                     for r in code_edit_rows
-                    if bool((r.get("code_edit_validation") or {}).get("tests_quality_ok"))
+                    if bool(
+                        (r.get("code_edit_validation") or {}).get("tests_quality_ok")
+                    )
                 )
                 / max(1, len(code_edit_rows))
             )
@@ -417,10 +445,12 @@ def _compute_kpis(
         for e in failure_events
         if (e.get("payload") or {}).get("category") == "rollback"
     ]
-    rollback_rate = round((len(rollback_failures) / max(1, len(code_edit_rows))) * 100, 2)
+    rollback_rate = round(
+        (len(rollback_failures) / max(1, len(code_edit_rows))) * 100, 2
+    )
 
     return {
-        "measured_at": datetime.utcnow().isoformat(),
+        "measured_at": datetime.now(UTC).isoformat(),
         "success_rate": success_rate,
         "json_failure_rate": json_failure_rate,
         "avg_task_seconds": avg_task_time,
@@ -450,7 +480,7 @@ def _run_pr_ready_probe() -> dict:
     created = False
     try:
         with open(probe_path, "a", encoding="utf-8") as f:
-            f.write(f"probe={datetime.utcnow().isoformat()}\n")
+            f.write(f"probe={datetime.now(UTC).isoformat()}\n")
         created = True
         return prepare_pr(
             goal="kpi-pr-ready-probe",
@@ -480,7 +510,7 @@ def run_eval(tasks_file: str = "eval/tasks.json", max_tasks: int | None = None):
 
     results = []
     start_all = time.time()
-    start_ts = datetime.utcnow()
+    start_ts = datetime.now(UTC)
     for task in tasks:
         name = task["name"]
         mode = task["mode"]
@@ -522,7 +552,9 @@ def run_eval(tasks_file: str = "eval/tasks.json", max_tasks: int | None = None):
                 task, "require_tests_green", _task_bool(task, "auto_apply", False)
             )
             requires_tests = _task_bool(task, "require_patch_with_tests", False)
-            requires_quality = _task_bool(task, "require_generated_tests_quality", False)
+            requires_quality = _task_bool(
+                task, "require_generated_tests_quality", False
+            )
             strict_scope = _task_bool(task, "strict_scope", False)
             has_unexpected = bool(validation.get("unexpected_touched_paths"))
 
@@ -546,10 +578,10 @@ def run_eval(tasks_file: str = "eval/tasks.json", max_tasks: int | None = None):
 
     duration = round(time.time() - start_all, 2)
     probe = _run_pr_ready_probe()
-    end_ts = datetime.utcnow()
+    end_ts = datetime.now(UTC)
     pass_count = sum(1 for r in results if r["passed"])
     summary = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "total": len(results),
         "passed": pass_count,
         "pass_rate": round((pass_count / len(results)) * 100, 2) if results else 0.0,

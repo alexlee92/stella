@@ -1,4 +1,4 @@
-﻿from agent.settings import load_settings
+from agent.settings import load_settings
 
 _CFG = load_settings()
 
@@ -12,8 +12,8 @@ OLLAMA_BASE_URL = _CFG["OLLAMA_BASE_URL"]
 OLLAMA_URL = _CFG["OLLAMA_URL"]
 OLLAMA_EMBED_URL = _CFG["OLLAMA_EMBED_URL"]
 
-ORISHA_URL = _CFG["ORISHA_URL"]
-ORISHA_ENABLED = _CFG["ORISHA_ENABLED"]
+ROUTER_URL = _CFG["ROUTER_URL"]
+ROUTER_ENABLED = _CFG["ROUTER_ENABLED"]
 
 REQUEST_TIMEOUT = _CFG["REQUEST_TIMEOUT"]
 TOP_K_RESULTS = _CFG["TOP_K_RESULTS"]

@@ -18,7 +18,11 @@ def _to_abs(path: str) -> str:
 
 def _is_python_source(path: str) -> bool:
     low = path.replace("\\", "/").lower()
-    return low.endswith(".py") and "/tests/" not in f"/{low}/" and not low.startswith("tests/")
+    return (
+        low.endswith(".py")
+        and "/tests/" not in f"/{low}/"
+        and not low.startswith("tests/")
+    )
 
 
 def _strip_code_fences(text: str) -> str:
@@ -53,7 +57,9 @@ def analyze_generated_test_code(code: str) -> dict:
     }
 
 
-def build_test_targets(changed_files: List[str], limit: int = 3) -> List[Tuple[str, str]]:
+def build_test_targets(
+    changed_files: List[str], limit: int = 3
+) -> List[Tuple[str, str]]:
     out = []
     seen = set()
     for path in changed_files:
@@ -92,7 +98,9 @@ def _get_coverage_report(source_path: str, test_path: str) -> Optional[str]:
         return None
 
 
-def generate_tests_for_changes(changed_files: List[str], limit: int = 3) -> Dict[str, str]:
+def generate_tests_for_changes(
+    changed_files: List[str], limit: int = 3
+) -> Dict[str, str]:
     generated: Dict[str, str] = {}
     targets = build_test_targets(changed_files, limit=limit)
     for source_path, test_path in targets:
@@ -108,7 +116,9 @@ def generate_tests_for_changes(changed_files: List[str], limit: int = 3) -> Dict
         coverage_report = _get_coverage_report(source_path, test_path)
         coverage_section = ""
         if coverage_report:
-            coverage_section = f"\nCoverage report (lines not yet covered):\n{coverage_report}\n"
+            coverage_section = (
+                f"\nCoverage report (lines not yet covered):\n{coverage_report}\n"
+            )
 
         prompt = f"""
 You generate pytest tests for a changed Python file.
@@ -160,7 +170,9 @@ def apply_generated_tests(changed_files: List[str], limit: int = 3) -> dict:
         abs_path = _to_abs(test_path)
         os.makedirs(os.path.dirname(abs_path), exist_ok=True)
         result = apply_patch_non_interactive(abs_path, code)
-        if isinstance(result, dict) and (result.get("applied") or result.get("dry_run")):
+        if isinstance(result, dict) and (
+            result.get("applied") or result.get("dry_run")
+        ):
             applied.append(test_path)
         else:
             failed.append({"path": test_path, "result": result})

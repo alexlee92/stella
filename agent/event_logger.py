@@ -1,6 +1,6 @@
-﻿import json
+import json
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 
 from agent.config import EVENT_LOG_PATH, PROJECT_ROOT
 
@@ -14,7 +14,7 @@ class EventLogger:
     def log(self, event_type: str, payload: dict):
         record = {
             "type": event_type,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "payload": payload,
         }
         with open(self.path, "a", encoding="utf-8") as f:

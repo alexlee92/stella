@@ -5,8 +5,7 @@ Teste la logique de normalisation, auto-correction, détection de boucle,
 et exécution de la boucle avec des décisions pré-scriptées.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from agent.decision_normalizer import (
     normalize_decision,
@@ -15,12 +14,9 @@ from agent.decision_normalizer import (
     infer_fallback_action,
     autocorrect_decision_schema,
     extract_target_file_from_goal,
-    extract_all_target_files_from_goal,
     is_code_edit_goal,
     is_git_goal,
-    is_allowed_edit_path,
 )
-
 
 # ---------------------------------------------------------------------------
 # Decision normalizer tests
@@ -70,12 +66,20 @@ class TestNormalizeDecision:
         assert result["args"]["paths"] == ["a.py"]
 
     def test_infer_action_from_args_shape(self):
-        d = {"action": "unknown_stuff", "reason": "t", "args": {"path": "f.py", "instruction": "fix bug"}}
+        d = {
+            "action": "unknown_stuff",
+            "reason": "t",
+            "args": {"path": "f.py", "instruction": "fix bug"},
+        }
         result = normalize_decision(d)
         assert result["action"] == "propose_edit"
 
     def test_filter_disallowed_args(self):
-        d = {"action": "read_file", "reason": "t", "args": {"path": "a.py", "extra": "bad"}}
+        d = {
+            "action": "read_file",
+            "reason": "t",
+            "args": {"path": "a.py", "extra": "bad"},
+        }
         result = normalize_decision(d)
         assert "extra" not in result["args"]
 
@@ -110,7 +114,11 @@ class TestNormalizeCritique:
         c = {
             "approve": False,
             "reason": "bad",
-            "patched_decision": {"action": "read", "reason": "fix", "args": {"path": "a.py"}},
+            "patched_decision": {
+                "action": "read",
+                "reason": "fix",
+                "args": {"path": "a.py"},
+            },
         }
         result = normalize_critique(c)
         assert result["patched_decision"]["action"] == "read_file"
@@ -133,7 +141,10 @@ class TestCoerceDecision:
 
 class TestGoalHelpers:
     def test_extract_target_file(self):
-        assert extract_target_file_from_goal("fix bug in agent/config.py") == "agent/config.py"
+        assert (
+            extract_target_file_from_goal("fix bug in agent/config.py")
+            == "agent/config.py"
+        )
 
     def test_extract_no_file(self):
         assert extract_target_file_from_goal("improve performance") is None
@@ -199,8 +210,10 @@ class TestAutocorrect:
 
 class TestAgentLoop:
     @patch("agent.auto_agent.ask_llm_json")
-    @patch("agent.executor.list_files", return_value=["agent/config.py", "agent/memory.py"])
-    @patch("agent.auto_agent.list_python_files", return_value=["agent/config.py"])
+    @patch(
+        "agent.executor.list_files", return_value=["agent/config.py", "agent/memory.py"]
+    )
+    @patch("agent.tooling.list_python_files", return_value=["agent/config.py"])
     @patch("agent.auto_agent.search_memory", return_value=[])
     def test_simple_list_then_finish(self, mock_mem, mock_pyfiles, mock_list, mock_llm):
         from agent.auto_agent import AutonomousAgent
@@ -211,7 +224,11 @@ class TestAgentLoop:
             # Critique: approve
             {"approve": True, "reason": "ok"},
             # Planner: finish
-            {"action": "finish", "reason": "done", "args": {"summary": "explored files"}},
+            {
+                "action": "finish",
+                "reason": "done",
+                "args": {"summary": "explored files"},
+            },
             # Critique: approve
             {"approve": True, "reason": "ok"},
         ]
@@ -222,13 +239,17 @@ class TestAgentLoop:
         assert len(agent.steps) >= 2
 
     @patch("agent.auto_agent.ask_llm_json")
-    @patch("agent.auto_agent.list_python_files", return_value=[])
+    @patch("agent.tooling.list_python_files", return_value=[])
     @patch("agent.auto_agent.search_memory", return_value=[])
     def test_loop_detection_stops_agent(self, mock_mem, mock_pyfiles, mock_llm):
         from agent.auto_agent import AutonomousAgent
 
         # Return the same decision repeatedly to trigger loop detection
-        same_decision = {"action": "list_files", "reason": "loop", "args": {"limit": 20}}
+        same_decision = {
+            "action": "list_files",
+            "reason": "loop",
+            "args": {"limit": 20},
+        }
         approve = {"approve": True, "reason": "ok"}
 
         mock_llm.side_effect = [same_decision, approve] * 10
@@ -237,10 +258,14 @@ class TestAgentLoop:
             agent = AutonomousAgent(max_steps=10)
             result = agent.run("test loop", auto_apply=False)
             # Should stop before max_steps due to loop detection
-            assert "loop" in result.lower() or "repeat" in result.lower() or len(agent.steps) < 10
+            assert (
+                "loop" in result.lower()
+                or "repeat" in result.lower()
+                or len(agent.steps) < 10
+            )
 
     @patch("agent.auto_agent.ask_llm_json")
-    @patch("agent.auto_agent.list_python_files", return_value=[])
+    @patch("agent.tooling.list_python_files", return_value=[])
     @patch("agent.auto_agent.search_memory", return_value=[])
     def test_cost_budget_stops_agent(self, mock_mem, mock_pyfiles, mock_llm):
         from agent.auto_agent import AutonomousAgent
@@ -254,8 +279,15 @@ class TestAgentLoop:
             calls.append({"approve": True, "reason": "ok"})
         mock_llm.side_effect = calls
 
-        with patch("agent.executor.run_quality_pipeline_normalized", return_value={"ok": True, "raw": []}):
+        with patch(
+            "agent.executor.run_quality_pipeline_normalized",
+            return_value={"ok": True, "raw": []},
+        ):
             agent = AutonomousAgent(max_steps=20)
             result = agent.run("check quality repeatedly", auto_apply=False)
             # Should stop due to cost budget or loop detection
-            assert "cost" in result.lower() or "loop" in result.lower() or "repeat" in result.lower()
+            assert (
+                "cost" in result.lower()
+                or "loop" in result.lower()
+                or "repeat" in result.lower()
+            )

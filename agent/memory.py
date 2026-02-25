@@ -1,4 +1,4 @@
-﻿"""
+"""
 Vector memory and indexing for Stella.
 Supports semantic search (Ollama embeddings) and lexical search (BM25).
 """
@@ -95,6 +95,19 @@ def remember_fix_strategy(issue: str, strategy: str, files: List[str] | None = N
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
     except OSError:
         return
+
+    # P2.4 — Propager vers la mémoire globale cross-sessions
+    try:
+        from agent.global_memory import remember_globally
+
+        remember_globally(
+            issue=issue,
+            strategy=strategy,
+            project=PROJECT_ROOT,
+            files=files,
+        )
+    except Exception:
+        pass
 
 
 def _load_fix_strategy_docs(limit: int = 8) -> List[Tuple[str, str]]:
@@ -272,7 +285,11 @@ def _chunk_sql_by_statements(content: str):
         if not stmt or len(stmt) < 10:
             continue
         # Extract a label for the statement
-        m = re.match(r"(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|SELECT)\s+(?:TABLE|INDEX|VIEW|INTO|FROM)?\s*(\S+)", stmt, re.IGNORECASE)
+        m = re.match(
+            r"(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|SELECT)\s+(?:TABLE|INDEX|VIEW|INTO|FROM)?\s*(\S+)",
+            stmt,
+            re.IGNORECASE,
+        )
         label = f"sql:{m.group(1).lower()}_{m.group(2)}" if m else "sql:statement"
         chunks.append((stmt[:CHUNK_SIZE], label))
     return chunks[:MAX_CHUNKS_PER_FILE] if chunks else []
@@ -282,7 +299,11 @@ def _chunk_xml_by_elements(content: str):
     """P5.1 — Chunk XML files by top-level elements (for Odoo, configs, etc.)."""
     chunks = []
     # Split on top-level opening tags
-    parts = re.split(r"(?=<(?:record|template|menuitem|field|form|tree|data)\s)", content, flags=re.IGNORECASE)
+    parts = re.split(
+        r"(?=<(?:record|template|menuitem|field|form|tree|data)\s)",
+        content,
+        flags=re.IGNORECASE,
+    )
     for part in parts:
         part = part.strip()
         if not part or len(part) < 20:
@@ -432,7 +453,9 @@ def _incremental_update(project_root: str) -> int:
         for idx, (chunk, symbol) in enumerate(chunks):
             vec = embed(chunk)
             if vec is not None:
-                documents.append(MemoryDoc(path=file_path, chunk_id=idx, text=chunk, symbol=symbol))
+                documents.append(
+                    MemoryDoc(path=file_path, chunk_id=idx, text=chunk, symbol=symbol)
+                )
                 vectors.append(vec)
         changed_count += 1
 
@@ -446,11 +469,13 @@ def _incremental_update(project_root: str) -> int:
     if changed_count > 0:
         _rebuild_lexical_stats()
         _query_cache.clear()
-        _save_index(meta={
-            "file_hashes": new_hashes,
-            "chunking": "symbol_or_window_multilang",
-            "extensions": sorted(SOURCE_EXTENSIONS),
-        })
+        _save_index(
+            meta={
+                "file_hashes": new_hashes,
+                "chunking": "symbol_or_window_multilang",
+                "extensions": sorted(SOURCE_EXTENSIONS),
+            }
+        )
 
     return changed_count
 
@@ -712,6 +737,7 @@ def search_memory(query: str, k: int = 3):
     dep_related: set[str] = set()
     try:
         from agent.dependency_graph import get_related_files
+
         for hp in list(hot_paths)[:8]:
             for rel_file in get_related_files(hp, depth=1):
                 dep_related.add(rel_file.lower())
@@ -737,7 +763,10 @@ def search_memory(query: str, k: int = 3):
 
     # Also ensure explicitly referenced files appear even if not in top_idx
     if explicit_paths:
-        seen_paths = {os.path.relpath(documents[i].path, PROJECT_ROOT).replace("\\", "/").lower() for i in top_idx}
+        seen_paths = {
+            os.path.relpath(documents[i].path, PROJECT_ROOT).replace("\\", "/").lower()
+            for i in top_idx
+        }
         for i, doc in enumerate(documents):
             rel = os.path.relpath(doc.path, PROJECT_ROOT).replace("\\", "/").lower()
             if any(rel.endswith(ep) for ep in explicit_paths) and rel not in seen_paths:
@@ -757,11 +786,16 @@ def search_memory(query: str, k: int = 3):
     # --- Ensure explicitly referenced files appear in results ---
     # If the query names specific files, force their best chunks to the front
     if explicit_paths:
-        existing_paths = {os.path.relpath(p, PROJECT_ROOT).replace("\\", "/").lower() for p, _ in out}
+        existing_paths = {
+            os.path.relpath(p, PROJECT_ROOT).replace("\\", "/").lower() for p, _ in out
+        }
         explicit_docs = []
         for i, doc in enumerate(documents):
             rel = os.path.relpath(doc.path, PROJECT_ROOT).replace("\\", "/").lower()
-            if any(rel.endswith(ep) for ep in explicit_paths) and rel not in existing_paths:
+            if (
+                any(rel.endswith(ep) for ep in explicit_paths)
+                and rel not in existing_paths
+            ):
                 explicit_docs.append((doc.path, doc.text))
                 existing_paths.add(rel)
         # Prepend explicit file chunks, push others down
@@ -849,13 +883,34 @@ def budget_context(query: str, k: int = 6, budget_chars: int = CONTEXT_BUDGET_CH
 
 # P2.1 — Mots-clés pour calibrer la complexité du goal
 _COMPLEX_KW = {
-    "architecture", "refactor", "migrate", "redesign", "restructure",
-    "all files", "entire", "system", "global", "tous les fichiers",
-    "architecture", "refactoriser", "migrer", "restructurer", "système",
+    "architecture",
+    "refactor",
+    "migrate",
+    "redesign",
+    "restructure",
+    "all files",
+    "entire",
+    "system",
+    "global",
+    "tous les fichiers",
+    "architecture",
+    "refactoriser",
+    "migrer",
+    "restructurer",
+    "système",
 }
 _SIMPLE_KW = {
-    "fix", "typo", "rename", "import", "correct", "add line",
-    "corriger", "typo", "renommer", "ajouter", "ligne",
+    "fix",
+    "typo",
+    "rename",
+    "import",
+    "correct",
+    "add line",
+    "corriger",
+    "typo",
+    "renommer",
+    "ajouter",
+    "ligne",
 }
 
 
@@ -897,6 +952,7 @@ def summarize_module(file_path: str, max_chars: int = 800) -> str:
     # Class/function signatures
     if file_path.endswith(".py"):
         import ast
+
         try:
             tree = ast.parse(content)
             for node in tree.body:
@@ -905,12 +961,17 @@ def summarize_module(file_path: str, max_chars: int = 800) -> str:
                         getattr(b, "id", getattr(b, "attr", "?")) for b in node.bases
                     )
                     methods = [
-                        n.name for n in node.body
+                        n.name
+                        for n in node.body
                         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
                     ]
                     parts.append(f"class {node.name}({bases}): methods={methods[:8]}")
                 elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    sig = lines[node.lineno - 1].strip() if node.lineno <= len(lines) else node.name
+                    sig = (
+                        lines[node.lineno - 1].strip()
+                        if node.lineno <= len(lines)
+                        else node.name
+                    )
                     parts.append(sig)
         except SyntaxError:
             pass

@@ -1,9 +1,9 @@
-﻿import os
+import os
 import re
 import shlex
 import subprocess
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Tuple
 
 from agent.config import DRY_RUN, PROJECT_ROOT
@@ -33,6 +33,7 @@ def invalidate_tool_cache():
     _read_file_cache.clear()
     _list_files_cache.clear()
 
+
 _ALLOWED_COMMAND_PREFIXES = [
     ["pytest"],
     ["python", "-m", "pytest"],
@@ -47,21 +48,65 @@ _ALLOWED_COMMAND_PREFIXES = [
     ["npm", "install"],
     ["npm", "test"],
     ["npm", "run"],
+    ["npx"],
     ["node"],
-    ["python"],
     ["git", "status"],
     ["git", "log"],
     ["git", "diff"],
     ["git", "blame"],
     ["git", "stash"],
+    # --- DevOps / Containers ---
+    ["docker", "build"],
+    ["docker", "run"],
+    ["docker", "ps"],
+    ["docker", "logs"],
+    ["docker", "exec"],
+    ["docker", "images"],
+    ["docker", "stop"],
+    ["docker-compose", "up"],
+    ["docker-compose", "down"],
+    ["docker-compose", "build"],
+    ["docker-compose", "logs"],
+    ["docker-compose", "ps"],
+    # --- Alembic (migrations DB) ---
+    ["alembic", "revision"],
+    ["alembic", "upgrade"],
+    ["alembic", "downgrade"],
+    ["alembic", "current"],
+    ["alembic", "history"],
+    ["alembic", "stamp"],
+    ["python", "-m", "alembic"],
+    # --- Django ---
+    ["python", "manage.py"],
+    ["django-admin"],
+    # --- Build tools ---
+    ["make"],
+    # --- Celery ---
+    ["celery"],
+    # --- Bases de données (lecture seule) ---
+    ["psql", "--command"],
+    ["psql", "-c"],
+    ["redis-cli"],
+    # --- TypeScript / frontend ---
+    ["tsc"],
+    ["pnpm"],
+    ["yarn"],
+    ["bun"],
 ]
 
 # Commandes dangereuses jamais autorisees
 _BLOCKED_PATTERNS = [
-    "rm -rf", "rmdir /s", "del /f", "format ",
-    "drop database", "drop table", "truncate table",
-    "> /dev/null", ":(){ :|:& };:",
-    "mkfs", "dd if=",
+    "rm -rf",
+    "rmdir /s",
+    "del /f",
+    "format ",
+    "drop database",
+    "drop table",
+    "truncate table",
+    "> /dev/null",
+    ":(){ :|:& };:",
+    "mkfs",
+    "dd if=",
 ]
 
 
@@ -89,6 +134,7 @@ def is_command_blocked(command: str) -> bool:
     # P5.5 — Extra safety in production/staging environments
     try:
         from agent.config import _CFG
+
         env = _CFG.get("STELLA_ENV", "development")
     except Exception:
         env = "development"
@@ -112,7 +158,9 @@ def is_command_allowed(command: str) -> bool:
     return False
 
 
-def run_safe_command(command: str, timeout: int = 300, ask_user: bool = False) -> Tuple[int, str]:
+def run_safe_command(
+    command: str, timeout: int = 300, ask_user: bool = False
+) -> Tuple[int, str]:
     # P3.3 — Blocklist de securite
     if is_command_blocked(command):
         return 2, f"[BLOCKED] Commande dangereuse refusee : {command}"
@@ -121,10 +169,14 @@ def run_safe_command(command: str, timeout: int = 300, ask_user: bool = False) -
         if ask_user:
             # P3.3 — Mode sandbox : demande confirmation pour les commandes inconnues
             try:
-                answer = input(
-                    f"\n  [?] Commande non-whitelistee : {command}\n"
-                    f"      Autoriser l'execution ? [y/n] "
-                ).strip().lower()
+                answer = (
+                    input(
+                        f"\n  [?] Commande non-whitelistee : {command}\n"
+                        f"      Autoriser l'execution ? [y/n] "
+                    )
+                    .strip()
+                    .lower()
+                )
                 if answer not in {"y", "yes", "o", "oui"}:
                     return 2, f"Refused by user: {command}"
             except (EOFError, KeyboardInterrupt):
@@ -136,15 +188,23 @@ def run_safe_command(command: str, timeout: int = 300, ask_user: bool = False) -
         return 0, f"[dry-run] skipped command: {command}"
 
     try:
+        tokens = shlex.split(command)
+    except ValueError as exc:
+        return 2, f"Invalid command syntax: {exc}"
+
+    if not tokens:
+        return 2, "Invalid command: empty"
+
+    try:
         result = subprocess.run(
-            command,
+            tokens,
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
             timeout=timeout,
-            shell=True,
+            shell=False,
             check=False,
         )
     except subprocess.TimeoutExpired:
@@ -164,7 +224,11 @@ def read_file(path: str, max_chars: int = 6000) -> str:
     if cached is not None:
         return cached
     content = load_file_content(abs_path)
-    result = content if len(content) <= max_chars else content[:max_chars] + "\n\n...[truncated]"
+    result = (
+        content
+        if len(content) <= max_chars
+        else content[:max_chars] + "\n\n...[truncated]"
+    )
     _ttl_set(_read_file_cache, cache_key, result)
     return result
 
@@ -311,3 +375,22 @@ def run_tests_detailed(
 def run_tests(command: str = "pytest -q", timeout: int = 180) -> str:
     code, output = run_tests_detailed(command=command, timeout=timeout)
     return f"exit_code={code}\n{output}"
+
+
+def web_search(query: str, limit: int = 5) -> str:
+    """P1.1 — Recherche web via DuckDuckGo."""
+    try:
+        from duckduckgo_search import DDGS
+
+        results = []
+        with DDGS() as ddgs:
+            for r in ddgs.text(query, max_results=limit):
+                results.append(
+                    f"Title: {r['title']}\nURL: {r['href']}\nSnippet: {r['body']}\n"
+                )
+
+        if not results:
+            return "No web results found."
+        return "\n".join(results)
+    except Exception as e:
+        return f"[error] Web search failed: {e}"

@@ -8,9 +8,9 @@ Transforme la sortie texte de pytest en une liste de dicts avec:
   - message: message d'erreur concis
   - context: lignes de code autour de l'erreur
 """
+
 import re
 from typing import Any
-
 
 _TRACEBACK_HEADER = re.compile(r"^_{3,}\s*(.+?)\s*_{3,}$")
 _FILE_LINE = re.compile(r'^\s*File "([^"]+)", line (\d+), in (.+)$')
@@ -38,7 +38,7 @@ def parse_pytest_output(output: str) -> dict[str, Any]:
             failed = int(m.group(1))
         m = re.search(r"(\d+) error", line)
         if m:
-            errors_count = int(m.group(1))
+            int(m.group(1))  # errors_count — compté mais non utilisé actuellement
     total = passed + failed
 
     # Parser les blocs d'échec
@@ -62,7 +62,13 @@ def parse_pytest_output(output: str) -> dict[str, Any]:
         if m and not in_short_summary:
             if current_failure and current_error_lines:
                 current_failure["error_lines"] = current_error_lines[-3:]
-            current_failure = {"test": m.group(1), "frames": [], "error_type": "", "message": "", "error_lines": []}
+            current_failure = {
+                "test": m.group(1),
+                "frames": [],
+                "error_type": "",
+                "message": "",
+                "error_lines": [],
+            }
             current_error_lines = []
             failures.append(current_failure)
             continue
@@ -81,7 +87,9 @@ def parse_pytest_output(output: str) -> dict[str, Any]:
         # Frame de traceback
         m = _FILE_LINE.match(line)
         if m:
-            current_failure["frames"].append({"file": m.group(1), "line": int(m.group(2)), "func": m.group(3)})
+            current_failure["frames"].append(
+                {"file": m.group(1), "line": int(m.group(2)), "func": m.group(3)}
+            )
             continue
 
         # Ligne d'erreur (préfixe E )
@@ -93,7 +101,7 @@ def parse_pytest_output(output: str) -> dict[str, Any]:
                 colon_pos = err_text.find(":")
                 if colon_pos > 0:
                     current_failure["error_type"] = err_text[:colon_pos].strip()
-                    current_failure["message"] = err_text[colon_pos + 1:].strip()[:200]
+                    current_failure["message"] = err_text[colon_pos + 1 :].strip()[:200]
                 else:
                     current_failure["message"] = err_text[:200]
 
@@ -105,15 +113,17 @@ def parse_pytest_output(output: str) -> dict[str, Any]:
     for f in failures:
         frames = f.get("frames", [])
         last_frame = frames[-1] if frames else {}
-        structured.append({
-            "test": f.get("test", ""),
-            "file": last_frame.get("file", ""),
-            "line": last_frame.get("line", 0),
-            "func": last_frame.get("func", ""),
-            "error_type": f.get("error_type", ""),
-            "message": f.get("message", ""),
-            "context": f.get("error_lines", []),
-        })
+        structured.append(
+            {
+                "test": f.get("test", ""),
+                "file": last_frame.get("file", ""),
+                "line": last_frame.get("line", 0),
+                "func": last_frame.get("func", ""),
+                "error_type": f.get("error_type", ""),
+                "message": f.get("message", ""),
+                "context": f.get("error_lines", []),
+            }
+        )
 
     return {
         "passed": passed,
@@ -132,7 +142,7 @@ def format_failures_for_llm(parsed: dict[str, Any], max_failures: int = 3) -> st
 
     lines = [f"Test results: {parsed['passed']} passed, {parsed['failed']} failed\n"]
     for i, f in enumerate(parsed["failures"][:max_failures]):
-        lines.append(f"Failure {i+1}: {f['test']}")
+        lines.append(f"Failure {i + 1}: {f['test']}")
         if f["file"]:
             lines.append(f"  File: {f['file']}, line {f['line']}")
         if f["error_type"]:

@@ -1,4 +1,4 @@
-﻿import os
+import os
 import tomllib
 
 
@@ -16,7 +16,7 @@ def _get(cfg: dict, section: str, key: str, default):
 
 
 def _detect_environment() -> str:
-    """P5.5 — Detect current environment from env var or settings."""
+    """P5.5 â€” Detect current environment from env var or settings."""
     return os.getenv("STELLA_ENV", "development").lower()
 
 
@@ -24,7 +24,7 @@ def load_settings() -> dict:
     root = os.path.abspath(os.getcwd())
     file_cfg = _read_toml(os.path.join(root, "settings.toml"))
 
-    # P5.5 — Environment-specific overrides
+    # P5.5 â€” Environment-specific overrides
     env = _detect_environment()
     env_cfg = _read_toml(os.path.join(root, f"settings.{env}.toml"))
     # Merge env-specific config over base (shallow per-section)
@@ -41,17 +41,18 @@ def load_settings() -> dict:
         "OLLAMA_BASE_URL",
         _get(file_cfg, "ollama", "base_url", "http://localhost:11434"),
     )
-    orisha_base_url = os.getenv(
-        "ORISHA_BASE_URL",
-        _get(file_cfg, "orisha", "base_url", "http://localhost:5000"),
+    router_base_url = os.getenv(
+        "ROUTER_BASE_URL",
+        _get(file_cfg, "routing", "base_url", "http://localhost:5000"),
     )
-    orisha_enabled = str(
-        os.getenv("ORISHA_ENABLED", _get(file_cfg, "orisha", "enabled", False))
+    router_enabled = str(
+        os.getenv("ROUTER_ENABLED", _get(file_cfg, "routing", "enabled", False))
     ).lower() in {"1", "true", "yes"}
 
     settings = {
         "MODEL": os.getenv(
-            "MODEL", _get(file_cfg, "models", "main", "deepseek-coder:6.7b")
+            "MODEL",
+            _get(file_cfg, "models", "main", "qwen2.5-coder:14b-instruct-q5_K_M"),
         ),
         "EMBED_MODEL": os.getenv(
             "EMBED_MODEL", _get(file_cfg, "models", "embed", "nomic-embed-text")
@@ -65,9 +66,9 @@ def load_settings() -> dict:
         "OLLAMA_BASE_URL": base_url,
         "OLLAMA_URL": f"{base_url}/api/chat",
         "OLLAMA_EMBED_URL": f"{base_url}/api/embeddings",
-        "ORISHA_BASE_URL": orisha_base_url,
-        "ORISHA_URL": f"{orisha_base_url}/query",
-        "ORISHA_ENABLED": orisha_enabled,
+        "ROUTER_BASE_URL": router_base_url,
+        "ROUTER_URL": f"{router_base_url}/query",
+        "ROUTER_ENABLED": router_enabled,
         "REQUEST_TIMEOUT": int(
             os.getenv(
                 "REQUEST_TIMEOUT", _get(file_cfg, "ollama", "request_timeout", 120)
@@ -140,21 +141,22 @@ def load_settings() -> dict:
         ),
         "FORMAT_COMMAND": os.getenv(
             "FORMAT_COMMAND",
-            _get(file_cfg, "quality", "format_command", "python -m black ."),
+            _get(file_cfg, "quality", "format_command", "python -m ruff format ."),
         ),
         "LINT_COMMAND": os.getenv(
             "LINT_COMMAND",
             _get(file_cfg, "quality", "lint_command", "python -m ruff check ."),
         ),
         "TEST_COMMAND": os.getenv(
-            "TEST_COMMAND", _get(file_cfg, "quality", "test_command", "pytest -q")
+            "TEST_COMMAND",
+            _get(file_cfg, "quality", "test_command", "python -m pytest -q"),
         ),
         "SECURITY_COMMAND": os.getenv(
             "SECURITY_COMMAND",
             _get(file_cfg, "quality", "security_command", "python -m bandit -r . -ll"),
         ),
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
-        # P5.5 — Environment awareness
+        # P5.5 â€” Environment awareness
         "STELLA_ENV": env,
     }
 

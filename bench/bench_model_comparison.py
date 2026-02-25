@@ -1,84 +1,75 @@
 """
-bench_model_comparison.py — Compare Orisha-Ifa1.0 vs Orisha-Oba1.0 sur des tâches croisées.
+bench_model_comparison.py - Evaluation du modele unique sur des taches variees.
 
-Ce benchmark teste chaque modèle sur son domaine de prédilection ET en dehors,
-pour valider que le routing est justifié.
-
-Usage :
+Usage:
     python bench/bench_model_comparison.py --direct
-    python bench/bench_model_comparison.py --url http://localhost:5000
+    python bench/bench_model_comparison.py --url http://localhost:5000/query
 """
+
 import argparse
 import sys
 import time
 
 import requests
 
-ORISHA_URL = "http://localhost:5000/query"
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
+MODEL = "qwen2.5-coder:14b-instruct-q5_K_M"
 
 TASKS = {
     "analyse_architecture": {
+        "task_type": "analysis",
         "prompt": (
-            "Analyse cette fonction et identifie tous les problèmes potentiels :\n"
+            "Analyse cette fonction et identifie tous les problemes potentiels:\n"
             "def process(data):\n"
             "    result = []\n"
             "    for item in data:\n"
             "        result.append(item['value'] / item['total'])\n"
             "    return result"
         ),
-        "expected_keywords": ["division", "zero", "keyerror", "none", "erreur", "exception"],
-        "ideal_model": "Orisha-Ifa1.0",
+        "expected_keywords": [
+            "division",
+            "zero",
+            "keyerror",
+            "none",
+            "erreur",
+            "exception",
+        ],
     },
     "generation_fonction": {
+        "task_type": "backend",
         "prompt": (
-            "Génère une fonction Python `safe_divide(a, b)` qui :\n"
+            "Genere une fonction Python safe_divide(a, b) qui:\n"
             "- Retourne None si b == 0\n"
-            "- Lève ValueError si a ou b n'est pas un nombre\n"
-            "- Retourne le résultat de a / b sinon"
+            "- Leve ValueError si a ou b n'est pas un nombre\n"
+            "- Retourne a / b sinon"
         ),
-        "expected_keywords": ["def safe_divide", "if b == 0", "return none", "valueerror", "isinstance"],
-        "ideal_model": "Orisha-Oba1.0",
+        "expected_keywords": [
+            "def safe_divide",
+            "if b == 0",
+            "return none",
+            "valueerror",
+            "isinstance",
+        ],
     },
     "debug_traceback": {
+        "task_type": "debug",
         "prompt": (
-            "Ce code Python lève une exception :\n"
-            "```python\n"
+            "Ce code Python leve une exception:\n"
             "lst = [1, 2, 3]\n"
             "print(lst[10])\n"
-            "```\n"
-            "Quel est le type d'exception ? Comment corriger ?"
+            "Quel est le type d'exception et comment corriger?"
         ),
         "expected_keywords": ["indexerror", "index", "out of range", "10", "len"],
-        "ideal_model": "Orisha-Oba1.0",
-    },
-    "refactoring": {
-        "prompt": (
-            "Refactorise ce code pour le rendre plus lisible et maintenable :\n"
-            "def f(l):\n"
-            "    r = []\n"
-            "    for i in range(len(l)):\n"
-            "        if l[i] > 0:\n"
-            "            r.append(l[i] * 2)\n"
-            "    return r"
-        ),
-        "expected_keywords": ["def", "for", "if", "append", "comprehension", "list"],
-        "ideal_model": "Orisha-Ifa1.0",
     },
     "json_strict": {
+        "task_type": "json",
         "prompt": (
-            'Retourne UNIQUEMENT ce JSON, sans modification :\n'
-            '{"action":"finish","reason":"tâche complète","args":{"summary":"Analyse terminée avec succès"}}'
+            "Retourne UNIQUEMENT ce JSON, sans modification:\n"
+            '{"action":"finish","reason":"tache complete","args":{"summary":"Analyse terminee avec succes"}}'
         ),
         "expected_keywords": ['"action"', '"finish"', '"summary"'],
-        "ideal_model": "Orisha-Ifa1.0",
     },
 }
-
-TASK_TYPES_BY_MODEL = [
-    ("Orisha-Ifa1.0", "analysis", "Orisha-ifa1.0:latest"),
-    ("Orisha-Oba1.0", "optimization", "Orisha-Oba1.0:latest"),
-]
 
 
 def _score(response: str, keywords: list[str]) -> tuple[int, int]:
@@ -87,76 +78,87 @@ def _score(response: str, keywords: list[str]) -> tuple[int, int]:
     return hits, len(keywords)
 
 
-def _query_ollama(model: str, prompt: str, timeout: int = 120) -> str:
+def _query_ollama(prompt: str, timeout: int = 120) -> str:
     resp = requests.post(
         OLLAMA_CHAT_URL,
-        json={"model": model, "messages": [{"role": "user", "content": prompt}], "stream": False},
+        json={
+            "model": MODEL,
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+        },
         timeout=timeout,
     )
     resp.raise_for_status()
     return resp.json().get("message", {}).get("content", "")
 
 
-def run_comparison(url: str | None = None):
+def run_evaluation(url: str | None = None):
     direct = url is None
-    print(f"\n{'='*80}")
-    print("Comparaison Orisha-Ifa1.0 vs Orisha-Oba1.0")
+    print(f"\n{'=' * 80}")
+    print("Evaluation du modele unique")
+    print(f"Modele: {MODEL}")
     print(f"Mode : {'direct Ollama' if direct else url}")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     if not direct:
         try:
             health_url = url.replace("/query", "/health")
             requests.get(health_url, timeout=5)
         except Exception:
-            print("[!] Serveur Orisha non accessible. Lancez : python orisha_server.py")
-            print("    Ou utilisez le mode direct : python bench/bench_model_comparison.py --direct")
+            print("[!] Serveur de routing non accessible.")
+            print(
+                "    Utilisez le mode direct : python bench/bench_model_comparison.py --direct"
+            )
             sys.exit(1)
 
     for task_name, task in TASKS.items():
-        print(f"\n--- Tâche : {task_name} (modèle idéal : {task['ideal_model']}) ---")
-        for model_label, task_type, ollama_model in TASK_TYPES_BY_MODEL:
-            t0 = time.time()
-            try:
-                if direct:
-                    response = _query_ollama(ollama_model, task["prompt"])
-                else:
-                    resp = requests.post(
-                        url,
-                        json={"prompt": task["prompt"], "task_type": task_type},
-                        timeout=200,
-                    )
-                    response = resp.json().get("response", "")
-                elapsed = round(time.time() - t0, 1)
-                hits, total = _score(response, task["expected_keywords"])
-                score_pct = round((hits / total) * 100) if total else 0
-                is_ideal = "[*]" if model_label == task["ideal_model"] else "  "
-                status = "[OK]" if score_pct >= 60 else ("[!!]" if score_pct >= 40 else "[KO]")
-                print(f"  {is_ideal} {status} {model_label:<22} | score: {hits}/{total} ({score_pct}%) | {elapsed}s")
-            except Exception as e:
-                print(f"     {model_label}: ERREUR — {e}")
+        t0 = time.time()
+        try:
+            if direct:
+                response = _query_ollama(task["prompt"])
+                model_used = MODEL
+            else:
+                resp = requests.post(
+                    url,
+                    json={"prompt": task["prompt"], "task_type": task["task_type"]},
+                    timeout=200,
+                )
+                data = resp.json()
+                response = data.get("response", "")
+                model_used = data.get("model_used", "?")
+            elapsed = round(time.time() - t0, 1)
+            hits, total = _score(response, task["expected_keywords"])
+            score_pct = round((hits / total) * 100) if total else 0
+            status = (
+                "[OK]" if score_pct >= 60 else ("[!!]" if score_pct >= 40 else "[KO]")
+            )
+            print(
+                f"{status} {task_name:<22} | model: {model_used:<34} | score: {hits}/{total} ({score_pct}%) | {elapsed}s"
+            )
+        except Exception as exc:
+            print(f"[KO] {task_name:<22} | ERREUR - {exc}")
 
-    print(f"\n{'='*80}")
-    print("Interprétation :")
-    print("  [*] = modèle idéal pour cette tâche selon le routing")
-    print("  [OK] = bonne réponse (>=60% de mots-clés trouvés)")
-    print("  [!!]  = réponse partielle (40-59%)")
-    print("  [KO] = réponse insuffisante (<40%)")
-    print("\nSi le modèle idéal [*] obtient un meilleur score que l'autre,")
-    print("le routing est justifié et fonctionne correctement.")
+    print(f"\n{'=' * 80}")
+    print("Interpretation:")
+    print("  [OK]  >=60% de mots-cles trouves")
+    print("  [!!]  40-59%")
+    print("  [KO]  <40% ou erreur")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Comparaison Orisha-Ifa1.0 vs Orisha-Oba1.0")
+    parser = argparse.ArgumentParser(description="Evaluation du modele unique")
     parser.add_argument("--url", default="http://localhost:5000/query")
-    parser.add_argument("--direct", action="store_true",
-                        help="Appeler Ollama directement sans le serveur Flask")
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        help="Appeler Ollama directement sans serveur de routing",
+    )
     args = parser.parse_args()
 
     if args.direct:
-        run_comparison(url=None)
+        run_evaluation(url=None)
     else:
-        run_comparison(url=args.url)
+        run_evaluation(url=args.url)
 
 
 if __name__ == "__main__":

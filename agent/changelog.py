@@ -38,7 +38,11 @@ def generate_session_changelog(
     if files_modified:
         lines.append("### Files changed")
         for f in files_modified[:20]:
-            action = "created" if not os.path.exists(os.path.join(PROJECT_ROOT, f + ".bak_*")) else "modified"
+            action = (
+                "created"
+                if not os.path.exists(os.path.join(PROJECT_ROOT, f + ".bak_*"))
+                else "modified"
+            )
             lines.append(f"- `{f}` ({action})")
         lines.append("")
 
@@ -107,7 +111,10 @@ def _categorize_files(files: List[str]) -> Dict[str, List[str]]:
             categories["tests"].append(f)
         elif "migrat" in low or "alembic" in low:
             categories["migrations"].append(f)
-        elif any(f.endswith(ext) for ext in (".toml", ".yaml", ".yml", ".json", ".cfg", ".ini", ".env")):
+        elif any(
+            f.endswith(ext)
+            for ext in (".toml", ".yaml", ".yml", ".json", ".cfg", ".ini", ".env")
+        ):
             categories["configs"].append(f)
     return categories
 

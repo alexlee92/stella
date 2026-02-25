@@ -1,22 +1,22 @@
 {
   "summary": {
-    "timestamp": "2026-02-19T22:31:01.760129",
-    "total": 2,
-    "passed": 2,
-    "pass_rate": 100.0,
-    "duration_s": 51.28,
-    "pr_ready_probe_ok": true,
+    "timestamp": "2026-02-22T19:10:42.512854",
+    "total": 5,
+    "passed": 0,
+    "pass_rate": 0.0,
+    "duration_s": 455.26,
+    "pr_ready_probe_ok": false,
     "tracks": {
       "code_edit": {
-        "total": 2,
-        "passed": 2,
-        "pass_rate": 100.0,
-        "avg_task_seconds": 25.64,
-        "avg_patch_signal_score": 66.67,
-        "avg_valid_patch_score": 66.67,
+        "total": 5,
+        "passed": 0,
+        "pass_rate": 0.0,
+        "avg_task_seconds": 91.05,
+        "avg_patch_signal_score": 0.0,
+        "avg_valid_patch_score": 0.0,
         "tests_green_rate": 0.0,
-        "expected_diff_match_rate": 100.0,
-        "patch_with_tests_rate": 100.0,
+        "expected_diff_match_rate": 0.0,
+        "patch_with_tests_rate": 0.0,
         "generated_tests_quality_rate": 0.0
       }
     }
@@ -26,113 +26,145 @@
       "name": "code_edit_task_1",
       "mode": "code_edit",
       "track": "code_edit",
-      "duration_s": 30.11,
-      "output": "Final: Reached max steps without finish action\n\nDecisions:\n- step 1: read_file | code_edit_bootstrap_read | ﻿import argparse\n\nfrom agent.agent import (\n    apply_suggestion,\n    ask_project,\n    index_project,\n    patch_risk,\n    propose_file_update,\n    review_file_update,\n)\nfrom agent.\n- step 2: propose_edit | code_edit_bootstrap_patch | Staged edit for main.py (540 chars), risk=high:100\n- step 3: propose_edit | with_tests_auto_target | Staged edit for tests/test_main.py (793 chars), risk=high:55\n- step 4: propose_edit | code_edit_bootstrap_tests | Staged edit for tests/test_main.py (932 chars), risk=medium:47",
+      "duration_s": 124.29,
+      "output": "Final: Reached max steps without finish action\n\n--- Resume de session ---\n  Etapes executees : 4/4\n  Fichiers modifies : 2\n    - stella.py\n    - tests/test_stella.py\n  Cout total : 10/16\n  Replans : 0/4\n\nDecisions:\n  1. [read_file] code_edit_bootstrap_read -> ﻿import os\nimport sys\n\nif sys.stdout.encoding and sys.stdout.encoding.lower() != \"utf-8\":\n    sys.stdout.reconfigure(encoding=\"utf-8\", errors=\"replace\")\n\nimport\n  2. [propose_edit] code_edit_bootstrap_patch -> Staged edit for stella.py (531 chars), risk=high:100\n  3. [propose_edit] with_tests_auto_target -> Staged edit for tests/test_stella.py (1012 chars), risk=high:100\n  4. [propose_edit] code_edit_bootstrap_tests -> Staged edit for tests/test_stella.py (2968 chars), risk=high:100",
       "code_edit_signals": {
-        "actions": [
-          "read_file",
-          "propose_edit",
-          "propose_edit",
-          "propose_edit"
-        ],
-        "has_edit_action": true,
+        "actions": [],
+        "has_edit_action": false,
         "has_validation_action": false,
-        "has_code_navigation_action": true,
-        "patch_signal_score": 66.67
+        "has_code_navigation_action": false,
+        "patch_signal_score": 0.0
       },
       "code_edit_validation": {
         "expected_edit_paths": [
-          "main.py"
+          "stella.py"
         ],
-        "touched_paths": [
-          "main.py",
-          "tests/test_main.py",
-          "tests/test_main.py"
-        ],
-        "expected_diff_match": true,
+        "touched_paths": [],
+        "expected_diff_match": false,
         "tests_ran": false,
         "tests_green": false,
-        "patch_with_tests": true,
+        "patch_with_tests": false,
         "tests_quality_ok": false,
         "unexpected_touched_paths": [],
-        "valid_patch_score": 66.67
+        "valid_patch_score": 0.0
       },
-      "passed": true
+      "passed": false
     },
     {
       "name": "code_edit_task_2",
       "mode": "code_edit",
       "track": "code_edit",
-      "duration_s": 21.17,
-      "output": "Final: Reached max steps without finish action\n\nDecisions:\n- step 1: read_file | code_edit_bootstrap_read | ﻿import json\nimport os\nimport re\nimport time\nfrom datetime import datetime\n\nfrom agent.agent import ask_project, index_project\nfrom agent.auto_agent import AutonomousAgent\nfrom age\n- step 2: propose_edit | code_edit_bootstrap_patch | Staged edit for agent/eval_runner.py (550 chars), risk=high:100\n- step 3: propose_edit | with_tests_auto_target | Staged edit for tests/agent/test_eval_runner.py (645 chars), risk=medium:25\n- step 4: propose_edit | code_edit_bootstrap_tests | Staged edit for tests/agent/test_eval_runner.py (789 chars), risk=medium:27",
+      "duration_s": 52.75,
+      "output": "Final: Reached max steps without finish action\n\n--- Resume de session ---\n  Etapes executees : 4/4\n  Fichiers modifies : 2\n    - agent/eval_runner.py\n    - tests/agent/test_eval_runner.py\n  Cout total : 10/16\n  Replans : 0/4\n\nDecisions:\n  1. [read_file] code_edit_bootstrap_read -> ﻿import json\nimport os\nimport re\nimport time\nfrom datetime import datetime\n\nfrom agent.agent import ask_project, index_project\nfrom agent.auto_agent import Auto\n  2. [propose_edit] code_edit_bootstrap_patch -> Staged edit for agent/eval_runner.py (696 chars), risk=high:100\n  3. [propose_edit] with_tests_auto_target -> Staged edit for tests/agent/test_eval_runner.py (374 chars), risk=medium:23\n  4. [propose_edit] code_edit_bootstrap_tests -> Staged edit for tests/agent/test_eval_runner.py (365 chars), risk=medium:23",
       "code_edit_signals": {
-        "actions": [
-          "read_file",
-          "propose_edit",
-          "propose_edit",
-          "propose_edit"
-        ],
-        "has_edit_action": true,
+        "actions": [],
+        "has_edit_action": false,
         "has_validation_action": false,
-        "has_code_navigation_action": true,
-        "patch_signal_score": 66.67
+        "has_code_navigation_action": false,
+        "patch_signal_score": 0.0
       },
       "code_edit_validation": {
         "expected_edit_paths": [
           "agent/eval_runner.py"
         ],
-        "touched_paths": [
-          "agent/eval_runner.py",
-          "tests/agent/test_eval_runner.py",
-          "tests/agent/test_eval_runner.py"
-        ],
-        "expected_diff_match": true,
+        "touched_paths": [],
+        "expected_diff_match": false,
         "tests_ran": false,
         "tests_green": false,
-        "patch_with_tests": true,
+        "patch_with_tests": false,
         "tests_quality_ok": false,
         "unexpected_touched_paths": [],
-        "valid_patch_score": 66.67
+        "valid_patch_score": 0.0
       },
-      "passed": true
+      "passed": false
+    },
+    {
+      "name": "code_edit_task_3",
+      "mode": "code_edit",
+      "track": "code_edit",
+      "duration_s": 79.15,
+      "output": "Final: Reached max steps without finish action\n\n--- Resume de session ---\n  Etapes executees : 4/4\n  Fichiers modifies : 2\n    - agent/auto_agent.py\n    - tests/agent/test_auto_agent.py\n  Cout total : 10/16\n  Replans : 0/4\n\nDecisions:\n  1. [read_file] code_edit_bootstrap_read -> ﻿\"\"\"\nAutonomous agent loop for Stella.\nHandles planning, tool execution, and self-correction.\n\"\"\"\n\nimport json\nimport os\nimport re\nimport threading\nfrom datacla\n  2. [propose_edit] code_edit_bootstrap_patch -> Staged edit for agent/auto_agent.py (208 chars), risk=high:100\n  3. [propose_edit] with_tests_auto_target -> Staged edit for tests/agent/test_auto_agent.py (1205 chars), risk=high:76\n  4. [propose_edit] code_edit_bootstrap_tests -> Staged edit for tests/agent/test_auto_agent.py (1640 chars), risk=high:89",
+      "code_edit_signals": {
+        "actions": [],
+        "has_edit_action": false,
+        "has_validation_action": false,
+        "has_code_navigation_action": false,
+        "patch_signal_score": 0.0
+      },
+      "code_edit_validation": {
+        "expected_edit_paths": [
+          "agent/auto_agent.py"
+        ],
+        "touched_paths": [],
+        "expected_diff_match": false,
+        "tests_ran": false,
+        "tests_green": false,
+        "patch_with_tests": false,
+        "tests_quality_ok": false,
+        "unexpected_touched_paths": [],
+        "valid_patch_score": 0.0
+      },
+      "passed": false
+    },
+    {
+      "name": "code_edit_task_4",
+      "mode": "code_edit",
+      "track": "code_edit",
+      "duration_s": 121.15,
+      "output": "Final: Reached max steps without finish action\n\n--- Resume de session ---\n  Etapes executees : 4/4\n  Fichiers modifies : 2\n    - agent/tooling.py\n    - tests/agent/test_tooling.py\n  Cout total : 10/16\n  Replans : 0/4\n\nDecisions:\n  1. [read_file] code_edit_bootstrap_read -> ﻿import os\nimport re\nimport shlex\nimport subprocess\nimport time\nfrom concurrent.futures import ThreadPoolExecutor, as_completed\nfrom typing import Dict, List, T\n  2. [propose_edit] code_edit_bootstrap_patch -> Staged edit for agent/tooling.py (4385 chars), risk=high:100\n  3. [propose_edit] with_tests_auto_target -> Staged edit for tests/agent/test_tooling.py (382 chars), risk=low:16\n  4. [propose_edit] code_edit_bootstrap_tests -> Staged edit for tests/agent/test_tooling.py (382 chars), risk=low:16",
+      "code_edit_signals": {
+        "actions": [],
+        "has_edit_action": false,
+        "has_validation_action": false,
+        "has_code_navigation_action": false,
+        "patch_signal_score": 0.0
+      },
+      "code_edit_validation": {
+        "expected_edit_paths": [
+          "agent/tooling.py"
+        ],
+        "touched_paths": [],
+        "expected_diff_match": false,
+        "tests_ran": false,
+        "tests_green": false,
+        "patch_with_tests": false,
+        "tests_quality_ok": false,
+        "unexpected_touched_paths": [],
+        "valid_patch_score": 0.0
+      },
+      "passed": false
+    },
+    {
+      "name": "code_edit_task_5",
+      "mode": "code_edit",
+      "track": "code_edit",
+      "duration_s": 77.92,
+      "output": "Final: Reached max steps without finish action\n\n--- Resume de session ---\n  Etapes executees : 4/4\n  Fichiers modifies : 2\n    - agent/pr_ready.py\n    - tests/agent/test_pr_ready.py\n  Cout total : 10/16\n  Replans : 0/4\n\nDecisions:\n  1. [read_file] code_edit_bootstrap_read -> ﻿import datetime\nimport os\nimport re\n\nfrom agent.config import PROJECT_ROOT\nfrom agent.event_logger import EventLogger\nfrom agent.git_tools import (\n    changed\n  2. [propose_edit] code_edit_bootstrap_patch -> Staged edit for agent/pr_ready.py (817 chars), risk=high:100\n  3. [propose_edit] with_tests_auto_target -> Staged edit for tests/agent/test_pr_ready.py (987 chars), risk=medium:43\n  4. [propose_edit] code_edit_bootstrap_tests -> Staged edit for tests/agent/test_pr_ready.py (989 chars), risk=medium:43",
+      "code_edit_signals": {
+        "actions": [],
+        "has_edit_action": false,
+        "has_validation_action": false,
+        "has_code_navigation_action": false,
+        "patch_signal_score": 0.0
+      },
+      "code_edit_validation": {
+        "expected_edit_paths": [
+          "agent/pr_ready.py"
+        ],
+        "touched_paths": [],
+        "expected_diff_match": false,
+        "tests_ran": false,
+        "tests_green": false,
+        "patch_with_tests": false,
+        "tests_quality_ok": false,
+        "unexpected_touched_paths": [],
+        "valid_patch_score": 0.0
+      },
+      "passed": false
     }
   ],
   "pr_ready_probe": {
-    "ok": true,
-    "branch": "feature/xyz",
-    "commit_message": "chore(agent): kpi pr-ready probe",
-    "pr_title": "chore(agent): kpi pr-ready probe",
-    "pr_body": "## Summary\n- Goal: kpi-pr-ready-probe\n- Branch: feature/xyz\n- Commit: chore(agent): kpi pr-ready probe\n\n## Changes\n- Automated changes generated by Stella agent\n- Quality checks executed by agent pipeline\n\n## Diff Overview\n```\nchanged_lines:+3343/-191\ndiff --git a/README.md b/README.md\nindex 2204393..18074fb 100644\n--- a/README.md\n+++ b/README.md\n@@ -84,6 +84,13 @@ Execution multi-etapes:\n python main.py run \"Ameliore la robustesse de l'agent\" --steps 10 --apply\n ```\n \n+Mode robuste (borne runtime + tests generes):\n+\n+```bash\n+python main.py run \"...\" --apply --with-tests\n+python main.py run \"...\" --apply --with-tests --fix-until-green --max-seconds 900\n+```\n+\n ## Mode chat continu\n \n ```bash\n@@ -128,6 +135,12 @@ Executer la suite d'evaluation:\n python main.py eval\n ```\n \n+Suite code-edit stricte (profil production):\n+\n+```bash\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n+```\n+\n Rapport ecrit dans:\n \n - `eval/last_report.json`\n@@ -180,9 +193,15 @@ python main.py apply <file> \"...\"\n python main.py undo <file>\n python main.py plan \"...\"\n python main.py run \"...\" --steps 10 --apply\n+python main.py run \"...\" --steps 10 --apply --with-tests --max-seconds 600\n python main.py chat --apply\n python main.py map\n python main.py eval\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n python main.py ci\n python main.py pr-ready \"...\"\n+python main.py dev-task \"<goal>\" --profile safe\n+python main.py dev-task \"<goal>\" --profile standard\n+python main.py dev-task \"<goal>\" --profile aggressive --max-seconds 900\n+python main.py ide-shortcuts\n ```\ndiff --git a/UPGRADE_PLAN_30J.md b/UPGRADE_PLAN_30J.md\nindex 4bc3c86..451c457 100644\n--- a/UPGRADE_PLAN_30J.md\n+++ b/UPGRADE_PLAN_30J.md\n@@ -18,8 +18,8 @@ Atteindre un agent \"tres fiable pour usage personnel\" avec:\n ## Statut global\n \n - Date de demarrage: 2026-02-17\n-- Avancement global: 67%\n-- Etat: En cours\n+- Avancement global: 100%\n+- Etat: Termine\n \n ---\n \n@@ -132,18 +132,22 @@ Atteindre un agent \"tres fiable pour usage\n```\n\n## Validation\n- [x] format\n- [x] lint\n- [x] tests\n- [x] generated_tests (3)\n",
-    "pr_file": "C:\\Users\\lodon\\PycharmProjects\\stella\\.stella\\last_pr.md",
-    "quality": {
-      "fast": [
-        {
-          "mode": "fast",
-          "stage": "format",
-          "command": "quick_validate",
-          "exit_code": 0,
-          "output": "quick validation: skipped",
-          "skipped": true
-        },
-        {
-          "mode": "fast",
-          "stage": "lint",
-          "command": "quick_validate",
-          "exit_code": 0,
-          "output": "quick validation: skipped",
-          "skipped": true
-        },
-        {
-          "mode": "fast",
-          "stage": "tests",
-          "command": "quick_validate",
-          "exit_code": 5,
-          "output": "quick validation: skipped",
-          "skipped": true
-        }
-      ],
-      "full": []
-    },
-    "summary": "PR Ready: yes\nbranch: feature/xyz\ncommit_message: chore(agent): kpi pr-ready probe\nquality_gate: ok\nbranch_cmd_exit: 0\ncommit_cmd_exit: 0\npr_text_file: C:\\Users\\lodon\\PycharmProjects\\stella\\.stella\\last_pr.md\nbranch_output:\n[dry-run] branch creation skipped\n\ndiff_summary:\nchanged_lines:+3343/-191\ndiff --git a/README.md b/README.md\nindex 2204393..18074fb 100644\n--- a/README.md\n+++ b/README.md\n@@ -84,6 +84,13 @@ Execution multi-etapes:\n python main.py run \"Ameliore la robustesse de l'agent\" --steps 10 --apply\n ```\n \n+Mode robuste (borne runtime + tests generes):\n+\n+```bash\n+python main.py run \"...\" --apply --with-tests\n+python main.py run \"...\" --apply --with-tests --fix-until-green --max-seconds 900\n+```\n+\n ## Mode chat continu\n \n ```bash\n@@ -128,6 +135,12 @@ Executer la suite d'evaluation:\n python main.py eval\n ```\n \n+Suite code-edit stricte (profil production):\n+\n+```bash\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n+```\n+\n Rapport ecrit dans:\n \n - `eval/last_report.json`\n@@ -180,9 +193,15 @@ python main.py apply <file> \"...\"\n python main.py undo <file>\n python main.py plan \"...\"\n python main.py run \"...\" --steps 10 --apply\n+python main.py run \"...\" --steps 10 --apply --with-tests --max-seconds 600\n python main.py chat --apply\n python main.py map\n python main.py eval\n+python main.py eval --tasks eval/tasks_code_edit_prod.json --limit 5\n python main.py ci\n python main.py pr-ready \"...\"\n+python main.py dev-task \"<goal>\" --profile safe\n+python main.py dev-task \"<goal>\" --profile standard\n+python main.py dev-task \"<goal>\" --profile aggressive --max-seconds 900\n+python main.py ide-shortcuts\n ```\ndiff --git a/UPGRADE_PLAN_30J.md b/UPGRADE_PLAN_30J.md\nindex 4bc3c86..451c457 100644\n--- a/UPGRADE_PLAN_30J.md\n+++ b/UPGRADE_PLAN\n\ncommit_output:\n[dry-run] commit skipped"
+    "ok": false,
+    "summary": "PR Ready: no\nReason: no local changes to commit\nAction: run `python stella.py run ... --apply` or edit files, then retry `pr-ready`"
   }
 }

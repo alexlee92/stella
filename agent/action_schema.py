@@ -1,4 +1,4 @@
-﻿from typing import Any
+from typing import Any
 
 ALLOWED_ACTIONS = {
     "list_files",
@@ -15,6 +15,12 @@ ALLOWED_ACTIONS = {
     "git_branch",
     "git_commit",
     "git_diff",
+    "web_search",
+    "generate_migration",
+    "apply_migration",
+    "read_schema",
+    "plan_files",
+    "mcp_call",
     "finish",
 }
 
@@ -74,6 +80,18 @@ def validate_decision_schema(decision: dict) -> tuple[bool, str]:
         "git_branch": {"required": {}, "optional": {"name": "str"}},
         "git_commit": {"required": {}, "optional": {"message": "str"}},
         "git_diff": {"required": {}, "optional": {}},
+        "web_search": {"required": {"query": "str"}, "optional": {"limit": "int"}},
+        "generate_migration": {"required": {}, "optional": {"message": "str"}},
+        "apply_migration": {"required": {}, "optional": {"target": "str"}},
+        "read_schema": {"required": {}, "optional": {"files": "list_str"}},
+        "plan_files": {
+            "required": {"description": "str"},
+            "optional": {},
+        },
+        "mcp_call": {
+            "required": {"server": "str", "method": "str"},
+            "optional": {},
+        },
         "finish": {"required": {}, "optional": {"summary": "str"}},
     }
 

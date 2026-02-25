@@ -1,6 +1,6 @@
 # Stella Agent
 
-Stella est un agent IA local pour développeurs — similaire à Claude Code, mais qui tourne entièrement sur votre machine avec les modèles Orisha locaux.
+Stella est un agent IA local pour développeurs — similaire à Claude Code, mais qui tourne entièrement sur votre machine avec Ollama et un modèle principal unique.
 
 ---
 
@@ -8,13 +8,12 @@ Stella est un agent IA local pour développeurs — similaire à Claude Code, ma
 
 - Python 3.11+
 - [Ollama](https://ollama.com) accessible sur `http://localhost:11434` (dans WSL ou natif)
-- Modèles Orisha chargés dans Ollama :
-  - `Orisha-ifa1.0` — architecte / analyste (basé sur deepseek-coder-v2:16b)
-  - `Orisha-Oba1.0` — générateur de code (basé sur qwen2.5-coder:14b)
+- Modèles Ollama chargés :
+  - `qwen2.5-coder:14b-instruct-q5_K_M` — modèle principal Stella
   - `nomic-embed-text` — embeddings pour la mémoire vectorielle
 
-Optionnel (routing automatique) :
-- Serveur Flask Orisha (`python orisha_server.py`) sur `http://localhost:5000`
+Optionnel :
+- Serveur de routing HTTP sur `http://localhost:5000` (non requis en mode standard)
 
 ---
 
@@ -47,8 +46,8 @@ Cette commande indexe votre code et configure l'environnement.
 ### 2. Poser une question sur votre code
 
 ```bash
-python stella.py ask "Comment fonctionne le module d'authentification ?"
-python stella.py ask "Quels fichiers gèrent les routes API ?"
+python stella.py ask "Comment fonctionne le module d'authentification "
+python stella.py ask "Quels fichiers gèrent les routes API "
 ```
 
 ### 3. Corriger ou améliorer du code (en langage naturel)
@@ -66,6 +65,19 @@ python stella.py fix "Corriger le bug de division par zéro" --apply
 ```bash
 python stella.py map
 ```
+
+### 5. Mode simple (goal direct)
+
+Vous pouvez aussi lancer Stella sans sous-commande:
+
+```bash
+python stella.py "votre objectif en langage naturel"
+```
+
+Routage automatique:
+- Question (`comment`, `pourquoi`, ``) -> `ask`
+- Création (`crée`, `génère`, `implémente`) -> `run`
+- Le reste (correction/amélioration) -> `fix`
 
 ---
 
@@ -165,16 +177,9 @@ python stella.py pr-ready "fix: correction bug llm_interface" --branch fix/llm-j
 
 ---
 
-## Sélection automatique des modèles
+## Sélection des tâches
 
-Stella choisit automatiquement le bon modèle Orisha selon la tâche :
-
-| Type de tâche | Modèle utilisé | Exemples |
-|---------------|----------------|----------|
-| `analysis`, `refactor`, `planning`, `json` | Orisha-Ifa1.0 | analyser, expliquer, planifier |
-| `debug`, `optimization`, `backend`, `frontend` | Orisha-Oba1.0 | corriger, générer, créer |
-
-La détection fonctionne en **français et en anglais**.
+Stella détecte automatiquement le `task_type` selon la demande (français/anglais), puis utilise le modèle principal configuré dans `settings.toml`.
 
 ---
 
@@ -182,12 +187,12 @@ La détection fonctionne en **français et en anglais**.
 
 | Tâche | Modèle | Latence |
 |-------|--------|---------|
-| Question simple | Oba1.0 | ~10s |
-| Analyse courte | Ifa1.0 | ~8s |
-| Analyse longue | Ifa1.0 | ~27s |
-| Génération simple | Oba1.0 | ~15s |
-| Génération complexe (classe FastAPI+JWT) | Oba1.0 | ~90s |
-| Planning JSON | Ifa1.0 | ~22s |
+| Question simple | qwen2.5-coder:14b-instruct-q5_K_M | variable selon machine |
+| Analyse courte | qwen2.5-coder:14b-instruct-q5_K_M | variable selon machine |
+| Analyse longue | qwen2.5-coder:14b-instruct-q5_K_M | variable selon machine |
+| Génération simple | qwen2.5-coder:14b-instruct-q5_K_M | variable selon machine |
+| Génération complexe (classe FastAPI+JWT) | qwen2.5-coder:14b-instruct-q5_K_M | variable selon machine |
+| Planning JSON | qwen2.5-coder:14b-instruct-q5_K_M | variable selon machine |
 
 Stabilité JSON : **100%** sur tous les types de prompts planner.
 
@@ -199,18 +204,18 @@ Stabilité JSON : **100%** sur tous les types de prompts planner.
 stella.py               — CLI principal
 agent/
   auto_agent.py         — boucle autonome (planner → critique → action)
-  llm_interface.py      — interface LLM avec routing modèle automatique
+  llm_interface.py      — interface LLM (classification task_type + appel modèle)
   memory.py             — index vectoriel (BM25 + cosine) persistant
   tooling.py            — outils sécurisés (read/search/tests)
   patcher.py            — patch transactionnel avec backup/rollback
   quality.py            — pipeline qualité (format/lint/tests)
-  health_check.py       — vérification connectivité Ollama/Orisha
+  health_check.py       — vérification connectivité Ollama (+ routing optionnel)
   chat_session.py       — chat continu + historique
   pr_ready.py           — branche + commit + résumé diff
 bench/
   bench_latency.py      — benchmark latence modèles
   bench_json_stability.py — benchmark stabilité JSON planner
-  bench_model_comparison.py — comparaison Ifa1.0 vs Oba1.0
+  bench_model_comparison.py — évaluation du modèle unique
 ```
 
 ---
@@ -218,7 +223,7 @@ bench/
 ## Sécurité
 
 - Écriture limitée au dossier du projet (`PROJECT_ROOT`)
-- Commandes shell autorisées via whitelist (`pytest`, `black`, `ruff` uniquement)
+- Commandes shell autorisées via whitelist contrôlée
 - Rollback automatique si la quality gate échoue après un patch
 - Mode `DRY_RUN=true` pour simuler sans modifier
 
@@ -249,9 +254,9 @@ ollama serve
 curl http://localhost:11434/api/tags
 ```
 
-**Orisha (Flask) inaccessible :**
+**Serveur de routing optionnel inaccessible :**
 ```bash
-python orisha_server.py
+python router_server.py
 ```
 
 **Réindexer le projet :**
@@ -260,7 +265,7 @@ python stella.py index --rebuild
 ```
 
 **Rollback fréquent après `--apply` :**
-- Vérifier que `pytest`, `black`, `ruff` passent manuellement
+- Vérifier que `pytest`, `ruff format --check`, `ruff check` passent manuellement
 - Ajuster `FORMAT_COMMAND`, `LINT_COMMAND`, `TEST_COMMAND` dans `settings.toml`
 
 ---
@@ -270,6 +275,7 @@ python stella.py index --rebuild
 La configuration principale est dans `settings.toml`.
 
 Paramètres importants :
-- `ORISHA_ENABLED = true` — activer le routing Orisha (Flask requis)
+- `ROUTER_ENABLED = false` — mode recommandé (appel direct Ollama)
 - `context_budget_chars = 8000` — contexte envoyé au modèle
 - `AUTO_MAX_STEPS = 15` — nombre d'étapes max en mode autonome
+

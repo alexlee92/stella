@@ -8,7 +8,6 @@ Detects model changes and suggests migration commands for:
 """
 
 import os
-import re
 from typing import List, Optional
 
 from agent.config import PROJECT_ROOT
@@ -17,8 +16,9 @@ from agent.config import PROJECT_ROOT
 def detect_migration_framework() -> Optional[str]:
     """Detect which migration framework the project uses."""
     # Alembic
-    if os.path.isdir(os.path.join(PROJECT_ROOT, "alembic")) or \
-       os.path.isfile(os.path.join(PROJECT_ROOT, "alembic.ini")):
+    if os.path.isdir(os.path.join(PROJECT_ROOT, "alembic")) or os.path.isfile(
+        os.path.join(PROJECT_ROOT, "alembic.ini")
+    ):
         return "alembic"
 
     # Django
@@ -27,7 +27,9 @@ def detect_migration_framework() -> Optional[str]:
             init = os.path.join(root, "migrations", "__init__.py")
             if os.path.isfile(init):
                 return "django"
-        dirs[:] = [d for d in dirs if d not in {".venv", "__pycache__", ".git", "node_modules"}]
+        dirs[:] = [
+            d for d in dirs if d not in {".venv", "__pycache__", ".git", "node_modules"}
+        ]
 
     # Odoo
     for root, dirs, files in os.walk(PROJECT_ROOT):
@@ -61,9 +63,13 @@ def suggest_migration_commands(changed_files: List[str]) -> List[str]:
             suggestions.append(f"python manage.py makemigrations {app}")
         suggestions.append("python manage.py migrate")
     elif framework == "odoo":
-        suggestions.append("# Restart Odoo server with -u <module_name> to apply changes")
+        suggestions.append(
+            "# Restart Odoo server with -u <module_name> to apply changes"
+        )
     else:
-        suggestions.append("# No migration framework detected. Consider using Alembic or Django migrations.")
+        suggestions.append(
+            "# No migration framework detected. Consider using Alembic or Django migrations."
+        )
 
     return suggestions
 
@@ -85,8 +91,9 @@ def validate_model_migration_coherence(changed_files: List[str]) -> List[str]:
 
 def _is_model_file(path: str) -> bool:
     low = path.lower().replace("\\", "/")
-    return ("model" in low and low.endswith(".py")) or \
-           ("schema" in low and low.endswith(".py"))
+    return ("model" in low and low.endswith(".py")) or (
+        "schema" in low and low.endswith(".py")
+    )
 
 
 def _is_migration_file(path: str) -> bool:

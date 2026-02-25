@@ -1,13 +1,13 @@
-﻿import json
+import json
 import os
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, List, Optional
 
 from agent.auto_agent import AutonomousAgent
 from agent.config import CHAT_HISTORY_PATH, PROJECT_ROOT, TOP_K_RESULTS
 from agent.event_logger import EventLogger
-from agent.llm_interface import ask_llm, ask_llm_stream_print
+from agent.llm_interface import ask_llm_stream_print
 from agent.memory import search_memory
 
 # P2.2 — Sessions directory
@@ -33,13 +33,15 @@ def list_sessions(limit: int = 20) -> List[dict]:
         except Exception:
             meta = {}
             mtime = 0
-        entries.append({
-            "id": sid,
-            "path": path,
-            "mtime": mtime,
-            "goal": meta.get("goal", ""),
-            "type": meta.get("type", ""),
-        })
+        entries.append(
+            {
+                "id": sid,
+                "path": path,
+                "mtime": mtime,
+                "goal": meta.get("goal", ""),
+                "type": meta.get("type", ""),
+            }
+        )
     entries.sort(key=lambda e: e["mtime"], reverse=True)
     return entries[:limit]
 
@@ -126,7 +128,7 @@ class ChatSession:
         record = {
             "type": "staged_edits",
             "edits": self.staged_edits,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self._persist_session(record)
 
@@ -198,6 +200,7 @@ class ChatSession:
         """Read files explicitly mentioned in the question (e.g. users/api.py)."""
         import re as _re
         from agent.project_scan import load_file_content
+
         pattern = r"([A-Za-z0-9_./\\-]+\.(?:py|js|ts|jsx|tsx|html|css|json|yaml|yml|md|toml|sql|xml))"
         refs = list(dict.fromkeys(_re.findall(pattern, question)))
         sections = []
@@ -215,7 +218,8 @@ class ChatSession:
                         content = load_file_content(abs_path)
                         rel = os.path.relpath(abs_path, PROJECT_ROOT)
                         numbered = "\n".join(
-                            f"{i+1:4d} | {line}" for i, line in enumerate(content.splitlines())
+                            f"{i + 1:4d} | {line}"
+                            for i, line in enumerate(content.splitlines())
                         )
                         sections.append(f"=== {rel} (full source) ===\n{numbered}")
                     except OSError:
@@ -275,13 +279,13 @@ Instructions:
             "type": "message",
             "role": "user",
             "content": question,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         assistant_record = {
             "type": "message",
             "role": "assistant",
             "content": answer,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         self.messages.append({"role": "user", "content": question})
@@ -305,8 +309,12 @@ Instructions:
         max_seconds: int = 0,
     ) -> str:
         agent = AutonomousAgent(
-            top_k=self.top_k, max_steps=max_steps, logger=self.log_decision,
-            config=self._config, llm_fn=self._llm_fn, memory_fn=self._memory_fn,
+            top_k=self.top_k,
+            max_steps=max_steps,
+            logger=self.log_decision,
+            config=self._config,
+            llm_fn=self._llm_fn,
+            memory_fn=self._memory_fn,
         )
         summary = agent.run(
             goal=goal,
@@ -324,7 +332,7 @@ Instructions:
             "type": "auto_summary",
             "goal": goal,
             "summary": summary,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self._persist(record)
         self.event_logger.log(
@@ -344,9 +352,9 @@ Instructions:
             f"  Session file : {self.session_path}",
         ]
         if self.messages:
-            lines.append(f"  Derniers echanges :")
+            lines.append("  Derniers echanges :")
             for m in self.messages[-6:]:
-                content = m['content'][:100].replace('\n', ' ')
+                content = m["content"][:100].replace("\n", " ")
                 lines.append(f"    [{m['role']}] {content}...")
         return "\n".join(lines)
 

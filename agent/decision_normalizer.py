@@ -11,10 +11,10 @@ from typing import Dict, List, Optional, Tuple
 from agent.action_schema import ALLOWED_ACTIONS
 from agent.config import PROJECT_ROOT
 
-
 # ---------------------------------------------------------------------------
 # Goal analysis helpers
 # ---------------------------------------------------------------------------
+
 
 def extract_target_file_from_goal(goal: str) -> Optional[str]:
     low = goal.strip()
@@ -135,6 +135,7 @@ _ALLOWED_ARGS_PER_ACTION: Dict[str, set] = {
 # Normalization
 # ---------------------------------------------------------------------------
 
+
 def normalize_decision(decision: dict) -> dict:
     if not isinstance(decision, dict):
         return decision
@@ -144,8 +145,15 @@ def normalize_decision(decision: dict) -> dict:
         for k, v in decision.items()
         if k
         not in {
-            "action", "tool", "name", "decision",
-            "reason", "why", "args", "parameters", "input",
+            "action",
+            "tool",
+            "name",
+            "decision",
+            "reason",
+            "why",
+            "args",
+            "parameters",
+            "input",
         }
         and not (isinstance(k, str) and k.startswith("_"))
     }
@@ -197,7 +205,9 @@ def normalize_decision(decision: dict) -> dict:
 
     # Infer action from args shape
     if action not in ALLOWED_ACTIONS:
-        if isinstance(args.get("path"), str) and isinstance(args.get("instruction"), str):
+        if isinstance(args.get("path"), str) and isinstance(
+            args.get("instruction"), str
+        ):
             action = "propose_edit"
         elif isinstance(args.get("paths"), list):
             action = "read_many"
@@ -278,6 +288,7 @@ def coerce_decision(goal: str, decision: dict) -> dict:
 # Fallback inference
 # ---------------------------------------------------------------------------
 
+
 def infer_fallback_action(goal: str, args: dict) -> Tuple[str, dict]:
     low_goal = (goal or "").lower()
     target = extract_target_file_from_goal(goal)
@@ -344,9 +355,7 @@ def autocorrect_decision_schema(goal: str, decision: dict, msg: str) -> dict:
                     args["path"] = target
         if "missing required arg 'instruction'" in msg:
             instruction = (
-                args.get("prompt")
-                or args.get("change")
-                or decision.get("reason", "")
+                args.get("prompt") or args.get("change") or decision.get("reason", "")
             )
             if isinstance(instruction, str) and instruction:
                 args["instruction"] = instruction

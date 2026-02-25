@@ -1,7 +1,14 @@
-﻿import difflib
+import difflib
 from typing import Dict
 
-SENSITIVE_PATTERNS = ["auth", "security", "config", "patcher", "auto_agent", "stella.py"]
+SENSITIVE_PATTERNS = [
+    "auth",
+    "security",
+    "config",
+    "patcher",
+    "auto_agent",
+    "stella.py",
+]
 
 
 def _changed_line_count(old_code: str, new_code: str) -> int:

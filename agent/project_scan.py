@@ -1,4 +1,4 @@
-﻿import os
+import os
 from agent.config import PROJECT_ROOT, MAX_FILE_SIZE
 
 EXCLUDED_DIRS = {

@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 
 from agent.agent import index_project
 from agent.auto_agent import AutonomousAgent
@@ -10,7 +10,7 @@ from agent.git_tools import changed_files, diff_summary
 
 def _next_action(has_changes: bool, auto_apply: bool) -> str:
     if has_changes and auto_apply:
-        return "Run `python stella.py pr-ready \"<goal>\"` to package the patch."
+        return 'Run `python stella.py pr-ready "<goal>"` to package the patch.'
     if has_changes and not auto_apply:
         return "Re-run with `--apply` to apply staged edits."
     return "Refine goal to a concrete file-level change and rerun `dev-task`."
@@ -87,7 +87,7 @@ def run_dev_task(
     status = "changes_ready" if changed else "no_changes"
 
     payload = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "goal": goal,
         "status": status,
         "changed_files_count": len(changed),
@@ -112,11 +112,11 @@ def run_dev_task(
 
 def ide_shortcuts() -> dict:
     return {
-        "run_dev_task_standard": "python stella.py dev-task \"<goal>\" --profile standard",
-        "run_dev_task_aggressive": "python stella.py dev-task \"<goal>\" --profile aggressive --max-seconds 900",
-        "run_dev_task_safe": "python stella.py dev-task \"<goal>\" --profile safe",
-        "review_only": "python stella.py run \"<goal>\" --steps 8",
-        "package_pr": "python stella.py pr-ready \"<goal>\"",
+        "run_dev_task_standard": 'python stella.py dev-task "<goal>" --profile standard',
+        "run_dev_task_aggressive": 'python stella.py dev-task "<goal>" --profile aggressive --max-seconds 900',
+        "run_dev_task_safe": 'python stella.py dev-task "<goal>" --profile safe',
+        "review_only": 'python stella.py run "<goal>" --steps 8',
+        "package_pr": 'python stella.py pr-ready "<goal>"',
         "last_summary": ".stella/last_dev_task.md",
         "last_report": "eval/last_report.json",
     }

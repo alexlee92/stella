@@ -1,4 +1,4 @@
-﻿import ast
+import ast
 import os
 from typing import Dict, List
 

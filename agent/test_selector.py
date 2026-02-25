@@ -1,4 +1,4 @@
-﻿import os
+import os
 from typing import List
 
 from agent.config import PROJECT_ROOT

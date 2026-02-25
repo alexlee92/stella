@@ -1,8 +1,8 @@
-﻿import json
+import json
 import os
 import platform
 import shutil
-from datetime import datetime
+from datetime import datetime, UTC
 
 import requests
 
@@ -61,9 +61,22 @@ def run_doctor() -> dict:
     for cmd in ["pytest", "ruff", "black"]:
         add(f"tool_{cmd}", shutil.which(cmd) is not None, f"path={shutil.which(cmd)}")
 
+    import importlib.util
+
+    ddgs_installed = importlib.util.find_spec("duckduckgo_search") is not None
+    add(
+        "lib_ddgs",
+        ddgs_installed,
+        (
+            "duckduckgo-search installed"
+            if ddgs_installed
+            else "missing duckduckgo-search"
+        ),
+    )
+
     ok_count = sum(1 for c in checks if c["ok"])
     result = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "total": len(checks),
         "ok": ok_count,
         "failed": len(checks) - ok_count,

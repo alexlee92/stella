@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import os
 import re
 
@@ -12,7 +12,7 @@ from agent.git_tools import (
     diff_summary,
     is_git_repo,
 )
-from agent.quality import run_quality_gate
+from agent.quality import run_quality_gate, scan_secrets_in_files
 
 
 def _slug(text: str) -> str:
@@ -21,7 +21,7 @@ def _slug(text: str) -> str:
 
 
 def default_branch_name(goal: str) -> str:
-    date = datetime.datetime.utcnow().strftime("%Y%m%d")
+    date = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d")
     return f"agent/{date}-{_slug(goal)}"
 
 
@@ -32,8 +32,10 @@ def default_commit_message(goal: str) -> str:
 def _is_test_file(path: str) -> bool:
     rel = path.replace("\\", "/").lower()
     name = os.path.basename(rel)
-    return rel.startswith("tests/") or name.startswith("test_") or name.endswith(
-        "_test.py"
+    return (
+        rel.startswith("tests/")
+        or name.startswith("test_")
+        or name.endswith("_test.py")
     )
 
 
@@ -53,9 +55,7 @@ def _checklist(details: dict, changed: list[str]) -> tuple[str, bool]:
     format_ok = stage_ok(full or fast, "format")
     lint_ok = stage_ok(full or fast, "lint")
     tests_ok = stage_ok(full or fast, "tests")
-    changed_py = [
-        p for p in changed if p.endswith(".py") and not _is_test_file(p)
-    ]
+    changed_py = [p for p in changed if p.endswith(".py") and not _is_test_file(p)]
     generated_tests = [p for p in changed if _is_test_file(p)]
     generated_tests_ok = (not changed_py) or bool(generated_tests)
 
@@ -124,6 +124,25 @@ def prepare_pr(
         )
         logger.log("pr_ready", {"ok": False, "reason": "no_changes"})
         return {"ok": False, "summary": summary}
+
+    # Scan secrets avant tout commit — bloquer si trouvés
+    secret_findings = scan_secrets_in_files(changed)
+    if secret_findings:
+        details = "\n".join(
+            f"  - {f['file']}:{f['line']} [{f['type']}] {f['excerpt']}"
+            for f in secret_findings
+        )
+        summary = (
+            "PR Ready: no\n"
+            "Reason: hardcoded secrets detected in changed files\n"
+            f"Secrets found:\n{details}\n"
+            "Action: remove secrets, use environment variables, then retry"
+        )
+        logger.log(
+            "pr_ready",
+            {"ok": False, "reason": "secrets_detected", "findings": secret_findings},
+        )
+        return {"ok": False, "summary": summary, "secrets": secret_findings}
 
     if quick_validate:
         quality_ok = True

@@ -1,4 +1,4 @@
-﻿import difflib
+import difflib
 import os
 import re
 from typing import Dict
@@ -76,7 +76,8 @@ def ask_project(question: str, k: int = TOP_K_RESULTS) -> str:
                 rel = os.path.relpath(abs_path, PROJECT_ROOT)
                 # Ajouter les numéros de ligne pour que le LLM ne les invente pas
                 numbered = "\n".join(
-                    f"{i+1:4d} | {line}" for i, line in enumerate(content.splitlines())
+                    f"{i + 1:4d} | {line}"
+                    for i, line in enumerate(content.splitlines())
                 )
                 file_sections.append(f"=== {rel} ===\n{numbered}")
             except OSError:
@@ -84,22 +85,23 @@ def ask_project(question: str, k: int = TOP_K_RESULTS) -> str:
 
     file_context = "\n\n".join(file_sections)
 
-    prompt = f"""Tu es un assistant de développement senior. Réponds en prose claire, PAS en JSON.
+    if file_context:
+        extra_context = (
+            "\nVoici le contenu exact du fichier mentionné — analyse-le ligne par ligne:\n"
+            + file_context
+            + "\n\nInstructions:\n"
+            "- Liste uniquement les vraies erreurs (NameError, ImportError, logique incorrecte).\n"
+            "- Pour chaque erreur: numéro de ligne, description courte, correction proposée en code.\n"
+            "- Si le fichier est correct, dis-le explicitement.\n"
+            "- Ne réinvente pas des erreurs qui n'existent pas.\n"
+        )
+    else:
+        extra_context = f"\nContexte du projet:\n{context}\n"
 
-Question: {question}
-{f"""
-Voici le contenu exact du fichier mentionné — analyse-le ligne par ligne:
-{file_context}
-
-Instructions:
-- Liste uniquement les vraies erreurs (NameError, ImportError, logique incorrecte).
-- Pour chaque erreur: numéro de ligne, description courte, correction proposée en code.
-- Si le fichier est correct, dis-le explicitement.
-- Ne réinvente pas des erreurs qui n'existent pas.
-""" if file_context else f"""
-Contexte du projet:
-{context}
-"""}"""
+    prompt = (
+        "Tu es un assistant de développement senior. Réponds en prose claire, PAS en JSON.\n\n"
+        f"Question: {question}\n" + extra_context
+    )
     return ask_llm(prompt, task_type="analysis").strip()
 
 
@@ -116,7 +118,8 @@ def ask_project_stream(question: str, k: int = TOP_K_RESULTS) -> str:
                 content = load_file_content(abs_path)
                 rel = os.path.relpath(abs_path, PROJECT_ROOT)
                 numbered = "\n".join(
-                    f"{i+1:4d} | {line}" for i, line in enumerate(content.splitlines())
+                    f"{i + 1:4d} | {line}"
+                    for i, line in enumerate(content.splitlines())
                 )
                 file_sections.append(f"=== {rel} ===\n{numbered}")
             except OSError:
@@ -126,7 +129,8 @@ def ask_project_stream(question: str, k: int = TOP_K_RESULTS) -> str:
     prompt = f"""Tu es un assistant de développement senior. Réponds en prose claire, PAS en JSON.
 
 Question: {question}
-{f'''
+{
+        f'''
 Voici le contenu exact du fichier mentionné — analyse-le ligne par ligne:
 {file_context}
 
@@ -135,10 +139,13 @@ Instructions:
 - Pour chaque erreur: numéro de ligne, description courte, correction proposée en code.
 - Si le fichier est correct, dis-le explicitement.
 - Ne réinvente pas des erreurs qui n'existent pas.
-''' if file_context else f'''
+'''
+        if file_context
+        else f'''
 Contexte du projet:
 {context}
-'''}"""
+'''
+    }"""
     return ask_llm_stream_print(prompt, task_type="analysis")
 
 

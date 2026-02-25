@@ -1,9 +1,9 @@
-﻿import json
+import json
 import os
 import shutil
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, UTC
 
 from agent.agent import index_project
 from agent.config import PROJECT_ROOT
@@ -71,7 +71,7 @@ def run_bootstrap(
 
     ok = all(s.get("ok") for s in steps) if steps else True
     report = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "ok": ok,
         "steps": steps,
     }

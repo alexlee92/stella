@@ -79,15 +79,26 @@ def show_diff(old: str, new: str, filepath: str = "") -> str:
     """Affiche un diff coloré et retourne le texte brut du diff."""
     from_label = f"a/{filepath}" if filepath else "a/original"
     to_label = f"b/{filepath}" if filepath else "b/modified"
-    diff_lines = list(difflib.unified_diff(
-        old.splitlines(), new.splitlines(),
-        fromfile=from_label, tofile=to_label, lineterm=""
-    ))
+    diff_lines = list(
+        difflib.unified_diff(
+            old.splitlines(),
+            new.splitlines(),
+            fromfile=from_label,
+            tofile=to_label,
+            lineterm="",
+        )
+    )
     if not diff_lines:
         print("\n[patch] aucune difference detectee\n")
         return ""
 
-    print(f"\n[patch] proposed diff ({len([l for l in diff_lines if l.startswith('+') and not l.startswith('+++')])} additions, {len([l for l in diff_lines if l.startswith('-') and not l.startswith('---')])} deletions):\n")
+    n_add = len(
+        [ln for ln in diff_lines if ln.startswith("+") and not ln.startswith("+++")]
+    )
+    n_del = len(
+        [ln for ln in diff_lines if ln.startswith("-") and not ln.startswith("---")]
+    )
+    print(f"\n[patch] proposed diff ({n_add} additions, {n_del} deletions):\n")
     for line in diff_lines:
         print(_colorize_diff_line(line))
     print()
@@ -239,7 +250,9 @@ def validate_cross_imports(file_to_code: Dict[str, str]) -> List[str]:
             tree = ast.parse(code)
             syms = set()
             for node in tree.body:
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                if isinstance(
+                    node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+                ):
                     syms.add(node.name)
                 elif isinstance(node, ast.Assign):
                     for target in node.targets:
@@ -251,6 +264,7 @@ def validate_cross_imports(file_to_code: Dict[str, str]) -> List[str]:
 
     # Check imports between transaction files
     import re as _re
+
     for path, code in py_files.items():
         for m in _re.finditer(
             r"^\s*from\s+([A-Za-z0-9_.]+)\s+import\s+(.+)$",
@@ -280,7 +294,7 @@ def apply_transaction(
     # P3.4 — Cross-import validation
     cross_warnings = validate_cross_imports(file_to_code)
     if cross_warnings:
-        print(f"\n  [!] Cross-import warnings:")
+        print("\n  [!] Cross-import warnings:")
         for w in cross_warnings[:5]:
             print(f"    - {w}")
 

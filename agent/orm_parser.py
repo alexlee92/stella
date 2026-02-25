@@ -11,8 +11,7 @@ Builds an entity-relationship summary that can be included in agent context.
 
 import ast
 import os
-import re
-from typing import Dict, List, Set
+from typing import List, Set
 
 from agent.config import PROJECT_ROOT
 from agent.project_scan import get_python_files
@@ -64,7 +63,9 @@ def _extract_models_from_file(file_path: str) -> List[dict]:
             if isinstance(item, ast.Assign):
                 for target in item.targets:
                     if isinstance(target, ast.Name):
-                        field_info = _parse_field_assignment(target.id, item.value, source)
+                        field_info = _parse_field_assignment(
+                            target.id, item.value, source
+                        )
                         if field_info:
                             if field_info.get("relation"):
                                 model_info["relationships"].append(field_info)
@@ -95,11 +96,29 @@ def _parse_field_assignment(name: str, value, source: str) -> dict | None:
         func_name = value.func.attr
 
     # Known ORM field constructors
-    relation_funcs = {"ForeignKey", "relationship", "ForeignKeyField", "ManyToManyField",
-                      "OneToOneField", "Many2one", "Many2many", "One2many"}
-    field_funcs = {"Column", "Field", "fields", "mapped_column",
-                   "CharField", "IntegerField", "TextField", "BooleanField",
-                   "DateTimeField", "FloatField", "DecimalField"}
+    relation_funcs = {
+        "ForeignKey",
+        "relationship",
+        "ForeignKeyField",
+        "ManyToManyField",
+        "OneToOneField",
+        "Many2one",
+        "Many2many",
+        "One2many",
+    }
+    field_funcs = {
+        "Column",
+        "Field",
+        "fields",
+        "mapped_column",
+        "CharField",
+        "IntegerField",
+        "TextField",
+        "BooleanField",
+        "DateTimeField",
+        "FloatField",
+        "DecimalField",
+    }
 
     if func_name in relation_funcs:
         target = ""

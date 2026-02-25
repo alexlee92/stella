@@ -1,10 +1,11 @@
 """
-health_check.py — Vérification de connectivité Ollama/Orisha au démarrage.
+health_check.py â€” VÃ©rification de connectivitÃ© Ollama/routing au dÃ©marrage.
 Donne des messages d'aide clairs si un service est inaccessible.
 """
+
 import requests
 
-from agent.config import OLLAMA_BASE_URL, ORISHA_ENABLED, ORISHA_URL, REQUEST_TIMEOUT
+from agent.config import OLLAMA_BASE_URL, ROUTER_ENABLED, ROUTER_URL
 
 
 def _check_ollama() -> tuple[bool, str]:
@@ -14,22 +15,22 @@ def _check_ollama() -> tuple[bool, str]:
             return True, "OK"
         return False, f"HTTP {resp.status_code}"
     except requests.ConnectionError:
-        return False, "connexion refusée"
+        return False, "connexion refusÃ©e"
     except requests.Timeout:
         return False, "timeout"
     except Exception as e:
         return False, str(e)
 
 
-def _check_orisha() -> tuple[bool, str]:
-    health_url = ORISHA_URL.replace("/query", "/health")
+def _check_routing() -> tuple[bool, str]:
+    health_url = ROUTER_URL.replace("/query", "/health")
     try:
         resp = requests.get(health_url, timeout=5)
         if resp.status_code == 200:
             return True, "OK"
         return False, f"HTTP {resp.status_code}"
     except requests.ConnectionError:
-        return False, "connexion refusée"
+        return False, "connexion refusÃ©e"
     except requests.Timeout:
         return False, "timeout"
     except Exception as e:
@@ -38,9 +39,9 @@ def _check_orisha() -> tuple[bool, str]:
 
 def check_services(verbose: bool = True) -> dict:
     """
-    Vérifie la disponibilité d'Ollama et d'Orisha.
+    VÃ©rifie la disponibilitÃ© d'Ollama et de routing.
     Affiche des messages d'aide si un service est manquant.
-    Retourne {"ollama": bool, "orisha": bool, "ok": bool}
+    Retourne {"ollama": bool, "routing": bool, "ok": bool}
     """
     results = {}
 
@@ -48,38 +49,38 @@ def check_services(verbose: bool = True) -> dict:
     results["ollama"] = ollama_ok
 
     if not ollama_ok and verbose:
-        print(f"[!] Ollama inaccessible ({OLLAMA_BASE_URL}) — {ollama_msg}")
-        print("    Pour démarrer Ollama :")
+        print(f"[!] Ollama inaccessible ({OLLAMA_BASE_URL}) â€” {ollama_msg}")
+        print("    Pour dÃ©marrer Ollama :")
         print("      Dans WSL : ollama serve")
         print("      Sur Windows : lancez l'application Ollama")
         print()
 
-    if ORISHA_ENABLED:
-        orisha_ok, orisha_msg = _check_orisha()
-        results["orisha"] = orisha_ok
-        if not orisha_ok and verbose:
-            print(f"[!] Orisha inaccessible ({ORISHA_URL}) — {orisha_msg}")
-            print("    Pour démarrer le serveur Orisha :")
-            print("      python orisha_server.py")
-            print("      (depuis le dossier où se trouve orisha_server.py)")
+    if ROUTER_ENABLED:
+        routing_ok, routing_msg = _check_routing()
+        results["routing"] = routing_ok
+        if not routing_ok and verbose:
+            print(f"[!] routing inaccessible ({ROUTER_URL}) â€” {routing_msg}")
+            print("    Pour dÃ©marrer le serveur routing :")
+            print("      python routing_server.py")
+            print("      (depuis le dossier oÃ¹ se trouve routing_server.py)")
             print()
     else:
-        results["orisha"] = True  # Non requis si désactivé
+        results["routing"] = True  # Non requis si dÃ©sactivÃ©
 
-    results["ok"] = results["ollama"] and results.get("orisha", True)
+    results["ok"] = results["ollama"] and results.get("routing", True)
     return results
 
 
 def require_services(skip_check: bool = False) -> bool:
     """
-    Vérifie les services et retourne False si les services critiques sont injoignables.
-    Utilisé en début de commandes qui nécessitent le LLM.
+    VÃ©rifie les services et retourne False si les services critiques sont injoignables.
+    UtilisÃ© en dÃ©but de commandes qui nÃ©cessitent le LLM.
     """
     if skip_check:
         return True
     result = check_services(verbose=True)
     if not result["ok"]:
         print("[!] Certains services requis sont inaccessibles.")
-        print("    Démarrez les services ci-dessus et réessayez.")
+        print("    DÃ©marrez les services ci-dessus et rÃ©essayez.")
         return False
     return True

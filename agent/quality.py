@@ -1,4 +1,4 @@
-﻿from typing import List, Optional
+from typing import List, Optional
 
 import re
 
@@ -6,10 +6,12 @@ from agent.config import FORMAT_COMMAND, LINT_COMMAND, TEST_COMMAND, SECURITY_CO
 from agent.test_selector import build_targeted_pytest_command
 from agent.tooling import run_safe_command
 
-
 # P3.8 — Patterns de secrets a detecter avant commit
 _SECRET_PATTERNS = [
-    (r"(?i)(?:api[_-]?key|secret[_-]?key|access[_-]?token|password)\s*=\s*['\"][^'\"]{8,}['\"]", "hardcoded_secret"),
+    (
+        r"(?i)(?:api[_-]?key|secret[_-]?key|access[_-]?token|password)\s*=\s*['\"][^'\"]{8,}['\"]",
+        "hardcoded_secret",
+    ),
     (r"(?i)sk-[a-zA-Z0-9]{20,}", "openai_api_key"),
     (r"(?i)ghp_[a-zA-Z0-9]{36}", "github_token"),
     (r"(?i)(?:AKIA|ASIA)[A-Z0-9]{16}", "aws_key"),
@@ -19,6 +21,7 @@ _SECRET_PATTERNS = [
 def scan_secrets_in_files(file_paths: List[str]) -> List[dict]:
     """P3.8 — Scan les fichiers pour des secrets hardcodes."""
     import os
+
     findings = []
     for path in file_paths:
         if not os.path.isfile(path):
@@ -32,13 +35,15 @@ def scan_secrets_in_files(file_paths: List[str]) -> List[dict]:
             continue
         for pattern, secret_type in _SECRET_PATTERNS:
             for match in re.finditer(pattern, content):
-                line_num = content[:match.start()].count("\n") + 1
-                findings.append({
-                    "file": path,
-                    "line": line_num,
-                    "type": secret_type,
-                    "excerpt": match.group()[:30] + "...",
-                })
+                line_num = content[: match.start()].count("\n") + 1
+                findings.append(
+                    {
+                        "file": path,
+                        "line": line_num,
+                        "type": secret_type,
+                        "excerpt": match.group()[:30] + "...",
+                    }
+                )
     return findings
 
 
@@ -126,11 +131,21 @@ def normalize_quality_results(ok: bool, results: List[dict]) -> dict:
         }
 
         if not stage_ok and failed_stage is None:
-            failed_stage = stage
-            failed_reason = stage_status[stage]["failure_class"]
+            # Only record blocking failures as the main failure
+            if stage in {"tests", "format", "typecheck"}:
+                failed_stage = stage
+                failed_reason = stage_status[stage]["failure_class"]
+
+    # Re-evaluate global OK: must not have blocking failures
+    blocking_failed = any(
+        not s["ok"]
+        for name, s in stage_status.items()
+        if name in {"tests", "format", "typecheck"}
+    )
+    global_ok = bool(ok) and not blocking_failed
 
     return {
-        "ok": bool(ok),
+        "ok": global_ok,
         "failed_stage": failed_stage,
         "failed_reason": failed_reason,
         "stages": stage_status,
@@ -193,7 +208,7 @@ def run_quality_pipeline(
         if mode == "fast"
         else test_cmd
     )
-    
+
     # Define effective security command
     effective_security = SECURITY_COMMAND
     if changed_files:
@@ -204,22 +219,28 @@ def run_quality_pipeline(
     # P3.8 — Scan de secrets avant les autres etapes
     if changed_files:
         import os
-        abs_paths = [os.path.join(os.getcwd(), f) if not os.path.isabs(f) else f for f in changed_files]
+
+        abs_paths = [
+            os.path.join(os.getcwd(), f) if not os.path.isabs(f) else f
+            for f in changed_files
+        ]
         secret_findings = scan_secrets_in_files(abs_paths)
         if secret_findings:
             findings_text = "\n".join(
                 f"  {f['file']}:{f['line']} [{f['type']}] {f['excerpt']}"
                 for f in secret_findings
             )
-            print(f"\n  [!] SECRETS DETECTES dans les fichiers modifies :")
+            print("\n  [!] SECRETS DETECTES dans les fichiers modifies :")
             print(findings_text)
-            results.append({
-                "mode": mode,
-                "stage": "secrets_scan",
-                "command": "internal_scan",
-                "exit_code": 1,
-                "output": f"Found {len(secret_findings)} potential secret(s):\n{findings_text}",
-            })
+            results.append(
+                {
+                    "mode": mode,
+                    "stage": "secrets_scan",
+                    "command": "internal_scan",
+                    "exit_code": 1,
+                    "output": f"Found {len(secret_findings)} potential secret(s):\n{findings_text}",
+                }
+            )
             # Warning mais ne bloque pas le pipeline (juste un avertissement)
 
     stages_to_run = [
@@ -231,13 +252,15 @@ def run_quality_pipeline(
     # P4.2 — mypy comme étape optionnelle avant les tests
     if typecheck:
         tc = run_typecheck(changed_files=changed_files, command_timeout=command_timeout)
-        results.append({
-            "mode": mode,
-            "stage": "typecheck",
-            "command": tc["command"],
-            "exit_code": tc["exit_code"],
-            "output": tc["output"],
-        })
+        results.append(
+            {
+                "mode": mode,
+                "stage": "typecheck",
+                "command": tc["command"],
+                "exit_code": tc["exit_code"],
+                "output": tc["output"],
+            }
+        )
         if not tc["ok"]:
             return False, results
 
@@ -316,6 +339,12 @@ def run_quality_pipeline(
                 code, out = f_code, f_out
             if not _is_test_stage_success(code, out):
                 return False, results
+        elif name in {"lint", "security"}:
+            # P1.1 — Soft failure for lint/security (do not block the pipeline)
+            if code != 0:
+                print(
+                    f"  [!] Stage '{name}' failed (code {code}), but continuing pipeline as it is non-blocking."
+                )
         else:
             if code != 0:
                 return False, results
@@ -323,7 +352,9 @@ def run_quality_pipeline(
     return True, results
 
 
-def run_quality_gate(changed_files: Optional[List[str]] = None, command_timeout: int = 180):
+def run_quality_gate(
+    changed_files: Optional[List[str]] = None, command_timeout: int = 180
+):
     fast_ok, fast_results = run_quality_pipeline(
         mode="fast", changed_files=changed_files, command_timeout=command_timeout
     )

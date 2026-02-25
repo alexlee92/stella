@@ -1,4 +1,4 @@
-﻿import re
+import re
 from dataclasses import dataclass
 
 
@@ -31,11 +31,26 @@ def _section_chunk(content: str, marker: str) -> str:
 
 
 def summarize_progress(md_path: str = "UPGRADE_PLAN_30J.md") -> str:
-    try:
-        with open(md_path, "r", encoding="utf-8") as f:
-            content = f.read()
-    except OSError as exc:
-        return f"Progress unavailable: {exc}"
+    candidate_paths = [
+        md_path,
+        "AUDIT_COMPLET_STELLA_2026-02-25.md",
+        "README.md",
+    ]
+    content = ""
+    used_path = ""
+    for candidate in candidate_paths:
+        try:
+            with open(candidate, "r", encoding="utf-8") as f:
+                content = f.read()
+            used_path = candidate
+            break
+        except OSError:
+            continue
+    if not content:
+        return (
+            "Progress unavailable: no plan markdown found. "
+            "Expected one of: " + ", ".join(candidate_paths)
+        )
 
     sections = {
         "Semaine 1": "## Semaine 1",
@@ -62,6 +77,7 @@ def summarize_progress(md_path: str = "UPGRADE_PLAN_30J.md") -> str:
 
     lines = [
         "Progress Summary",
+        f"- Source: {used_path}",
         f"- Global: {global_stats.done}/{global_stats.total} ({global_stats.pct}%)",
         f"- Semaine 1: {stats['Semaine 1'].done}/{stats['Semaine 1'].total} ({stats['Semaine 1'].pct}%)",
         f"- Semaine 2: {stats['Semaine 2'].done}/{stats['Semaine 2'].total} ({stats['Semaine 2'].pct}%)",

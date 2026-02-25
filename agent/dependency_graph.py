@@ -4,9 +4,9 @@ agent/dependency_graph.py — Graphe de dépendances inter-fichiers.
 Construit un graphe d'imports Python pour permettre à Stella d'inclure
 automatiquement les fichiers liés dans le contexte de recherche.
 """
+
 import ast
 import os
-import re
 from functools import lru_cache
 from typing import Dict, Set
 

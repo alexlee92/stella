@@ -1,4 +1,4 @@
-﻿import ast
+import ast
 from typing import Tuple
 
 

@@ -15,9 +15,18 @@ from agent.tooling import run_safe_command
 
 # Directories to always skip
 _SKIP_DIRS = {
-    ".git", ".venv", "venv", "__pycache__", "node_modules",
-    ".stella", ".mypy_cache", ".pytest_cache", ".ruff_cache",
-    "dist", "build", "egg-info",
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "node_modules",
+    ".stella",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "dist",
+    "build",
+    "egg-info",
 }
 
 
@@ -26,7 +35,9 @@ def _scan_files(root: str, pattern: str) -> Dict[str, float]:
     result = {}
     for dirpath, dirnames, filenames in os.walk(root):
         # Prune skip dirs
-        dirnames[:] = [d for d in dirnames if d not in _SKIP_DIRS and not d.startswith(".")]
+        dirnames[:] = [
+            d for d in dirnames if d not in _SKIP_DIRS and not d.startswith(".")
+        ]
         for fname in filenames:
             rel = os.path.relpath(os.path.join(dirpath, fname), root)
             rel = rel.replace("\\", "/")
@@ -67,18 +78,19 @@ def run_watch(
     """
     if command is None:
         from agent.config import TEST_COMMAND
+
         command = TEST_COMMAND or "pytest -q"
 
     print(f"[watch] Surveillance active : {pattern}")
     print(f"[watch] Commande : {command}")
     print(f"[watch] Intervalle : {interval}s")
-    print(f"[watch] Ctrl+C pour arreter\n")
+    print("[watch] Ctrl+C pour arreter\n")
 
     state = _scan_files(PROJECT_ROOT, pattern)
     print(f"[watch] {len(state)} fichiers surveilles.")
 
     # Run tests once at start
-    print(f"\n--- Lancement initial ---")
+    print("\n--- Lancement initial ---")
     code, output = run_safe_command(command, timeout=300)
     _print_result(code, output)
 
@@ -113,4 +125,4 @@ def _print_result(code: int, output: str):
     marker = "[OK]" if code == 0 else "[KO]"
     print(output[:4000])
     print(f"\n[watch] {marker} {status} (exit code {code})")
-    print(f"[watch] En attente de modifications...")
+    print("[watch] En attente de modifications...")
