@@ -4,14 +4,14 @@ ALLOWED_ACTIONS = {
     "list_files",
     "read_file",
     "read_many",
-    "read_file_range",   # M3: lire une plage de lignes d'un fichier
+    "read_file_range",  # M3: lire une plage de lignes d'un fichier
     "search_code",
     "create_file",
     "propose_edit",
     "apply_edit",
     "apply_all_staged",
-    "delete_file",       # M1: supprimer un fichier
-    "move_file",         # M2: déplacer/renommer un fichier
+    "delete_file",  # M1: supprimer un fichier
+    "move_file",  # M2: déplacer/renommer un fichier
     "run_tests",
     "run_quality",
     "project_map",

@@ -299,9 +299,7 @@ class TestCreateFileApplyMode:
     @patch("agent.executor.detect_and_install_deps", return_value="deps:ok")
     @patch("agent.executor.index_file_in_session", return_value=1)
     @patch("agent.executor.patch_risk", return_value={"level": "low", "score": 0})
-    def test_create_file_no_apply_stages_without_writing(
-        self, _risk, _index, _deps
-    ):
+    def test_create_file_no_apply_stages_without_writing(self, _risk, _index, _deps):
         from agent.auto_agent import AutonomousAgent
         from agent.executor import ActionExecutor
         from agent.config import PROJECT_ROOT

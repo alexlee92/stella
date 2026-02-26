@@ -86,7 +86,10 @@ class TestLoopControllerModule:
         # web_search n'est pas read-only → logique originale : 2 occurrences dans les 4 derniers
         sig = lc.signature("web_search", {"query": "fastapi", "limit": 3})
         ag._decision_signatures = [sig, sig, "x", "y"]
-        assert lc.decision_loop_detected("web_search", {"query": "fastapi", "limit": 3}) is True
+        assert (
+            lc.decision_loop_detected("web_search", {"query": "fastapi", "limit": 3})
+            is True
+        )
 
     def test_read_only_consecutive_is_loop(self):
         """R2: deux read_file consécutifs identiques = vraie boucle."""
@@ -106,7 +109,9 @@ class TestLoopControllerModule:
         ag = SimpleNamespace(_decision_signatures=[], _outcome_signatures=[])
         lc = LoopController(ag)
         sig = lc.signature("read_file", {"path": "config.py"})
-        other = lc.signature("propose_edit", {"path": "config.py", "instruction": "fix"})
+        other = lc.signature(
+            "propose_edit", {"path": "config.py", "instruction": "fix"}
+        )
         # history: [sig, sig, other, ?] — non-consécutif, seulement 2 occurrences
         ag._decision_signatures = [sig, sig, other]
         assert lc.decision_loop_detected("read_file", {"path": "config.py"}) is False
@@ -152,7 +157,9 @@ class TestMigrationModule:
     def test_generate_migration_not_configured(self):
         from agent.migration_generator import generate_migration
 
-        with patch("agent.migration_generator.is_alembic_configured", return_value=False):
+        with patch(
+            "agent.migration_generator.is_alembic_configured", return_value=False
+        ):
             out = generate_migration("x")
         assert out["ok"] is False
         assert "alembic" in out["output"].lower()
@@ -160,7 +167,9 @@ class TestMigrationModule:
     def test_apply_migration_not_configured(self):
         from agent.migration_generator import apply_migration
 
-        with patch("agent.migration_generator.is_alembic_configured", return_value=False):
+        with patch(
+            "agent.migration_generator.is_alembic_configured", return_value=False
+        ):
             out = apply_migration("head")
         assert out["ok"] is False
 
@@ -186,7 +195,11 @@ class TestDoctorAndDevTaskModule:
         from agent.doctor import format_doctor
 
         text = format_doctor(
-            {"ok": 1, "total": 2, "checks": [{"name": "python", "ok": True, "details": "3.13"}]}
+            {
+                "ok": 1,
+                "total": 2,
+                "checks": [{"name": "python", "ok": True, "details": "3.13"}],
+            }
         )
         assert "Doctor: 1/2 checks passed" in text
         assert "[OK] python" in text
@@ -201,14 +214,12 @@ class TestDoctorAndDevTaskModule:
     def test_run_dev_task_profile_standard(self):
         from agent.dev_task import run_dev_task
 
-        with patch("agent.dev_task.index_project"), patch(
-            "agent.dev_task.AutonomousAgent"
-        ) as mock_agent_cls, patch(
-            "agent.dev_task.changed_files", return_value=["agent/x.py"]
-        ), patch(
-            "agent.dev_task.diff_summary", return_value="diff"
-        ), patch(
-            "agent.dev_task._write_run_summary", return_value=("a.json", "a.md")
+        with (
+            patch("agent.dev_task.index_project"),
+            patch("agent.dev_task.AutonomousAgent") as mock_agent_cls,
+            patch("agent.dev_task.changed_files", return_value=["agent/x.py"]),
+            patch("agent.dev_task.diff_summary", return_value="diff"),
+            patch("agent.dev_task._write_run_summary", return_value=("a.json", "a.md")),
         ):
             mock_agent = mock_agent_cls.return_value
             mock_agent.run.return_value = "summary"
@@ -239,7 +250,9 @@ class TestGenerationQualityModule:
                 )
             with open(testf, "w", encoding="utf-8") as f:
                 f.write("def test_add():\n    assert True\n")
-            score = assess_generated_files([f"{rel_dir}/sample.py", f"{rel_dir}/test_sample.py"])
+            score = assess_generated_files(
+                [f"{rel_dir}/sample.py", f"{rel_dir}/test_sample.py"]
+            )
             assert score["python_files"] == 2
             assert score["syntax_valid_rate"] == 100.0
             assert score["score"] > 60.0
@@ -279,17 +292,25 @@ class TestEvalRunnerGenerationQuality:
             json.dump(task, f)
             tmp_path = f.name
         try:
-            with patch("agent.eval_runner.index_project"), patch(
-                "agent.eval_runner.AutonomousAgent"
-            ) as mock_agent_cls, patch(
-                "agent.eval_runner._run_pr_ready_probe", return_value={"ok": True}
-            ), patch(
-                "agent.eval_runner.changed_files", side_effect=[[], ["agent/tooling.py"]]
-            ), patch(
-                "agent.eval_runner.assess_generated_files", return_value={"score": 10.0}
+            with (
+                patch("agent.eval_runner.index_project"),
+                patch("agent.eval_runner.AutonomousAgent") as mock_agent_cls,
+                patch(
+                    "agent.eval_runner._run_pr_ready_probe", return_value={"ok": True}
+                ),
+                patch(
+                    "agent.eval_runner.changed_files",
+                    side_effect=[[], ["agent/tooling.py"]],
+                ),
+                patch(
+                    "agent.eval_runner.assess_generated_files",
+                    return_value={"score": 10.0},
+                ),
             ):
                 mock_agent = mock_agent_cls.return_value
-                mock_agent.run.return_value = "Final\nDecisions:\n1. [propose_edit] x -> agent/tooling.py"
+                mock_agent.run.return_value = (
+                    "Final\nDecisions:\n1. [propose_edit] x -> agent/tooling.py"
+                )
                 # Very high override -> fail
                 report = run_eval(tasks_file=tmp_path, min_generation_quality=90.0)
             assert report["results"][0]["passed"] is False

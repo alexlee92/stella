@@ -43,10 +43,13 @@ class Planner:
         )
         # I3-fix: lister tous les fichiers source, pas seulement .py
         from agent.tooling import list_files as _list_all
+
         py_files = list_python_files(limit=30)
-        other_files = _list_all(
-            limit=20, ext=".ts"
-        ) + _list_all(limit=10, ext=".js") + _list_all(limit=5, ext=".html")
+        other_files = (
+            _list_all(limit=20, ext=".ts")
+            + _list_all(limit=10, ext=".js")
+            + _list_all(limit=5, ext=".html")
+        )
         all_files = py_files + [f for f in other_files if f not in py_files]
         files_text = "\n".join(all_files[:60]) if all_files else "no source files"
         context = self.agent._summarize_context(goal)
@@ -177,9 +180,10 @@ Rules:
         )
 
         ag = self.agent
+        planner_retries = 1
         raw_decision = ag._llm_fn(
             self.prompt(goal),
-            retries=MAX_RETRIES_JSON,
+            retries=planner_retries,
             prompt_class="planner",
             task_type="planning",
         )
@@ -371,9 +375,14 @@ Rules:
         )
         # I2-fix: choisir le task_type selon l'extension du fichier
         _ext_task = {
-            ".js": "frontend", ".jsx": "frontend", ".ts": "frontend",
-            ".tsx": "frontend", ".css": "frontend", ".scss": "frontend",
-            ".html": "frontend", ".vue": "frontend",
+            ".js": "frontend",
+            ".jsx": "frontend",
+            ".ts": "frontend",
+            ".tsx": "frontend",
+            ".css": "frontend",
+            ".scss": "frontend",
+            ".html": "frontend",
+            ".vue": "frontend",
         }
         file_task_type = _ext_task.get(ext, "backend")
         raw = ask_llm(prompt, task_type=file_task_type)

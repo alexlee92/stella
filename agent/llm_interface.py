@@ -1,5 +1,8 @@
 import json
 import re
+import threading
+import time
+import sys
 from collections import OrderedDict
 from typing import Any, Generator
 
@@ -16,13 +19,20 @@ _JSON_CACHE: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
 _JSON_CACHE_SIZE = 64
 
 
+def _effective_timeout(task_type: str | None) -> int:
+    """Cap planning/json latency to avoid multi-minute silent waits."""
+    if task_type in {"planning", "json"}:
+        return min(int(REQUEST_TIMEOUT), 20)
+    return int(REQUEST_TIMEOUT)
+
+
 def _strip_fences(text: str) -> str:
     """B2-fix: strip any ``` fence regardless of language tag."""
     raw = (text or "").strip()
     if raw.startswith("```"):
         lines = raw.splitlines()
         if len(lines) >= 2 and lines[-1].strip() == "```":
-            # Drop the opening fence line (```json, ```python, ```yaml, `` ` ``, …)
+            # Drop the opening fence line (```json, ```python, ```yaml, `` ` ``, â€¦)
             raw = "\n".join(lines[1:-1]).strip()
     return raw
 
@@ -162,15 +172,15 @@ def _fallback_json_error(
     }
 
 
-
 def ask_llm(
     prompt: str,
     system_prompt: str = "You are a helpful coding assistant.",
     task_type: str | None = None,  # no-op: kept for API compatibility
     concise: bool = False,  # no-op: kept for API compatibility
-    json_mode: bool = False,  # P1.2 — force Ollama format:json
+    json_mode: bool = False,  # P1.2 â€” force Ollama format:json
 ) -> str:
     try:
+        timeout_s = _effective_timeout(task_type)
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -183,7 +193,7 @@ def ask_llm(
             response = client.chat.completions.create(
                 model=MODEL,
                 messages=messages,
-                timeout=REQUEST_TIMEOUT,
+                timeout=timeout_s,
             )
             return response.choices[0].message.content
 
@@ -193,21 +203,23 @@ def ask_llm(
             "stream": False,
         }
         if json_mode:
-            ollama_body["format"] = "json"  # P1.2 â€" JSON schema enforcement
+            ollama_body["format"] = "json"  # P1.2 Ã¢â‚¬" JSON schema enforcement
         response = requests.post(
             OLLAMA_URL,
             json=ollama_body,
-            timeout=REQUEST_TIMEOUT,
+            timeout=timeout_s,
         )
         response.raise_for_status()
         data = response.json()
         return data.get("message", {}).get("content", "")
     except requests.ConnectionError:
-        print("[llm] Serveur inaccessible. VÃ©rifiez qu'Ollama/routing est dÃ©marrÃ©.")
+        print(
+            "[llm] Serveur inaccessible. VÃƒÂ©rifiez qu'Ollama/routing est dÃƒÂ©marrÃƒÂ©."
+        )
         return ""
     except requests.Timeout:
         print(
-            f"[llm] Timeout aprÃ¨s {REQUEST_TIMEOUT}s. Le modÃ¨le est peut-Ãªtre surchargÃ©."
+            f"[llm] Timeout aprÃƒÂ¨s {timeout_s}s. Le modÃƒÂ¨le est peut-ÃƒÂªtre surchargÃƒÂ©."
         )
         return ""
     except Exception as exc:
@@ -223,7 +235,7 @@ def ask_llm_json(
     task_type: str | None = None,
 ) -> dict[str, Any] | list:
     """B1-fix: can now return a list when LLM outputs a JSON array (e.g. plan_files)."""
-    # task_type par défaut pour JSON = modèle analytique (single model)
+    # task_type par dÃ©faut pour JSON = modÃ¨le analytique (single model)
     effective_task_type = task_type or "json"
     strict_prompt = _build_json_strict_prompt(prompt)
 
@@ -278,7 +290,7 @@ def ask_llm_stream(
     system_prompt: str = "You are a helpful coding assistant.",
     task_type: str | None = None,  # no-op: kept for API compatibility
 ) -> Generator[str, None, None]:
-    """Génère les tokens LLM progressivement via Ollama streaming.
+    """GÃ©nÃ¨re les tokens LLM progressivement via Ollama streaming.
 
     Usage:
         for token in ask_llm_stream(prompt):
@@ -320,11 +332,40 @@ def ask_llm_stream_print(
     task_type: str | None = None,
 ) -> str:
     """Stream les tokens vers stdout et retourne le texte complet."""
+    stop_spinner = threading.Event()
+
+    def _spinner():
+        frames = "|/-\\"
+        idx = 0
+        while not stop_spinner.is_set():
+            frame = frames[idx % len(frames)]
+            print(f"\r[stella] generation en cours {frame}", end="", flush=True)
+            idx += 1
+            time.sleep(0.1)
+
     parts = []
+    spinner_thread = None
+    stream_started = False
+    use_spinner = sys.stdout.isatty()
+    if use_spinner:
+        spinner_thread = threading.Thread(target=_spinner, daemon=True)
+        spinner_thread.start()
+
     for token in ask_llm_stream(
         prompt, system_prompt=system_prompt, task_type=task_type
     ):
+        if use_spinner and not stream_started:
+            stream_started = True
+            stop_spinner.set()
+            if spinner_thread:
+                spinner_thread.join(timeout=0.3)
+            print("\r" + (" " * 50) + "\r", end="", flush=True)
         print(token, end="", flush=True)
         parts.append(token)
+    if use_spinner and not stream_started:
+        stop_spinner.set()
+        if spinner_thread:
+            spinner_thread.join(timeout=0.3)
+        print("\r" + (" " * 50) + "\r", end="", flush=True)
     print()  # newline finale
     return "".join(parts)

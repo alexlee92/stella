@@ -85,7 +85,13 @@ class LoopController:
     # ------------------------------------------------------------------
 
     # R2 — read-only actions tolèrent une répétition non-consécutive (ex: re-lecture après patch)
-    _READ_ONLY_ACTIONS = {"read_file", "read_many", "list_files", "search_code", "read_file_range"}
+    _READ_ONLY_ACTIONS = {
+        "read_file",
+        "read_many",
+        "list_files",
+        "search_code",
+        "read_file_range",
+    }
 
     def decision_loop_detected(self, action: str, args: dict) -> bool:
         sig = self.signature(action, args)

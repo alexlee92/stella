@@ -99,7 +99,6 @@ _BLOCKED_PATTERNS = [
     "rm -rf",
     "rmdir /s",
     "del /f",
-    "format ",
     "drop database",
     "drop table",
     "truncate table",
@@ -135,6 +134,9 @@ def is_command_blocked(command: str) -> bool:
     P5.5 — En production, bloque aussi les commandes destructives SQL.
     """
     low = command.lower()
+    # Block disk formatting command specifically (but allow formatters like ruff/black).
+    if re.search(r"^\s*format(?:\.exe)?\s+[a-z]:", low):
+        return True
     if any(pat in low for pat in _BLOCKED_PATTERNS):
         return True
     # P5.5 — Extra safety in production/staging environments
@@ -322,8 +324,10 @@ def search_code(pattern: str, limit: int = 30, context_lines: int = 2) -> List[s
             "rg",
             "-n",
             "--hidden",
-            "--glob", "!**/__pycache__/**",
-            "--glob", "!**/.venv/**",
+            "--glob",
+            "!**/__pycache__/**",
+            "--glob",
+            "!**/.venv/**",
             f"-C{context_lines}",  # M4: contexte entourant
             pattern,
             PROJECT_ROOT,
@@ -338,7 +342,7 @@ def search_code(pattern: str, limit: int = 30, context_lines: int = 2) -> List[s
             timeout=10,
         )
         lines = [line for line in result.stdout.splitlines() if line.strip()]
-        return lines[:limit * (1 + context_lines * 2)]
+        return lines[: limit * (1 + context_lines * 2)]
     except Exception:
         pass
 
@@ -349,7 +353,9 @@ def search_code(pattern: str, limit: int = 30, context_lines: int = 2) -> List[s
         expr = re.compile(re.escape(pattern))
 
     # Fallback Python : inclut les fichiers source communs (pas seulement .py)
-    for file_path in get_source_files(PROJECT_ROOT, extensions={".py", ".ts", ".js", ".tsx", ".jsx"}):
+    for file_path in get_source_files(
+        PROJECT_ROOT, extensions={".py", ".ts", ".js", ".tsx", ".jsx"}
+    ):
         content = load_file_content(file_path)
         file_lines = content.splitlines()
         for idx, line in enumerate(file_lines, start=1):

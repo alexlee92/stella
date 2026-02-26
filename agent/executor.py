@@ -1,5 +1,5 @@
 """
-P2.1 — Action executor extracted from AutonomousAgent.
+P2.1 â€” Action executor extracted from AutonomousAgent.
 
 Handles the execution of individual agent actions (read, edit, test, etc.).
 """
@@ -47,7 +47,7 @@ def _validate_file_syntax(path: str, content: str) -> str | None:
     """M5: Validates syntax for .json, .js/.ts/.tsx/.jsx, and .html files.
 
     Returns None if OK, "warning: <message>" if a problem is detected.
-    Does not raise — validation errors are non-blocking.
+    Does not raise â€” validation errors are non-blocking.
     """
     import subprocess as _sp
     import tempfile
@@ -85,7 +85,7 @@ def _validate_file_syntax(path: str, content: str) -> str | None:
                 except OSError:
                     pass
         except FileNotFoundError:
-            pass  # node not available — skip
+            pass  # node not available â€” skip
         except Exception:
             pass
         return None
@@ -137,7 +137,7 @@ class ActionExecutor:
         Returns a result string. May modify agent state (staged_edits, forced_decisions, etc.).
         Raises on unexpected errors (caller should catch).
         """
-        # P1.1 — Protection mode lecture seule
+        # P1.1 â€” Protection mode lecture seule
         writing_actions = {
             "create_file",
             "propose_edit",
@@ -150,7 +150,7 @@ class ActionExecutor:
         }
         if self.agent.read_only and action in writing_actions:
             self.agent.event_logger.log("read_only_blocked", {"action": action})
-            return f"[blocked] Action '{action}' refusée en mode LECTURE SEULE."
+            return f"[blocked] Action '{action}' refusÃ©e en mode LECTURE SEULE."
 
         handler = getattr(self, f"_exec_{action}", None)
         if handler is None:
@@ -158,22 +158,34 @@ class ActionExecutor:
                 "tool", "unknown_action", {"action": action, "args": args}
             )
             return f"Unknown action: {action}"
-        return handler(args, goal=goal, auto_apply=auto_apply, index=index, reason=reason)
+        return handler(
+            args, goal=goal, auto_apply=auto_apply, index=index, reason=reason
+        )
 
     def _fix_missing_imports(self, path: str, content: str, goal: str) -> str:
-        """Tentative de résolution automatique des imports manquants via Ruff + search_code."""
+        """Tentative de rÃ©solution automatique des imports manquants via Ruff + search_code."""
         if not path.endswith(".py"):
             return content
 
         import subprocess
         from agent.tooling import search_code
 
-        # 1. Utiliser ruff pour détecter les noms non définis (F821)
-        # On écrit temporairement pour que ruff puisse lire si besoin,
+        # 1. Utiliser ruff pour dÃ©tecter les noms non dÃ©finis (F821)
+        # On Ã©crit temporairement pour que ruff puisse lire si besoin,
         # ou on pipe le contenu. Ici on va utiliser ruff check --stdin-filename
         try:
-            # I8-fix: shell=False pour la sécurité
-            cmd = ["python", "-m", "ruff", "check", "--select", "F821", "--output-format", "json", "-"]
+            # I8-fix: shell=False pour la sÃ©curitÃ©
+            cmd = [
+                "python",
+                "-m",
+                "ruff",
+                "check",
+                "--select",
+                "F821",
+                "--output-format",
+                "json",
+                "-",
+            ]
             proc = subprocess.run(
                 cmd, input=content, text=True, capture_output=True, shell=False
             )
@@ -192,7 +204,7 @@ class ActionExecutor:
                 return content
 
             print(
-                f"     [auto-import] détection de {len(undefined_names)} noms non définis : {list(undefined_names)}"
+                f"     [auto-import] dÃ©tection de {len(undefined_names)} noms non dÃ©finis : {list(undefined_names)}"
             )
 
             new_imports = []
@@ -251,14 +263,14 @@ class ActionExecutor:
                         found_locally = True
                         break
 
-                # 2. Si non trouvé localement, chercher dans les fallbacks communs
+                # 2. Si non trouvÃ© localement, chercher dans les fallbacks communs
                 if not found_locally and name in common_fallbacks:
                     new_imports.append(common_fallbacks[name])
 
             if new_imports:
                 import_block = "\n".join(new_imports) + "\n"
                 print(f"     [auto-import] ajout de : {import_block.strip()}")
-                # Insérer au début du fichier (après les docstrings si possible, sinon tout en haut)
+                # InsÃ©rer au dÃ©but du fichier (aprÃ¨s les docstrings si possible, sinon tout en haut)
                 if content.startswith('"""'):
                     end_ds = content.find('"""', 3)
                     if end_ds != -1:
@@ -271,7 +283,7 @@ class ActionExecutor:
                 return import_block + content
 
         except Exception as e:
-            print(f"     [auto-import] échec : {e}")
+            print(f"     [auto-import] Ã©chec : {e}")
 
         return content
 
@@ -306,6 +318,7 @@ class ActionExecutor:
 
     def _exec_create_file(self, args: dict, goal: str, **_kw) -> str:
         ag = self.agent
+        decision_reason = _kw.get("reason", "")
         path = args.get("path", "")
         description = args.get("description", "")
         auto_apply = bool(_kw.get("auto_apply", False))
@@ -329,60 +342,73 @@ class ActionExecutor:
                 )
             return result
 
-        print(f"     génère le contenu de {path}...", flush=True)
+        print(f"     gÃ©nÃ¨re le contenu de {path}...", flush=True)
         content = ag._generate_file_content(goal, path, description)
         if not content:
-            # R1 — Abort remaining plan_files creations on failure
-            decision_reason = _kw.get("reason", "")
+            # R1 â€” Abort remaining plan_files creations on failure
             if decision_reason == "plan_files_ordered_creation":
                 ag._forced_decisions = [
-                    d for d in ag._forced_decisions
+                    d
+                    for d in ag._forced_decisions
                     if not (
                         d.get("action") == "create_file"
                         and d.get("reason") == "plan_files_ordered_creation"
                     )
                 ]
-                ag._forced_decisions.insert(0, {
-                    "action": "finish",
-                    "reason": "plan_files_aborted",
-                    "args": {"summary": f"plan_files aborted: empty content for {path}"},
-                })
+                ag._forced_decisions.insert(
+                    0,
+                    {
+                        "action": "finish",
+                        "reason": "plan_files_aborted",
+                        "args": {
+                            "summary": f"plan_files aborted: empty content for {path}"
+                        },
+                    },
+                )
             return f"[error] LLM returned empty content for {path}"
 
-        # P1.1 — Tentative de correction automatique des imports manquants
+        # P1.1 â€” Tentative de correction automatique des imports manquants
         if path.endswith(".py"):
             fixed_content = self._fix_missing_imports(path, content, goal)
             if fixed_content != content:
                 content = fixed_content
-                print(f"     [auto-import] contenu de {path} mis à jour.")
+                print(f"     [auto-import] contenu de {path} mis Ã  jour.")
 
-        # M5 — Validation syntaxe non-Python (JSON, JS/TS, HTML)
+        # M5 â€” Validation syntaxe non-Python (JSON, JS/TS, HTML)
         syntax_warning = _validate_file_syntax(path, content)
 
         if auto_apply:
             write_result = write_new_file(path, content)
             if not write_result.startswith("ok:"):
-                # R1 — Abort remaining plan_files creations on write failure
-                decision_reason = _kw.get("reason", "")
+                # R1 â€” Abort remaining plan_files creations on write failure
                 if decision_reason == "plan_files_ordered_creation":
                     ag._forced_decisions = [
-                        d for d in ag._forced_decisions
+                        d
+                        for d in ag._forced_decisions
                         if not (
                             d.get("action") == "create_file"
                             and d.get("reason") == "plan_files_ordered_creation"
                         )
                     ]
-                    ag._forced_decisions.insert(0, {
-                        "action": "finish",
-                        "reason": "plan_files_aborted",
-                        "args": {"summary": f"plan_files aborted: write failed for {path}: {write_result}"},
-                    })
+                    ag._forced_decisions.insert(
+                        0,
+                        {
+                            "action": "finish",
+                            "reason": "plan_files_aborted",
+                            "args": {
+                                "summary": f"plan_files aborted: write failed for {path}: {write_result}"
+                            },
+                        },
+                    )
                 return f"[error] write failed: {write_result}"
 
         ag.staged_edits[path] = content
         risk = patch_risk(path, content)
         n_chunks = index_file_in_session(path, content)
-        deps_result = detect_and_install_deps(path, content)
+        if decision_reason == "plan_files_ordered_creation":
+            deps_result = "deps:skipped (fast plan_files mode)"
+        else:
+            deps_result = detect_and_install_deps(path, content)
         mode = "Created" if auto_apply else "Staged creation for"
         result = (
             f"{mode} {path} ({len(content)} chars), "
@@ -392,6 +418,15 @@ class ActionExecutor:
         )
         if syntax_warning:
             result += f" [syntax-warning: {syntax_warning}]"
+
+        # For plan_files queue, continue creating all queued files before quality/finalize.
+        if decision_reason == "plan_files_ordered_creation":
+            remaining_plan_actions = any(
+                (d.get("reason") or "").startswith("plan_files_ordered_")
+                for d in ag._forced_decisions
+            )
+            if remaining_plan_actions:
+                return result
 
         # Chain next files from goal
         all_targets = extract_all_target_files_from_goal(goal)
@@ -453,8 +488,8 @@ class ActionExecutor:
                 path = target
                 instruction = f"{instruction}\nKeep changes strictly in {target}."
 
-        # B4-fix: injecter le contenu des fichiers créés dans la session
-        # pour que le LLM puisse voir les dépendances non encore écrites sur disque.
+        # B4-fix: injecter le contenu des fichiers crÃ©Ã©s dans la session
+        # pour que le LLM puisse voir les dÃ©pendances non encore Ã©crites sur disque.
         session_ctx = ag._session_context(max_chars_per_file=3000)
         if session_ctx:
             instruction = (
@@ -581,13 +616,13 @@ class ActionExecutor:
                     )
                 result = f"Applied {path}; quality gate failed; replan queued in fix-until-green mode"
             else:
-                # P1.1 — Interactive force apply
+                # P1.1 â€” Interactive force apply
                 force_apply = False
                 if ag.interactive:
                     try:
-                        print(f"\n  [!] Échec du Quality Gate pour {path}.")
+                        print(f"\n  [!] Ã‰chec du Quality Gate pour {path}.")
                         ans = (
-                            input("      Garder les modifications quand même ? [y/n] ")
+                            input("      Garder les modifications quand mÃªme ? [y/n] ")
                             .strip()
                             .lower()
                         )
@@ -685,15 +720,15 @@ class ActionExecutor:
                     )
                 result = "Transaction applied then failed quality gate; replan queued in fix-until-green mode"
             else:
-                # P1.1 — Interactive force apply
+                # P1.1 â€” Interactive force apply
                 force_apply = False
                 if ag.interactive:
                     try:
                         print(
-                            f"\n  [!] Échec du Quality Gate pour la transaction ({len(changed)} fichiers)."
+                            f"\n  [!] Ã‰chec du Quality Gate pour la transaction ({len(changed)} fichiers)."
                         )
                         ans = (
-                            input("      Garder les modifications quand même ? [y/n] ")
+                            input("      Garder les modifications quand mÃªme ? [y/n] ")
                             .strip()
                             .lower()
                         )
@@ -796,7 +831,7 @@ class ActionExecutor:
         return result
 
     # ------------------------------------------------------------------
-    # M1 — delete_file
+    # M1 â€” delete_file
     # ------------------------------------------------------------------
 
     def _exec_delete_file(self, args: dict, **_kw) -> str:
@@ -812,15 +847,16 @@ class ActionExecutor:
         if not os.path.isfile(abs_path):
             return f"[error] File not found: {path}"
         from agent.patcher import create_backup
+
         backup = create_backup(path)
         os.remove(abs_path)
         invalidate_tool_cache()
-        # Retirer des staged_edits si présent
+        # Retirer des staged_edits si prÃ©sent
         self.agent.staged_edits.pop(path, None)
         return f"Deleted {path} (backup: {backup})"
 
     # ------------------------------------------------------------------
-    # M2 — move_file
+    # M2 â€” move_file
     # ------------------------------------------------------------------
 
     def _exec_move_file(self, args: dict, **_kw) -> str:
@@ -843,14 +879,14 @@ class ActionExecutor:
         os.makedirs(os.path.dirname(abs_dst), exist_ok=True)
         shutil.move(abs_src, abs_dst)
         invalidate_tool_cache()
-        # Mettre à jour staged_edits si src était staged
+        # Mettre Ã  jour staged_edits si src Ã©tait staged
         ag = self.agent
         if src in ag.staged_edits:
             ag.staged_edits[dst] = ag.staged_edits.pop(src)
-        return f"Moved {src} → {dst}"
+        return f"Moved {src} â†’ {dst}"
 
     # ------------------------------------------------------------------
-    # M3 — read_file_range
+    # M3 â€” read_file_range
     # ------------------------------------------------------------------
 
     def _exec_read_file_range(self, args: dict, **_kw) -> str:
@@ -898,10 +934,41 @@ class ActionExecutor:
     def _exec_web_search(self, args: dict, **_kw) -> str:
         query = args.get("query", "")
         limit = int(args.get("limit", 5))
+        goal = (_kw.get("goal") or "").strip()
+
+        def _enqueue_local_plan_fallback() -> None:
+            low_goal = goal.lower()
+            creation_hints = (
+                "create",
+                "crÃ©er",
+                "creer",
+                "gÃ©nÃ©rer",
+                "generer",
+                "module",
+                "frontend",
+                "backend",
+            )
+            if not (goal and any(h in low_goal for h in creation_hints)):
+                return
+            ag = self.agent
+            already_queued = any(
+                d.get("action") == "plan_files"
+                and d.get("reason") == "fallback_after_web_error"
+                for d in ag._forced_decisions
+            )
+            if not already_queued:
+                ag._forced_decisions = [
+                    {
+                        "action": "plan_files",
+                        "reason": "fallback_after_web_error",
+                        "args": {"description": goal[:500]},
+                    }
+                ] + ag._forced_decisions
+
         if not query:
             return "[error] web_search requires a 'query'"
 
-        # P2.5 — Consulter le cache de documentation avant une vraie recherche
+        # P2.5 â€” Consulter le cache de documentation avant une vraie recherche
         try:
             from agent.global_memory import cache_web_result, search_doc_cache
 
@@ -909,15 +976,27 @@ class ActionExecutor:
             if cached:
                 _, cached_text = cached[0]
                 print(
-                    "     [web_search] résultat depuis le cache doc global", flush=True
+                    "     [web_search] rÃ©sultat depuis le cache doc global", flush=True
                 )
+                if "No web results found" in cached_text:
+                    _enqueue_local_plan_fallback()
+                    return (
+                        f"[cached] {cached_text}\n"
+                        "[fallback] cache web insuffisant -> planification locale du module"
+                    )
                 return f"[cached] {cached_text}"
         except Exception:
             cache_web_result = None  # type: ignore[assignment]
 
         result = web_search(query, limit=limit)
 
-        # P2.5 — Sauvegarder le résultat pour les sessions futures
+        if isinstance(result, str) and (
+            result.startswith("[error]") or "No web results found" in result
+        ):
+            _enqueue_local_plan_fallback()
+            return f"{result}\n[fallback] web indisponible/insuffisant -> planification locale du module"
+
+        # P2.5 â€” Sauvegarder le rÃ©sultat pour les sessions futures
         try:
             if (
                 cache_web_result is not None
@@ -954,6 +1033,73 @@ class ActionExecutor:
         if not description:
             return "[error] plan_files requires a 'description'"
 
+        def _local_default_plan(desc: str) -> list[dict]:
+            low = (desc or "").lower()
+            wants_react = "react" in low or "frontend" in low
+            wants_backend = "backend" in low or "api" in low or "module" in low
+            plan: list[dict] = []
+
+            if wants_backend:
+                plan.extend(
+                    [
+                        {
+                            "path": "users/__init__.py",
+                            "description": "Initialize users backend package",
+                        },
+                        {
+                            "path": "users/models.py",
+                            "description": "User domain model and role definitions",
+                        },
+                        {
+                            "path": "users/schemas.py",
+                            "description": "Validation schemas for user payloads",
+                        },
+                        {
+                            "path": "users/service.py",
+                            "description": "Business logic for create/list/update/authenticate users",
+                        },
+                        {
+                            "path": "users/api.py",
+                            "description": "HTTP endpoints for user CRUD and auth actions",
+                        },
+                    ]
+                )
+            if wants_react:
+                plan.extend(
+                    [
+                        {
+                            "path": "frontend/src/modules/users/api.ts",
+                            "description": "HTTP client for users module",
+                        },
+                        {
+                            "path": "frontend/src/modules/users/types.ts",
+                            "description": "TypeScript types for users",
+                        },
+                        {
+                            "path": "frontend/src/modules/users/UsersPage.tsx",
+                            "description": "Users management page",
+                        },
+                        {
+                            "path": "frontend/src/modules/users/components/UserForm.tsx",
+                            "description": "Create/Edit user form",
+                        },
+                        {
+                            "path": "frontend/src/modules/users/components/UserTable.tsx",
+                            "description": "Users list table",
+                        },
+                    ]
+                )
+            if not plan:
+                plan = [
+                    {
+                        "path": "users/__init__.py",
+                        "description": "Initialize users module",
+                    },
+                    {"path": "users/models.py", "description": "User model"},
+                    {"path": "users/api.py", "description": "Users API"},
+                ]
+            return plan
+
         from agent.llm_interface import ask_llm_json
 
         prompt = (
@@ -985,47 +1131,107 @@ class ActionExecutor:
             if "files" in raw:
                 file_plan = raw["files"]
             elif "path" in raw and "description" in raw:
-                # LLM a retourné un seul objet au lieu d'un array
+                # LLM a retournÃ© un seul objet au lieu d'un array
                 file_plan = [raw]
 
+        default_plan = _local_default_plan(description)
         if not file_plan:
-            return "[error] plan_files: LLM did not return a valid file plan"
+            file_plan = default_plan
+            ag.event_logger.log(
+                "plan_files_local_fallback",
+                {"reason": "invalid_llm_plan", "count": len(file_plan)},
+            )
+        else:
+            low_desc = (description or "").lower()
+            is_full_module_goal = any(
+                k in low_desc
+                for k in (
+                    "module",
+                    "backend",
+                    "frontend",
+                    "react",
+                    "gestion",
+                    "management",
+                )
+            )
+            if is_full_module_goal and len(file_plan) < 4:
+                # LLM plan too small for a full module request: merge with robust local defaults.
+                by_path = {f.get("path"): f for f in file_plan if isinstance(f, dict)}
+                for f in default_plan:
+                    if f["path"] not in by_path:
+                        file_plan.append(f)
 
-        # Filter already-existing files
-        pending = [
-            f
-            for f in file_plan
-            if f["path"] not in ag.staged_edits
-            and not os.path.isfile(os.path.join(PROJECT_ROOT, f["path"]))
-        ]
-        if not pending:
-            return f"plan_files: all {len(file_plan)} files already exist — nothing to create"
+        # Partition plan into files to create vs existing files to update.
+        to_create: list[dict] = []
+        to_update: list[dict] = []
+        for f in file_plan:
+            path = f["path"]
+            if path in ag.staged_edits:
+                continue
+            abs_path = os.path.join(PROJECT_ROOT, path)
+            if os.path.isfile(abs_path):
+                to_update.append(f)
+            else:
+                to_create.append(f)
 
-        # Inject create_file decisions in order
-        new_decisions = [
-            {
-                "action": "create_file",
-                "reason": "plan_files_ordered_creation",
-                "args": {
-                    "path": f["path"],
-                    "description": f"{f['description']} — part of: {description[:200]}",
-                },
-            }
-            for f in pending
-        ]
+        if not to_create and not to_update:
+            return f"plan_files: all {len(file_plan)} files already staged"
+
+        # Inject ordered actions: create missing files, then complete/update existing ones.
+        new_decisions = []
+        for f in to_create:
+            new_decisions.append(
+                {
+                    "action": "create_file",
+                    "reason": "plan_files_ordered_creation",
+                    "args": {
+                        "path": f["path"],
+                        "description": f"{f['description']} â€” part of: {description[:200]}",
+                    },
+                }
+            )
+        for f in to_update:
+            new_decisions.append(
+                {
+                    "action": "propose_edit",
+                    "reason": "plan_files_ordered_update",
+                    "args": {
+                        "path": f["path"],
+                        "instruction": (
+                            f"Complete/align this file with the module goal: {description[:300]}.\n"
+                            f"File role: {f['description']}.\n"
+                            "Keep imports consistent and provide production-ready code."
+                        ),
+                    },
+                }
+            )
+            if auto_apply:
+                new_decisions.append(
+                    {
+                        "action": "apply_edit",
+                        "reason": "plan_files_ordered_update_apply",
+                        "args": {"path": f["path"]},
+                    }
+                )
+
         new_decisions.append(
             {
                 "action": "finish",
                 "reason": "plan_files_all_done",
                 "args": {
-                    "summary": f"Created module: {', '.join(f['path'] for f in pending)}"
+                    "summary": (
+                        f"Module plan executed: created={len(to_create)}, updated={len(to_update)}"
+                    )
                 },
             }
         )
         ag._forced_decisions = new_decisions + ag._forced_decisions
 
-        plan_summary = "\n".join(f"  {f['path']}: {f['description']}" for f in pending)
-        return f"Plan files ({len(pending)} fichiers à créer) :\n{plan_summary}"
+        plan_summary = "\n".join(
+            [f"  [create] {f['path']}: {f['description']}" for f in to_create]
+            + [f"  [update] {f['path']}: {f['description']}" for f in to_update]
+        )
+        return f"Plan files (create={len(to_create)}, update={len(to_update)}) :\n{plan_summary}"
 
     def _exec_generate_migration(self, args: dict, **_kw) -> str:
         from agent.migration_generator import (
@@ -1037,13 +1243,13 @@ class ActionExecutor:
         if not is_alembic_configured():
             models = find_model_files()
             hint = (
-                f"Modèles détectés : {', '.join(models[:5])}"
+                f"ModÃ¨les dÃ©tectÃ©s : {', '.join(models[:5])}"
                 if models
-                else "Aucun modèle SQLAlchemy détecté."
+                else "Aucun modÃ¨le SQLAlchemy dÃ©tectÃ©."
             )
             return (
-                "[error] Alembic non configuré. "
-                "Créez alembic.ini via 'alembic init alembic' et configurez sqlalchemy.url. "
+                "[error] Alembic non configurÃ©. "
+                "CrÃ©ez alembic.ini via 'alembic init alembic' et configurez sqlalchemy.url. "
                 f"{hint}"
             )
 
@@ -1051,20 +1257,20 @@ class ActionExecutor:
         result = generate_migration(message=message)
         if result["ok"]:
             rev = result.get("revision_file") or "inconnu"
-            return f"Migration générée : {rev}\n{result['output']}"
-        return f"[error] génération échouée :\n{result['output']}"
+            return f"Migration gÃ©nÃ©rÃ©e : {rev}\n{result['output']}"
+        return f"[error] gÃ©nÃ©ration Ã©chouÃ©e :\n{result['output']}"
 
     def _exec_apply_migration(self, args: dict, **_kw) -> str:
         from agent.migration_generator import apply_migration, is_alembic_configured
 
         if not is_alembic_configured():
             return (
-                "[error] Alembic non configuré. "
-                "Créez alembic.ini via 'alembic init alembic' avant d'appliquer des migrations."
+                "[error] Alembic non configurÃ©. "
+                "CrÃ©ez alembic.ini via 'alembic init alembic' avant d'appliquer des migrations."
             )
 
         target = args.get("target", "head")
         result = apply_migration(target=target)
         if result["ok"]:
-            return f"Migrations appliquées (cible={target}) :\n{result['output']}"
-        return f"[error] application échouée (cible={target}) :\n{result['output']}"
+            return f"Migrations appliquÃ©es (cible={target}) :\n{result['output']}"
+        return f"[error] application Ã©chouÃ©e (cible={target}) :\n{result['output']}"

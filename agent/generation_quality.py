@@ -16,8 +16,10 @@ _STUB_PATTERNS = [
 def _is_test_file(path: str) -> bool:
     low = (path or "").replace("\\", "/").lower()
     base = os.path.basename(low)
-    return low.startswith("tests/") or base.startswith("test_") or base.endswith(
-        "_test.py"
+    return (
+        low.startswith("tests/")
+        or base.startswith("test_")
+        or base.endswith("_test.py")
     )
 
 
@@ -133,8 +135,10 @@ def assess_generated_files(
     line_rate = line_ratio_sum / py_count
     ann_rate = ann_sum / py_count
     test_rate = test_presence / max(1, len(src_py_files))
-    wildcard_score = 1.0 if wildcard_violations == 0 else max(
-        0.0, 1.0 - (wildcard_violations / max(1, py_count))
+    wildcard_score = (
+        1.0
+        if wildcard_violations == 0
+        else max(0.0, 1.0 - (wildcard_violations / max(1, py_count)))
     )
 
     # Weighted score (0..100)

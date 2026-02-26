@@ -81,6 +81,65 @@ def _colorize_diff_line(line: str) -> str:
     return line
 
 
+def _replacement_blocks(
+    old: str, new: str
+) -> List[Tuple[int, int, int, int, List[str], List[str]]]:
+    """Return replace blocks from old/new text with line ranges and payloads."""
+    old_lines = old.splitlines()
+    new_lines = new.splitlines()
+    matcher = difflib.SequenceMatcher(a=old_lines, b=new_lines)
+    blocks = []
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag != "replace":
+            continue
+        blocks.append((i1, i2, j1, j2, old_lines[i1:i2], new_lines[j1:j2]))
+    return blocks
+
+
+def _print_replacement_preview(
+    old: str, new: str, max_blocks: int = 5, max_lines: int = 6
+) -> None:
+    """Print a compact old/new preview to make replacements obvious for users."""
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    CYAN = "\033[36m"
+    RESET = "\033[0m"
+
+    blocks = _replacement_blocks(old, new)
+    if not blocks:
+        return
+
+    print(f"{CYAN}[patch] remplacements detectes :{RESET}")
+    for idx, (i1, i2, j1, j2, old_part, new_part) in enumerate(
+        blocks[:max_blocks], start=1
+    ):
+        old_range = f"L{i1 + 1}" if i2 <= i1 + 1 else f"L{i1 + 1}-L{i2}"
+        new_range = f"L{j1 + 1}" if j2 <= j1 + 1 else f"L{j1 + 1}-L{j2}"
+        print(f"{CYAN}  ({idx}) ancien {old_range} -> nouveau {new_range}{RESET}")
+
+        print(f"{RED}    ancien code:{RESET}")
+        for line in old_part[:max_lines]:
+            print(f"{RED}      - {line}{RESET}")
+        if len(old_part) > max_lines:
+            print(
+                f"{RED}      - ... ({len(old_part) - max_lines} ligne(s) de plus){RESET}"
+            )
+
+        print(f"{GREEN}    nouveau code:{RESET}")
+        for line in new_part[:max_lines]:
+            print(f"{GREEN}      + {line}{RESET}")
+        if len(new_part) > max_lines:
+            print(
+                f"{GREEN}      + ... ({len(new_part) - max_lines} ligne(s) de plus){RESET}"
+            )
+
+    if len(blocks) > max_blocks:
+        print(
+            f"{CYAN}  ... {len(blocks) - max_blocks} autre(s) remplacement(s) non affiches pour rester lisible{RESET}"
+        )
+    print()
+
+
 def show_diff(old: str, new: str, filepath: str = "") -> str:
     """Affiche un diff coloré et retourne le texte brut du diff."""
     from_label = f"a/{filepath}" if filepath else "a/original"
@@ -108,6 +167,7 @@ def show_diff(old: str, new: str, filepath: str = "") -> str:
     for line in diff_lines:
         print(_colorize_diff_line(line))
     print()
+    _print_replacement_preview(old, new)
     return "\n".join(diff_lines)
 
 

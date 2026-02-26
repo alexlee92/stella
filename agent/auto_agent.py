@@ -1,17 +1,18 @@
-"""
+﻿"""
 Autonomous agent loop for Stella.
 
-Orchestrateur principal : délègue à :
-- agent/planner.py      : génération et réparation des décisions LLM
-- agent/critic.py       : validation critique des décisions
-- agent/loop_controller.py : détection de boucles et gestion du budget
-- agent/replan.py       : stratégies de replanification après échec
-- agent/executor.py     : exécution des actions individuelles
+Orchestrateur principal : dÃ©lÃ¨gue Ã  :
+- agent/planner.py      : gÃ©nÃ©ration et rÃ©paration des dÃ©cisions LLM
+- agent/critic.py       : validation critique des dÃ©cisions
+- agent/loop_controller.py : dÃ©tection de boucles et gestion du budget
+- agent/replan.py       : stratÃ©gies de replanification aprÃ¨s Ã©chec
+- agent/executor.py     : exÃ©cution des actions individuelles
 """
 
 import atexit
 import json
 import os
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
 from typing import Callable, Dict, List, Optional
@@ -41,7 +42,7 @@ from agent.executor import ActionExecutor
 from agent.llm_interface import ask_llm_json
 from agent.memory import search_memory
 
-# P1.1 — Modules extraits
+# P1.1 â€” Modules extraits
 from agent.planner import Planner
 from agent.critic import Critic
 from agent.loop_controller import LoopController
@@ -73,7 +74,7 @@ class AutonomousAgent:
         llm_fn: Optional[Callable] = None,
         memory_fn: Optional[Callable] = None,
     ):
-        # P2.5 — Dependency injection: accept config/llm/memory as arguments
+        # P2.5 â€” Dependency injection: accept config/llm/memory as arguments
         self.config = config or dict(_CFG)
         self._llm_fn = llm_fn or ask_llm_json
         self._memory_fn = memory_fn or search_memory
@@ -101,13 +102,13 @@ class AutonomousAgent:
         self.read_only = False
         self._last_goal: str = ""
         self._executor = ActionExecutor(self)
-        # P1.1 — Sous-composants extraits
+        # P1.1 â€” Sous-composants extraits
         self._planner_obj = Planner(self)
         self._critic_obj = Critic(self)
         self._loop = LoopController(self)
         self._replan_engine = ReplanEngine(self)
 
-    # P2.1 — Delegate to decision_normalizer module
+    # P2.1 â€” Delegate to decision_normalizer module
     def _normalize_decision(self, decision: dict) -> dict:
         return normalize_decision(decision)
 
@@ -121,7 +122,7 @@ class AutonomousAgent:
         return autocorrect_decision_schema(goal, decision, msg)
 
     def _confirm_apply(self, paths: List[str]) -> bool:
-        """P1.2 — Demande confirmation à l'utilisateur avant d'appliquer des patches.
+        """P1.2 â€” Demande confirmation Ã  l'utilisateur avant d'appliquer des patches.
 
         En mode non-interactif, retourne toujours True.
         """
@@ -167,7 +168,7 @@ class AutonomousAgent:
         return answer in {"y", "yes", "o", "oui"}
 
     def _session_context(self, max_chars_per_file: int = 2000) -> str:
-        """Retourne le contenu des fichiers créés/modifiés dans cette session."""
+        """Retourne le contenu des fichiers crÃ©Ã©s/modifiÃ©s dans cette session."""
         if not self.staged_edits:
             return ""
         chunks = []
@@ -176,7 +177,7 @@ class AutonomousAgent:
             chunks.append(f"FILE (this session): {path}\n{preview}")
         return "\n\n".join(chunks)
 
-    # P2.6 — Budget contextuel dynamique
+    # P2.6 â€” Budget contextuel dynamique
     _COMPLEX_KW = {
         "erp",
         "crm",
@@ -187,14 +188,14 @@ class AutonomousAgent:
         "complet",
         "complete",
         "full",
-        "système",
+        "systÃ¨me",
         "system",
         "architecture",
         "multi-fichier",
         "multi-file",
         "plan",
-        "génère un",
-        "crée un",
+        "gÃ©nÃ¨re un",
+        "crÃ©e un",
         "generate a",
         "create a",
         "stock",
@@ -221,8 +222,8 @@ class AutonomousAgent:
         "optimise",
         "optimize",
         "update",
-        "mise à jour",
-        "améliore",
+        "mise Ã  jour",
+        "amÃ©liore",
         "improve",
         "ajoute",
         "add",
@@ -231,12 +232,12 @@ class AutonomousAgent:
     }
 
     def _context_budget(self, goal: str) -> tuple[int, int]:
-        """Retourne (chars_per_file, top_k) selon la complexité du goal.
+        """Retourne (chars_per_file, top_k) selon la complexitÃ© du goal.
 
-        P2.6 — Budget contextuel dynamique :
-        - Simple  (lecture/recherche) → 1200 chars, k=3
-        - Medium  (fix/refactor/test) → 3000 chars, k=5
-        - Complex (module ERP complet)→ 8000 chars, k=8
+        P2.6 â€” Budget contextuel dynamique :
+        - Simple  (lecture/recherche) â†’ 1200 chars, k=3
+        - Medium  (fix/refactor/test) â†’ 3000 chars, k=5
+        - Complex (module ERP complet)â†’ 8000 chars, k=8
         """
         low = goal.lower()
         if any(k in low for k in self._COMPLEX_KW):
@@ -253,7 +254,7 @@ class AutonomousAgent:
         for path, content in docs:
             chunks.append(f"FILE: {path}\n{content[:chars]}")
 
-        # P2.4 — Enrichir avec la mémoire globale cross-sessions
+        # P2.4 â€” Enrichir avec la mÃ©moire globale cross-sessions
         try:
             from agent.global_memory import search_global_memory
 
@@ -272,14 +273,14 @@ class AutonomousAgent:
     ) -> str:
         """Recherche de contexte multi-angle : goal + chemin + description.
 
-        Combine les résultats des 3 requêtes et déduplique par chemin de fichier.
-        Inclut aussi les fichiers créés dans la session courante.
-        P2.6 : chars_per_file et k adaptés dynamiquement à la complexité du goal.
+        Combine les rÃ©sultats des 3 requÃªtes et dÃ©duplique par chemin de fichier.
+        Inclut aussi les fichiers crÃ©Ã©s dans la session courante.
+        P2.6 : chars_per_file et k adaptÃ©s dynamiquement Ã  la complexitÃ© du goal.
         """
         import os as _os
 
         chars, k = self._context_budget(goal)
-        # Les fichiers de session ont droit à plus de contexte
+        # Les fichiers de session ont droit Ã  plus de contexte
         session_chars = min(chars * 2, 16000)
 
         seen_paths: set[str] = set()
@@ -297,17 +298,17 @@ class AutonomousAgent:
         # 1. Recherche par goal principal
         _add_docs(goal)
 
-        # 2. Recherche par répertoire/nom de fichier cible
+        # 2. Recherche par rÃ©pertoire/nom de fichier cible
         if path:
             dir_name = _os.path.dirname(path)
             base_name = _os.path.splitext(_os.path.basename(path))[0]
             _add_docs(dir_name or base_name)
 
-        # 3. Recherche par mots-clés de la description
+        # 3. Recherche par mots-clÃ©s de la description
         if description:
             _add_docs(description[:200])
 
-        # 4. Fichiers de la session courante (priorité haute — toujours inclus)
+        # 4. Fichiers de la session courante (prioritÃ© haute â€” toujours inclus)
         session = self._session_context(max_chars_per_file=session_chars)
         if session:
             all_chunks.insert(0, session)
@@ -322,7 +323,7 @@ class AutonomousAgent:
     ) -> str:
         return self._planner_obj.schema_repair_prompt(goal, decision, schema_error)
 
-    # P2.1 — Delegate to decision_normalizer module
+    # P2.1 â€” Delegate to decision_normalizer module
     def _extract_target_file_from_goal(self, goal: str) -> Optional[str]:
         return extract_target_file_from_goal(goal)
 
@@ -451,21 +452,37 @@ class AutonomousAgent:
         decision = self._planner_obj.plan(goal)
         return self._critic_obj.critique(goal, decision)
 
+    def _color(self, text: str, code: str) -> str:
+        if not sys.stdout.isatty():
+            return text
+        return f"\033[{code}m{text}\033[0m"
+
+    def _render_progress(self, step: int, total: int) -> str:
+        total = max(1, total)
+        width = 24
+        ratio = min(max(step / total, 0.0), 1.0)
+        filled = int(width * ratio)
+        bar = ("#" * filled) + ("-" * (width - filled))
+        pct = int(ratio * 100)
+        return f"[{self._color(bar, '36')}] {step}/{total} ({pct:3d}%)"
+
     def _fallback_decision(self, goal: str, reason: str) -> dict:
         return self._planner_obj.fallback_decision(goal, reason)
 
     def _generate_file_content(self, goal: str, path: str, description: str) -> str:
         return self._planner_obj.generate_file_content(goal, path, description)
 
-    # M8 — Persistance staged_edits sur interruption
+    # M8 â€” Persistance staged_edits sur interruption
     def _save_staged_recovery(self):
         if not self.staged_edits:
             return
         try:
             os.makedirs(os.path.dirname(STAGED_RECOVERY_PATH), exist_ok=True)
             with open(STAGED_RECOVERY_PATH, "w", encoding="utf-8") as f:
-                json.dump({"goal": self._last_goal, "edits": self.staged_edits}, f, indent=2)
-            print(f"[stella] staged_edits sauvegardés → {STAGED_RECOVERY_PATH}")
+                json.dump(
+                    {"goal": self._last_goal, "edits": self.staged_edits}, f, indent=2
+                )
+            print(f"[stella] staged_edits sauvegardÃ©s â†’ {STAGED_RECOVERY_PATH}")
         except Exception as exc:
             print(f"[stella] Impossible de sauvegarder staged_recovery: {exc}")
 
@@ -479,27 +496,33 @@ class AutonomousAgent:
         fix_until_green: bool = False,
         generate_tests: bool = False,
         max_seconds: int = 0,
-    ) -> str:
-        # M8 — Enregistrer goal pour la sauvegarde atexit
-        self._last_goal = goal
-        atexit.register(self._save_staged_recovery)
+        max_auto_continuations: int = 2,
+        _continuation_idx: int = 0,
+        _resume: bool = False,
+        _started_at: Optional[datetime] = None,
+     ) -> str:
+        window_start_step_count = len(self.steps)
+        # M8 â€” Enregistrer goal pour la sauvegarde atexit
+        if not _resume:
+            self._last_goal = goal
+            atexit.register(self._save_staged_recovery)
 
-        # M8 — Recharger staged_edits depuis la dernière session interrompue si le goal correspond
-        if os.path.isfile(STAGED_RECOVERY_PATH):
+        # M8 â€” Recharger staged_edits depuis la derniÃ¨re session interrompue si le goal correspond
+        if not _resume and os.path.isfile(STAGED_RECOVERY_PATH):
             try:
                 with open(STAGED_RECOVERY_PATH, "r", encoding="utf-8") as f:
                     recovery = json.load(f)
                 if recovery.get("goal") == goal and recovery.get("edits"):
                     self.staged_edits.update(recovery["edits"])
                     print(
-                        f"[stella] staged_edits rechargés depuis {STAGED_RECOVERY_PATH} "
+                        f"[stella] staged_edits rechargÃ©s depuis {STAGED_RECOVERY_PATH} "
                         f"({len(self.staged_edits)} fichiers)"
                     )
                     os.remove(STAGED_RECOVERY_PATH)
             except Exception:
                 pass
 
-        # P1.1 — Detection mode lecture seule (read-only)
+        # P1.1 â€” Detection mode lecture seule (read-only)
         low_goal = goal.lower()
         read_only_keywords = [
             "ne modifie pas",
@@ -517,31 +540,41 @@ class AutonomousAgent:
         self._fix_until_green = bool(fix_until_green)
         self._generate_tests = bool(generate_tests)
 
-        # P1.1 — Auto-adjust budget for code_edit + tests
+        # P1.1 â€” Auto-adjust budget for code_edit + tests
         if self._generate_tests and self.max_steps <= 10:
             self.max_steps = 15
             self._max_cost = self.max_steps * 4
 
         # M7-fix: augmenter le budget pour les goals multi-fichiers (plan_files)
         _multi_file_kw = [
-            "plan_files", "module", "erp", "crm", "crée un", "create a",
-            "génère un", "generate a", "scaffold", "complet", "complete",
+            "plan_files",
+            "module",
+            "erp",
+            "crm",
+            "crÃ©e un",
+            "create a",
+            "gÃ©nÃ¨re un",
+            "generate a",
+            "scaffold",
+            "complet",
+            "complete",
         ]
         if any(k in goal.lower() for k in _multi_file_kw) and self.max_steps <= 12:
             self.max_steps = 20
             self._max_cost = self.max_steps * 4
 
-        self._consecutive_stalled_steps = 0
-        self._total_cost = 0
-        self._replan_attempts = 0
-        self._forced_decisions = []
-        self._has_validation_action = False
-        self._bootstrapped_code_edit = False
+        if not _resume:
+            self._consecutive_stalled_steps = 0
+            self._total_cost = 0
+            self._replan_attempts = 0
+            self._forced_decisions = []
+            self._has_validation_action = False
+            self._bootstrapped_code_edit = False
 
-        if not self.read_only:
-            self._bootstrap_code_edit_decisions(goal, auto_apply=auto_apply)
+            if not self.read_only:
+                self._bootstrap_code_edit_decisions(goal, auto_apply=auto_apply)
 
-        # P1.1 — Proactive web search bootstrap for research and complex modules
+        # P1.1 â€” Proactive web search bootstrap for research and complex modules
         research_keywords = [
             "web",
             "recherche",
@@ -562,11 +595,13 @@ class AutonomousAgent:
             "analytics",
             "standard",
         ]
-        if not self._forced_decisions and any(k in low_goal for k in research_keywords):
+        if (not _resume) and (not self._forced_decisions) and any(
+            k in low_goal for k in research_keywords
+        ):
             # Use a cleaner, more technical English query for better results
             clean_goal = (
-                goal.replace("Génère ", "")
-                .replace("Crée ", "")
+                goal.replace("GÃ©nÃ¨re ", "")
+                .replace("CrÃ©e ", "")
                 .replace("un module ", "")
                 .strip()
             )
@@ -583,15 +618,21 @@ class AutonomousAgent:
 
         from datetime import UTC
 
-        start_ts = datetime.now(UTC)
+        start_ts = _started_at or datetime.now(UTC)
 
-        print(f"\n[stella] Démarrage de l'agent — objectif : {goal[:80]}")
-        if self.read_only:
-            print("[stella] MODE LECTURE SEULE ACTIF (aucune modification autorisée)")
-        print(
-            f"[stella] Paramètres : max_steps={self.max_steps}, apply={auto_apply}, fix={fix_until_green}, tests={generate_tests}"
-        )
-        print()
+        if _resume:
+            self._max_cost += self.max_steps * 4
+            print(
+                f"\n[stella] reprise automatique {_continuation_idx}/{max_auto_continuations} (fenetre +{self.max_steps} etapes)"
+            )
+        else:
+            print(f"\n[stella] DÃ©marrage de l'agent â€” objectif : {goal[:80]}")
+            if self.read_only:
+                print("[stella] MODE LECTURE SEULE ACTIF (aucune modification autorisÃ©e)")
+            print(
+                f"[stella] ParamÃ¨tres : max_steps={self.max_steps}, apply={auto_apply}, fix={fix_until_green}, tests={generate_tests}"
+            )
+            print()
 
         for index in range(1, self.max_steps + 1):
             if (
@@ -610,6 +651,11 @@ class AutonomousAgent:
                     f"Stopped: max runtime reached ({max_seconds}s)"
                 )
 
+            elapsed_so_far = round((datetime.now(UTC) - start_ts).total_seconds(), 1)
+            print(
+                f"  [{index}/{self.max_steps}] planification LLM en cours... ({elapsed_so_far}s)",
+                flush=True,
+            )
             decision = self._plan_with_critique(goal)
             action = decision.get("action", "")
             reason = decision.get("reason", "")
@@ -620,24 +666,25 @@ class AutonomousAgent:
                 "list_files": "liste les fichiers",
                 "read_file": f"lit {args.get('path', '')}",
                 "read_many": f"lit {len(args.get('paths', []))} fichier(s)",
-                "search_code": f"cherche « {args.get('pattern', '')} »",
-                "create_file": f"crée {args.get('path', '')}",
-                "propose_edit": f"prépare un patch pour {args.get('path', '')}",
+                "search_code": f"cherche Â« {args.get('pattern', '')} Â»",
+                "create_file": f"crÃ©e {args.get('path', '')}",
+                "propose_edit": f"prÃ©pare un patch pour {args.get('path', '')}",
                 "apply_edit": f"applique le patch sur {args.get('path', '')}",
                 "apply_all_staged": "applique tous les patches en attente",
-                "run_tests": "exécute les tests",
-                "run_quality": "vérifie la qualité du code",
-                "project_map": "génère la carte du projet",
-                "git_branch": f"crée la branche {args.get('name', '')}",
+                "run_tests": "exÃ©cute les tests",
+                "run_quality": "vÃ©rifie la qualitÃ© du code",
+                "project_map": "gÃ©nÃ¨re la carte du projet",
+                "git_branch": f"crÃ©e la branche {args.get('name', '')}",
                 "git_commit": "committe les changements",
                 "git_diff": "affiche le diff git",
-                "web_search": f"recherche sur le web « {args.get('query', '')} »",
-                "finish": "finalise la tâche",
+                "web_search": f"recherche sur le web Â« {args.get('query', '')} Â»",
+                "finish": "finalise la tÃ¢che",
             }
             label = _action_labels.get(action, action)
             elapsed_so_far = round((datetime.now(UTC) - start_ts).total_seconds(), 1)
+            gauge = self._render_progress(index, self.max_steps)
             print(
-                f"  [{index}/{self.max_steps}] {label}... ({elapsed_so_far}s)",
+                f"  {gauge} {label}... ({elapsed_so_far}s)",
                 flush=True,
             )
 
@@ -678,8 +725,8 @@ class AutonomousAgent:
                         "Stopped repeated decision loop",
                     )
                 )
-                # Pour les actions de lecture (read-only), synthétiser une réponse
-                # en lien avec le goal plutôt que de retourner une erreur.
+                # Pour les actions de lecture (read-only), synthÃ©tiser une rÃ©ponse
+                # en lien avec le goal plutÃ´t que de retourner une erreur.
                 _read_only = {"read_file", "read_many", "search_code", "list_files"}
                 if action in _read_only and self.steps:
                     last_result = next(
@@ -714,7 +761,7 @@ class AutonomousAgent:
                         elapsed = round(
                             (datetime.now(UTC) - start_ts).total_seconds(), 1
                         )
-                        print(f"\n[stella] Terminé en {elapsed}s\n")
+                        print(f"\n[stella] TerminÃ© en {elapsed}s\n")
                         return self.render_summary(summary)
                 summary = "Stopped repeated decision loop; recommend narrowing goal to a concrete file-level change request"
                 self._record(AutoStep(index, "finish", "auto_stop_repeat", summary))
@@ -723,7 +770,7 @@ class AutonomousAgent:
             self._decision_signatures.append(self._signature(action, args))
             step = AutoStep(index, action, reason, "")
 
-            # P2.1 — Delegate action execution to ActionExecutor
+            # P2.1 â€” Delegate action execution to ActionExecutor
             try:
                 result = self._executor.execute(
                     action,
@@ -774,7 +821,7 @@ class AutonomousAgent:
                     step.result = result
                     self._record(step)
                     elapsed = round((datetime.now(UTC) - start_ts).total_seconds(), 1)
-                    print(f"\n[stella] Terminé en {elapsed}s\n")
+                    print(f"\n[stella] TerminÃ© en {elapsed}s\n")
                     return self.render_summary(step.result)
                 # Unknown action
                 if result.startswith("Unknown action:"):
@@ -822,6 +869,39 @@ class AutonomousAgent:
             self._outcome_signatures.append(self._signature(action, args, step.result))
             self._record(step)
 
+        if auto_apply and (not self.read_only) and _continuation_idx < max_auto_continuations:
+            window_steps = self.steps[window_start_step_count:]
+            meaningful_actions = {
+                "create_file",
+                "propose_edit",
+                "apply_edit",
+                "apply_all_staged",
+                "plan_files",
+                "run_quality",
+                "run_tests",
+            }
+            made_progress = any(s.action in meaningful_actions for s in window_steps)
+            if made_progress or self._forced_decisions:
+                return self.run(
+                    goal=goal,
+                    auto_apply=auto_apply,
+                    fix_until_green=fix_until_green,
+                    generate_tests=generate_tests,
+                    max_seconds=max_seconds,
+                    max_auto_continuations=max_auto_continuations,
+                    _continuation_idx=_continuation_idx + 1,
+                    _resume=True,
+                    _started_at=start_ts,
+                )
+            return self.render_summary(
+                "Stopped: max steps reached and no meaningful progress in last window"
+            )
+
+        if _continuation_idx >= max_auto_continuations and auto_apply and (not self.read_only):
+            return self.render_summary(
+                f"Stopped: max steps reached after {max_auto_continuations} automatic continuations"
+            )
+
         return self.render_summary("Reached max steps without finish action")
 
     def render_summary(self, final_message: str) -> str:
@@ -839,13 +919,29 @@ class AutonomousAgent:
             f"  Etapes executees : {total_steps}/{self.max_steps}",
             f"  Fichiers modifies : {len(files_modified)}",
         ]
+        if total_steps < self.max_steps:
+            lines.append(
+                "  Statut boucle : termine normalement avant max_steps (action finish)"
+            )
         if files_modified:
             for f in files_modified[:10]:
                 lines.append(f"    - {f}")
         lines.append(f"  Cout total : {self._total_cost}/{self._max_cost}")
         lines.append(f"  Replans : {self._replan_attempts}/{self._max_replan_attempts}")
+
+        syntax_warnings = []
+        for s in self.steps:
+            if "[syntax-warning:" in (s.result or ""):
+                syntax_warnings.append(
+                    f"  - step {s.step} ({s.action}): {s.result[:220]}"
+                )
+        if syntax_warnings:
+            lines.append("  Warnings syntaxe JS/TS:")
+            lines.extend(syntax_warnings[:10])
         lines.append("")
         lines.append("Decisions:")
         for s in self.steps:
             lines.append(f"  {s.step}. [{s.action}] {s.reason} -> {s.result[:160]}")
         return "\n".join(lines)
+
+

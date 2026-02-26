@@ -455,7 +455,10 @@ def _compute_kpis(
     )
     generation_quality_score = (
         round(
-            sum(float((r.get("generation_quality") or {}).get("score", 0.0)) for r in code_edit_rows)
+            sum(
+                float((r.get("generation_quality") or {}).get("score", 0.0))
+                for r in code_edit_rows
+            )
             / max(1, len(code_edit_rows)),
             2,
         )

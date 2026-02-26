@@ -24,6 +24,7 @@ build/
 eval/last_report.json
 
 # --- IDE ---
+.gitignore
 .idea/
 .vscode/
 *.swp
@@ -36,3 +37,7 @@ eval/last_report.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# --- Fichiers temporaires de dev ---
+temp_*.py
+test_*_temp.py

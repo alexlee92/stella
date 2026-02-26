@@ -1,5 +1,6 @@
 import os
 import sys
+import unicodedata
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -17,7 +18,7 @@ from agent.agent import (
     propose_file_update,
     review_file_update,
 )
-from agent.auto_agent import AutonomousAgent
+from agent.auto_agent import AutonomousAgent, STAGED_RECOVERY_PATH
 from agent.bootstrap import format_bootstrap, run_bootstrap
 from agent.chat_session import ChatSession
 from agent.config import AUTO_MAX_STEPS
@@ -37,17 +38,75 @@ from agent.progress import summarize_progress
 from agent.project_map import render_project_map
 
 
-def _smart_dispatch(goal: str) -> None:
-    """Route automatiquement vers ask / run / fix selon l'intention détectée."""
-    index_project()
-    low = goal.strip().lower()
+def _should_index_for_question(question: str) -> bool:
+    """Skip expensive indexing for short/non-technical small-talk questions."""
+    q = (question or "").strip().lower()
+    if not q:
+        return False
 
-    # --- Question (lecture seule, réponse rapide) ---
+    greetings = {
+        "salut",
+        "bonjour",
+        "hello",
+        "hi",
+        "yo",
+        "coucou",
+        "Ã§a va",
+        "ca va",
+    }
+    if q in greetings:
+        return False
+
+    tokens = q.replace("?", " ").replace("!", " ").split()
+    has_code_hint = any(
+        marker in q
+        for marker in ("/", "\\", ".py", ".js", ".ts", "import ", "class ", "def ")
+    )
+    if has_code_hint:
+        return True
+
+    if len(tokens) <= 3 and len(q) <= 32:
+        return False
+
+    return True
+
+
+def _quick_chat_reply(question: str) -> str:
+    q = (question or "").strip().lower()
+    quick = {
+        "salut",
+        "bonjour",
+        "hello",
+        "hi",
+        "yo",
+        "coucou",
+    }
+    if q in quick:
+        return (
+            "Salut. Je suis pret.\n"
+            "Tu peux me poser une question code, par exemple:\n"
+            '- `python stella.py ask "explique agent/auto_agent.py"`'
+        )
+    return ""
+
+
+def _normalize_dispatch_text(text: str) -> str:
+    raw = (text or "").strip().lower()
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", raw) if not unicodedata.combining(c)
+    )
+
+
+def _smart_dispatch(goal: str) -> None:
+    """Route automatiquement vers ask / run / fix selon l'intention dÃ©tectÃ©e."""
+    low = _normalize_dispatch_text(goal)
+
+    # --- Question (lecture seule, rÃ©ponse rapide) ---
     question_starters = (
         "qu'est",
         "qu'",
         "c'est quoi",
-        "c'est quoi",
+        "c est quoi",
         "qu est",
         "quel",
         "quelle",
@@ -57,6 +116,7 @@ def _smart_dispatch(goal: str) -> None:
         "expliques",
         "dis moi",
         "dis-moi",
+        "quest",
         "what ",
         "how ",
         "why ",
@@ -73,18 +133,15 @@ def _smart_dispatch(goal: str) -> None:
         low.startswith(s) for s in question_starters
     )
 
-    # --- Création de nouveaux fichiers (agent autonome multi-étapes) ---
+    # --- CrÃ©ation de nouveaux fichiers (agent autonome multi-Ã©tapes) ---
     create_keywords = (
-        "crée ",
-        "génère ",
-        "implémente ",
-        "implémente un",
-        "ajoute un module",
+        "cree ",
         "creer ",
-        "créer ",
         "genere ",
-        "générer ",
+        "generer ",
         "implemente ",
+        "implemente un",
+        "ajoute un module",
         "create ",
         "generate ",
         "scaffold",
@@ -97,21 +154,44 @@ def _smart_dispatch(goal: str) -> None:
 
     if is_question:
         print("[stella] mode detecte : question -- reponse directe\n")
+        quick = _quick_chat_reply(goal)
+        if quick:
+            print(quick)
+            return
+        if _should_index_for_question(goal):
+            print("[stella] indexation du projet en cours...")
+            index_project()
+        else:
+            print("[stella] question courte detectee -- indexation ignoree")
         ask_project_stream(goal)
     elif is_creation:
-        print("[stella] mode détecté : création — agent autonome\n")
-        # I7-fix: passer auto_apply=True pour que les fichiers soient réellement écrits
-        print(AutonomousAgent(max_steps=15).run(goal=goal, auto_apply=True))
+        print("[stella] mode dÃ©tectÃ© : crÃ©ation â€” agent autonome\n")
+        print("[stella] mode rapide: indexation ignoree pour eviter le blocage")
+        print("[stella] lancement agent autonome...")
+        if os.path.isfile(STAGED_RECOVERY_PATH):
+            try:
+                os.remove(STAGED_RECOVERY_PATH)
+                print("[stella] recovery precedent ignore pour un run creation propre")
+            except OSError:
+                pass
+        no_memory = lambda _query, k=3: []
+        # I7-fix: passer auto_apply=True pour que les fichiers soient rÃ©ellement Ã©crits
+        print(
+            AutonomousAgent(max_steps=25, memory_fn=no_memory).run(
+                goal=goal, auto_apply=True, max_auto_continuations=4
+            )
+        )
     else:
-        print("[stella] mode détecté : modification — fix standard\n")
+        print("[stella] mode dÃ©tectÃ© : modification â€” fix standard\n")
+        print("[stella] execution du workflow fix...")
         result = run_dev_task(goal=goal, profile="standard")
         status = result.get("status", "?")
         changed = result.get("changed_files_count", 0)
         next_action = result.get("next_action", "")
         print(f"\nStatut    : {status}")
-        print(f"Fichiers  : {changed} modifié(s)")
+        print(f"Fichiers  : {changed} modifiÃ©(s)")
         if next_action:
-            print(f"Prochaine étape : {next_action}")
+            print(f"Prochaine Ã©tape : {next_action}")
         summary_md = result.get("summary_md")
         if summary_md:
             print(f"Rapport complet : {summary_md}")
@@ -120,7 +200,7 @@ def _smart_dispatch(goal: str) -> None:
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Local coding agent (DeepSeek/Ollama)",
-        usage='stella.py [command] [goal]  — ou simplement : stella.py "<ton goal>"',
+        usage='stella.py [command] [goal]  â€” ou simplement : stella.py "<ton goal>"',
     )
     sub = parser.add_subparsers(dest="command", required=False)
 
@@ -267,10 +347,10 @@ def build_parser():
     edit.add_argument("instruction")
     edit.add_argument("--apply", action="store_true")
 
-    # Commandes simplifiées pour non-experts
+    # Commandes simplifiÃ©es pour non-experts
     init_cmd = sub.add_parser(
         "init",
-        help="Initialiser Stella sur ce projet (git + index + outils) — pour débutants",
+        help="Initialiser Stella sur ce projet (git + index + outils) â€” pour dÃ©butants",
     )
     init_cmd.add_argument(
         "--no-git", action="store_true", help="Ne pas initialiser git"
@@ -311,7 +391,7 @@ def build_parser():
 
     fix_cmd = sub.add_parser(
         "fix",
-        help="Corriger / améliorer le code en langage naturel (mode standard, apply auto)",
+        help="Corriger / amÃ©liorer le code en langage naturel (mode standard, apply auto)",
     )
     fix_cmd.add_argument("description", help="Ce que tu veux faire ou corriger")
     fix_cmd.add_argument(
@@ -320,7 +400,7 @@ def build_parser():
     fix_cmd.add_argument(
         "--aggressive",
         action="store_true",
-        help="Mode agressif : correction itérative jusqu'aux tests verts",
+        help="Mode agressif : correction itÃ©rative jusqu'aux tests verts",
     )
 
     return parser
@@ -376,7 +456,7 @@ _CHAT_COMMANDS = [
 
 
 def _build_prompt_session():
-    """P4.2 — Build a prompt_toolkit session with auto-completion and history."""
+    """P4.2 â€” Build a prompt_toolkit session with auto-completion and history."""
     try:
         from prompt_toolkit import PromptSession
         from prompt_toolkit.completion import WordCompleter
@@ -392,7 +472,7 @@ def _build_prompt_session():
 
 
 def _highlight_code(text: str) -> str:
-    """P4.1 — Highlight code blocks in agent output using rich if available."""
+    """P4.1 â€” Highlight code blocks in agent output using rich if available."""
     try:
         from rich.console import Console
         from rich.syntax import Syntax
@@ -526,10 +606,10 @@ def run_chat(
                 continue
             backup = find_latest_backup(filepath)
             if not backup:
-                print(f"[!] Aucun backup trouvé pour {filepath}")
+                print(f"[!] Aucun backup trouvÃ© pour {filepath}")
             else:
                 ok = restore_backup(filepath, backup)
-                print("Annulé avec succès." if ok else "[!] Échec de l'annulation.")
+                print("AnnulÃ© avec succÃ¨s." if ok else "[!] Ã‰chec de l'annulation.")
             continue
 
         if user_input == "/eval":
@@ -594,7 +674,7 @@ def run_chat(
                     print(f"  L{s['line']} [{s['type']}] {s['name']}")
             continue
 
-        # P2.2 — Session persistence commands
+        # P2.2 â€” Session persistence commands
         if user_input == "/sessions":
             from agent.chat_session import list_sessions
 
@@ -636,7 +716,7 @@ def run_chat(
                 print(f"  Session {sid} introuvable.")
             continue
 
-        # P4.4 — /test alias for quick test run
+        # P4.4 â€” /test alias for quick test run
         if user_input == "/test" or user_input.startswith("/test "):
             from agent.tooling import run_tests
 
@@ -646,7 +726,7 @@ def run_chat(
             print(run_tests(cmd))
             continue
 
-        # P3.7 — /scaffold command
+        # P3.7 â€” /scaffold command
         if user_input.startswith("/scaffold "):
             from agent.scaffolder import scaffold
 
@@ -709,18 +789,20 @@ _KNOWN_COMMANDS = {
 
 
 def _handle_sigint(signum, frame):
-    """P1.5 — Gestion gracieuse de Ctrl+C."""
+    """P1.5 â€” Gestion gracieuse de Ctrl+C."""
     print("\n\n[stella] Interruption detectee (Ctrl+C). Arret en cours...")
-    print("[stella] Les fichiers stagés seront sauvegardés dans .stella/staged_recovery.json")
+    print(
+        "[stella] Les fichiers stagÃ©s seront sauvegardÃ©s dans .stella/staged_recovery.json"
+    )
     raise SystemExit(130)
 
 
 def main():
-    # P1.5 — Gestion gracieuse de Ctrl+C
+    # P1.5 â€” Gestion gracieuse de Ctrl+C
     signal.signal(signal.SIGINT, _handle_sigint)
 
-    # Entrée directe : python stella.py "mon goal" sans sous-commande
-    # Si le premier argument n'est pas une sous-commande connue → dispatch auto
+    # EntrÃ©e directe : python stella.py "mon goal" sans sous-commande
+    # Si le premier argument n'est pas une sous-commande connue â†’ dispatch auto
     if (
         len(sys.argv) >= 2
         and sys.argv[1] not in _KNOWN_COMMANDS
@@ -742,7 +824,19 @@ def main():
         return
 
     if args.command == "ask":
-        index_project()
+        from agent.health_check import require_services
+
+        quick = _quick_chat_reply(args.question)
+        if quick:
+            print(quick)
+            return
+        if not require_services():
+            raise SystemExit(1)
+        if _should_index_for_question(args.question):
+            print("[stella] indexation du projet en cours...")
+            index_project()
+        else:
+            print("[stella] question courte detectee -- indexation ignoree")
         ask_project_stream(args.question)
         return
 
@@ -892,7 +986,7 @@ def main():
         return
 
     if args.command == "init":
-        print("=== Stella — Initialisation du projet ===\n")
+        print("=== Stella â€” Initialisation du projet ===\n")
         report = run_bootstrap(
             init_git=not args.no_git,
             rebuild_index=True,
@@ -900,10 +994,10 @@ def main():
         )
         print(format_bootstrap(report))
         if report.get("ok"):
-            print("\nProchaines étapes :")
-            print('  python stella.py fix "<décris ce que tu veux faire>"')
-            print("  python stella.py chat          — mode interactif")
-            print("  python stella.py doctor        — diagnostics environnement")
+            print("\nProchaines Ã©tapes :")
+            print('  python stella.py fix "<dÃ©cris ce que tu veux faire>"')
+            print("  python stella.py chat          â€” mode interactif")
+            print("  python stella.py doctor        â€” diagnostics environnement")
         else:
             raise SystemExit(1)
         return
@@ -912,7 +1006,7 @@ def main():
         profile = (
             "safe" if args.safe else ("aggressive" if args.aggressive else "standard")
         )
-        print(f"=== Stella Fix — profil : {profile} ===")
+        print(f"=== Stella Fix â€” profil : {profile} ===")
         print(f"Objectif : {args.description}\n")
         result = run_dev_task(
             goal=args.description,
@@ -922,14 +1016,14 @@ def main():
         changed = result.get("changed_files_count", 0)
         next_action = result.get("next_action", "")
         print(f"\nStatut    : {status}")
-        print(f"Fichiers  : {changed} modifié(s)")
-        print(f"Prochaine étape : {next_action}")
+        print(f"Fichiers  : {changed} modifiÃ©(s)")
+        print(f"Prochaine Ã©tape : {next_action}")
         summary_md = result.get("summary_md")
         if summary_md:
             print(f"Rapport complet : {summary_md}")
         return
 
-    # P4.4 — stella test (alias rapide pour pytest)
+    # P4.4 â€” stella test (alias rapide pour pytest)
     if args.command == "test":
         from agent.tooling import run_tests
 
@@ -940,7 +1034,7 @@ def main():
         print(run_tests(cmd))
         return
 
-    # P3.7 — stella scaffold
+    # P3.7 â€” stella scaffold
     if args.command == "scaffold":
         from agent.scaffolder import scaffold as do_scaffold
 
@@ -948,7 +1042,7 @@ def main():
         print(result)
         return
 
-    # P4.5 — stella watch
+    # P4.5 â€” stella watch
     if args.command == "watch":
         from agent.watcher import run_watch
 

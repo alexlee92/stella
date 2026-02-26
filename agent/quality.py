@@ -57,6 +57,13 @@ def _python_files(changed_files: Optional[List[str]]) -> List[str]:
     return out
 
 
+def _frontend_files(changed_files: Optional[List[str]]) -> List[str]:
+    if not changed_files:
+        return []
+    exts = (".js", ".jsx", ".ts", ".tsx")
+    return [p for p in changed_files if p.endswith(exts)]
+
+
 def _build_changed_file_command(
     base_command: str, changed_files: Optional[List[str]]
 ) -> str:
@@ -192,6 +199,8 @@ def run_quality_pipeline(
         ]
 
     # Always prefer scoped commands when changed_files are known, even in full mode.
+    py_changed = _python_files(changed_files)
+    fe_changed = _frontend_files(changed_files)
     effective_format = _build_changed_file_command(format_cmd, changed_files)
     effective_lint = _build_changed_file_command(lint_cmd, changed_files)
     if (
@@ -265,6 +274,47 @@ def run_quality_pipeline(
             return False, results
 
     for name, cmd in stages_to_run:
+        # For mixed stacks, avoid running Python-only tooling when no Python file changed.
+        is_python_only_cmd = cmd.startswith(
+            (
+                "python -m ruff",
+                "python -m black",
+                "python -m bandit",
+                "python -m mypy",
+            )
+        )
+        if changed_files and not py_changed and fe_changed and is_python_only_cmd:
+            results.append(
+                {
+                    "mode": mode,
+                    "stage": name,
+                    "command": cmd,
+                    "exit_code": 0,
+                    "output": "skipped (frontend-only changes; python tooling not applicable)",
+                    "skipped": True,
+                }
+            )
+            continue
+
+        if (
+            name == "tests"
+            and changed_files
+            and not py_changed
+            and fe_changed
+            and cmd.startswith(("pytest", "python -m pytest"))
+        ):
+            results.append(
+                {
+                    "mode": mode,
+                    "stage": name,
+                    "command": cmd,
+                    "exit_code": 0,
+                    "output": "skipped (frontend-only changes; python tests not applicable)",
+                    "skipped": True,
+                }
+            )
+            continue
+
         code, out = run_safe_command(cmd, timeout=command_timeout)
 
         # If formatting/linting on broad scope fails due FS permission, fallback to changed .py files.

@@ -546,9 +546,12 @@ class TestWatcherHelpers:
             "root/src/b.txt": 3.0,
         }
 
-        with patch("agent.watcher.os.walk", return_value=walk_data), patch(
-            "agent.watcher.os.path.getmtime",
-            side_effect=lambda p: mtimes[p.replace("\\", "/")],
+        with (
+            patch("agent.watcher.os.walk", return_value=walk_data),
+            patch(
+                "agent.watcher.os.path.getmtime",
+                side_effect=lambda p: mtimes[p.replace("\\", "/")],
+            ),
         ):
             result = _scan_files("root", "*.py")
 
@@ -676,8 +679,10 @@ class TestDeleteFileAction:
             staged_edits = {}
             event_logger = type("L", (), {"log": lambda *a, **k: None})()
 
-        with patch("agent.tooling._resolve_path", return_value=str(target)), \
-             patch("agent.patcher.create_backup", return_value=str(target) + ".bak"):
+        with (
+            patch("agent.tooling._resolve_path", return_value=str(target)),
+            patch("agent.patcher.create_backup", return_value=str(target) + ".bak"),
+        ):
             ex = ActionExecutor(_DummyAgent())
             result = ex._exec_delete_file({"path": str(target)})
 
@@ -696,7 +701,11 @@ class TestDeleteFileAction:
         with patch("agent.tooling._resolve_path", return_value=str(ghost)):
             ex = ActionExecutor(_DummyAgent())
             result = ex._exec_delete_file({"path": str(ghost)})
-        assert "not found" in result.lower() or "introuvable" in result.lower() or "error" in result.lower()
+        assert (
+            "not found" in result.lower()
+            or "introuvable" in result.lower()
+            or "error" in result.lower()
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -920,7 +929,10 @@ class TestValidateFileSyntax:
         assert self._validate("script.py", "def f(: pass") is None
 
     def test_valid_html_returns_none(self):
-        assert self._validate("index.html", "<html><body><p>hello</p></body></html>") is None
+        assert (
+            self._validate("index.html", "<html><body><p>hello</p></body></html>")
+            is None
+        )
 
     def test_json_trailing_comma_returns_warning(self):
         result = self._validate("data.json", '{"a": 1,}')
@@ -950,6 +962,7 @@ class TestStagedRecovery:
         ag.staged_edits = {"auth.py": "def login(): pass\n"}
 
         import agent.auto_agent as _aa_module
+
         original = _aa_module.STAGED_RECOVERY_PATH
         recovery_path = str(tmp_path / "staged_recovery.json")
         _aa_module.STAGED_RECOVERY_PATH = recovery_path
@@ -958,6 +971,7 @@ class TestStagedRecovery:
             ag._save_staged_recovery()
             assert (tmp_path / "staged_recovery.json").exists()
             import json
+
             data = json.loads((tmp_path / "staged_recovery.json").read_text())
             assert data["goal"] == "fix bug in auth.py"
             assert "auth.py" in data["edits"]
@@ -972,6 +986,7 @@ class TestStagedRecovery:
         ag.staged_edits = {}
 
         import agent.auto_agent as _aa_module
+
         original = _aa_module.STAGED_RECOVERY_PATH
         recovery_path = str(tmp_path / "staged_recovery.json")
         _aa_module.STAGED_RECOVERY_PATH = recovery_path
@@ -1019,7 +1034,8 @@ class TestPlanFilesAbortOnFailure:
         assert "[error]" in result
         # R1: remaining plan_files create_file decisions must be purged
         create_file_left = [
-            d for d in ag._forced_decisions
+            d
+            for d in ag._forced_decisions
             if d.get("action") == "create_file"
             and d.get("reason") == "plan_files_ordered_creation"
         ]
@@ -1049,8 +1065,7 @@ class TestPlanFilesAbortOnFailure:
         assert "[error]" in result
         # No finish:plan_files_aborted injected
         assert not any(
-            d.get("reason") == "plan_files_aborted"
-            for d in ag._forced_decisions
+            d.get("reason") == "plan_files_aborted" for d in ag._forced_decisions
         )
 
 
@@ -1101,7 +1116,9 @@ class TestSanitizeSnippet:
                 pass
 
             def text(self, *a, **kw):
-                return [{"title": "Test", "href": "https://example.com", "body": "content"}]
+                return [
+                    {"title": "Test", "href": "https://example.com", "body": "content"}
+                ]
 
         mock_module = ModuleType("duckduckgo_search")
         mock_module.DDGS = _FakeDDGS
@@ -1110,6 +1127,7 @@ class TestSanitizeSnippet:
         sys.modules["duckduckgo_search"] = mock_module
         try:
             from agent.tooling import web_search
+
             result = web_search("test query", limit=1)
         finally:
             if old is not None:
