@@ -1,0 +1,4896 @@
+- stella_percentage: 31.33
+  stella_total: 47
+  end_date: '2023-06-15'
+  end_tag: v0.6.0
+  file_counts:
+    stella/coder.py:
+      Paul Gauthier: 32
+      Paul Gauthier (stella): 4
+    stella/commands.py:
+      Paul Gauthier: 2
+    stella/main.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 5
+    stella/models.py:
+      Paul Gauthier: 27
+    stella/repomap.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 1
+    stella/utils.py:
+      Paul Gauthier: 25
+      Paul Gauthier (stella): 21
+    setup.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 7
+    tests/test_utils.py:
+      Paul Gauthier (stella): 9
+  grand_total:
+    Paul Gauthier: 103
+    Paul Gauthier (stella): 47
+  start_tag: v0.5.0
+  total_lines: 150
+- stella_percentage: 14.36
+  stella_total: 209
+  end_date: '2023-06-25'
+  end_tag: v0.7.0
+  file_counts:
+    .github/workflows/release.yml:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 29
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/__init__.py:
+      Paul Gauthier: 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 314
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 35
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 115
+      Paul Gauthier (stella): 3
+    stella/coders/wholefile_func_coder.py:
+      Paul Gauthier: 120
+      Paul Gauthier (stella): 11
+    stella/commands.py:
+      Paul Gauthier: 28
+    stella/diffs.py:
+      Paul Gauthier: 18
+    stella/io.py:
+      Paul Gauthier: 16
+    stella/main.py:
+      Paul Gauthier: 51
+      Paul Gauthier (stella): 8
+    stella/models.py:
+      Paul Gauthier: 52
+    scripts/benchmark.py:
+      Paul Gauthier: 312
+      Paul Gauthier (stella): 22
+    scripts/versionbump.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 44
+    setup.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 2
+    tests/test_coder.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 18
+    tests/test_commands.py:
+      Paul Gauthier: 3
+    tests/test_editblock.py:
+      Paul Gauthier: 28
+    tests/test_main.py:
+      Paul Gauthier: 8
+    tests/test_models.py:
+      Paul Gauthier: 21
+      Paul Gauthier (stella): 7
+    tests/test_wholefile.py:
+      Paul Gauthier: 86
+      Paul Gauthier (stella): 65
+  grand_total:
+    Paul Gauthier: 1246
+    Paul Gauthier (stella): 209
+  start_tag: v0.6.0
+  total_lines: 1455
+- stella_percentage: 7.94
+  stella_total: 139
+  end_date: '2023-07-06'
+  end_tag: v0.8.0
+  file_counts:
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 5
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 15
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/__init__.py:
+      Paul Gauthier: 10
+    stella/coders/base_coder.py:
+      Paul Gauthier: 161
+      Paul Gauthier (stella): 5
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 14
+    stella/coders/editblock_func_coder.py:
+      Paul Gauthier: 131
+      Paul Gauthier (stella): 8
+    stella/coders/single_wholefile_func_coder.py:
+      Paul Gauthier: 49
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 24
+    stella/coders/wholefile_func_coder.py:
+      Paul Gauthier: 14
+    stella/commands.py:
+      Paul Gauthier: 18
+    stella/diffs.py:
+      Paul Gauthier: 25
+    stella/io.py:
+      Paul Gauthier: 38
+      Paul Gauthier (stella): 9
+    stella/main.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 5
+      kwmiebach: 5
+    stella/repomap.py:
+      Paul Gauthier: 30
+    stella/utils.py:
+      Paul Gauthier: 11
+    benchmark/Dockerfile:
+      Paul Gauthier: 7
+    benchmark/benchmark.py:
+      Paul Gauthier: 447
+      Paul Gauthier (stella): 29
+    benchmark/docker.sh:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 1
+    benchmark/docker_build.sh:
+      Paul Gauthier: 8
+    benchmark/plot.sh:
+      Paul Gauthier: 29
+    benchmark/rungrid.py:
+      Paul Gauthier: 60
+    benchmark/test_benchmark.py:
+      Paul Gauthier: 35
+      Paul Gauthier (stella): 12
+    tests/test_coder.py:
+      Paul Gauthier: 101
+      Paul Gauthier (stella): 32
+    tests/test_commands.py:
+      Paul Gauthier: 21
+      Paul Gauthier (stella): 17
+    tests/test_editblock.py:
+      Paul Gauthier: 86
+    tests/test_io.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 6
+    tests/test_main.py:
+      Paul Gauthier: 26
+    tests/test_repomap.py:
+      Paul Gauthier: 26
+    tests/test_wholefile.py:
+      Paul Gauthier: 189
+  grand_total:
+    Paul Gauthier: 1607
+    Paul Gauthier (stella): 139
+    kwmiebach: 5
+  start_tag: v0.7.0
+  total_lines: 1751
+- stella_percentage: 18.95
+  stella_total: 170
+  end_date: '2023-07-16'
+  end_tag: v0.9.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 75
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 8
+    stella/coders/single_wholefile_func_coder.py:
+      Paul Gauthier: 1
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 47
+    stella/coders/wholefile_func_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 87
+      Paul Gauthier (stella): 4
+    stella/io.py:
+      Paul Gauthier: 8
+    stella/main.py:
+      Paul Gauthier: 162
+      Paul Gauthier (stella): 57
+    stella/repomap.py:
+      Paul Gauthier: 37
+    stella/utils.py:
+      Paul Gauthier: 8
+    benchmark/benchmark.py:
+      Paul Gauthier: 3
+    scripts/versionbump.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 13
+    setup.py:
+      Paul Gauthier (stella): 1
+    tests/test_coder.py:
+      Paul Gauthier: 110
+      Paul Gauthier (stella): 30
+    tests/test_commands.py:
+      Paul Gauthier: 36
+      Paul Gauthier (stella): 61
+    tests/test_editblock.py:
+      Paul Gauthier: 1
+    tests/test_io.py:
+      Paul Gauthier: 1
+    tests/test_main.py:
+      Paul Gauthier: 20
+    tests/test_repomap.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 1
+    tests/test_wholefile.py:
+      Paul Gauthier: 50
+    tests/utils.py:
+      Paul Gauthier: 43
+      Paul Gauthier (stella): 3
+  grand_total:
+    Paul Gauthier: 727
+    Paul Gauthier (stella): 170
+  start_tag: v0.8.0
+  total_lines: 897
+- stella_percentage: 12.26
+  stella_total: 39
+  end_date: '2023-07-22'
+  end_tag: v0.10.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 24
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 11
+    stella/coders/single_wholefile_func_coder.py:
+      Paul Gauthier: 2
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 2
+    stella/coders/wholefile_func_coder.py:
+      Paul Gauthier: 2
+    stella/commands.py:
+      Amer Amayreh: 4
+      Paul Gauthier (stella): 12
+    stella/io.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 5
+    stella/main.py:
+      Paul Gauthier: 62
+    stella/versioncheck.py:
+      Paul Gauthier: 22
+      Paul Gauthier (stella): 5
+    benchmark/benchmark.py:
+      Paul Gauthier: 1
+    scripts/versionbump.py:
+      Paul Gauthier (stella): 2
+    tests/test_coder.py:
+      Paul Gauthier: 43
+    tests/test_commands.py:
+      Paul Gauthier: 31
+      Paul Gauthier (stella): 12
+    tests/test_editblock.py:
+      Paul Gauthier: 20
+    tests/test_main.py:
+      Paul Gauthier: 44
+      Paul Gauthier (stella): 3
+    tests/utils.py:
+      Paul Gauthier: 6
+  grand_total:
+    Amer Amayreh: 4
+    Paul Gauthier: 275
+    Paul Gauthier (stella): 39
+  start_tag: v0.9.0
+  total_lines: 318
+- stella_percentage: 6.63
+  stella_total: 55
+  end_date: '2023-08-02'
+  end_tag: v0.11.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 119
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 2
+    stella/commands.py:
+      Paul Gauthier: 38
+      Paul Gauthier (stella): 2
+    stella/history.py:
+      Paul Gauthier: 103
+      Paul Gauthier (stella): 25
+    stella/main.py:
+      Paul Gauthier: 86
+      Paul Gauthier (stella): 3
+    stella/repo.py:
+      Paul Gauthier: 133
+      Paul Gauthier (stella): 13
+    stella/sendchat.py:
+      Paul Gauthier: 64
+    scripts/versionbump.py:
+      Paul Gauthier: 4
+    tests/test_coder.py:
+      Paul Gauthier: 35
+    tests/test_commands.py:
+      Paul Gauthier: 53
+      Paul Gauthier (stella): 6
+    tests/test_main.py:
+      Paul Gauthier: 30
+      Paul Gauthier (stella): 1
+    tests/test_repo.py:
+      Paul Gauthier: 75
+      Paul Gauthier (stella): 5
+    tests/test_sendchat.py:
+      Paul Gauthier: 25
+    tests/utils.py:
+      Paul Gauthier: 6
+  grand_total:
+    Paul Gauthier: 774
+    Paul Gauthier (stella): 55
+  start_tag: v0.10.0
+  total_lines: 829
+- stella_percentage: 5.21
+  stella_total: 28
+  end_date: '2023-08-11'
+  end_tag: v0.12.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Arseniy Pavlenko: 3
+      Paul Gauthier: 4
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 124
+    stella/commands.py:
+      Joshua Vial: 2
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 3
+    stella/history.py:
+      Paul Gauthier: 10
+    stella/io.py:
+      Paul Gauthier: 10
+    stella/main.py:
+      Paul Gauthier: 2
+    stella/repo.py:
+      Paul Gauthier: 26
+    stella/repomap.py:
+      Paul Gauthier: 22
+    stella/sendchat.py:
+      Paul Gauthier: 17
+    stella/voice.py:
+      Paul Gauthier: 77
+      Paul Gauthier (stella): 8
+    benchmark/benchmark.py:
+      Paul Gauthier: 60
+    scripts/versionbump.py:
+      Paul Gauthier: 1
+    tests/test_coder.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 17
+    tests/test_commands.py:
+      Paul Gauthier: 22
+    tests/test_editblock.py:
+      Paul Gauthier: 52
+    tests/test_repo.py:
+      Paul Gauthier: 58
+  grand_total:
+    Arseniy Pavlenko: 3
+    Joshua Vial: 2
+    Paul Gauthier: 504
+    Paul Gauthier (stella): 28
+  start_tag: v0.11.0
+  total_lines: 537
+- stella_percentage: 4.18
+  stella_total: 24
+  end_date: '2023-08-22'
+  end_tag: v0.13.0
+  file_counts:
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 1
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier: 1
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 93
+      Paul Gauthier (stella): 2
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 6
+    stella/coders/editblock_func_coder.py:
+      Paul Gauthier: 2
+    stella/coders/single_wholefile_func_coder.py:
+      Paul Gauthier: 2
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 16
+    stella/coders/wholefile_func_coder.py:
+      Paul Gauthier: 3
+    stella/commands.py:
+      Paul Gauthier: 34
+    stella/io.py:
+      Paul Gauthier: 8
+    stella/main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 20
+    stella/repo.py:
+      Paul Gauthier: 59
+    stella/voice.py:
+      Paul Gauthier: 26
+    setup.py:
+      Paul Gauthier (stella): 1
+    tests/test_coder.py:
+      Paul Gauthier: 277
+      Paul Gauthier (stella): 1
+    tests/test_main.py:
+      Paul Gauthier: 1
+    tests/test_repo.py:
+      Paul Gauthier: 17
+    tests/test_wholefile.py:
+      Paul Gauthier: 1
+  grand_total:
+    Paul Gauthier: 550
+    Paul Gauthier (stella): 24
+  start_tag: v0.12.0
+  total_lines: 574
+- stella_percentage: 0.53
+  stella_total: 1
+  end_date: '2023-09-08'
+  end_tag: v0.14.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Joshua Vial: 20
+      Paul Gauthier: 4
+    stella/commands.py:
+      JV: 1
+    stella/history.py:
+      JV: 1
+      Joshua Vial: 6
+    stella/main.py:
+      JV: 1
+      Joshua Vial: 1
+    stella/models/__init__.py:
+      JV: 1
+      Paul Gauthier: 14
+    stella/models/model.py:
+      JV: 27
+      Joshua Vial: 4
+      Paul Gauthier: 8
+    stella/models/openai.py:
+      JV: 3
+      Paul Gauthier: 3
+    stella/models/openrouter.py:
+      JV: 28
+      Joshua Vial: 2
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 1
+    stella/repo.py:
+      JV: 2
+    stella/repomap.py:
+      JV: 1
+      Joshua Vial: 1
+    stella/sendchat.py:
+      JV: 2
+      Joshua Vial: 4
+      Paul Gauthier: 1
+    benchmark/Dockerfile:
+      Paul Gauthier: 1
+    setup.py:
+      Paul Gauthier: 1
+    tests/test_models.py:
+      Joshua Vial: 22
+      Paul Gauthier: 13
+  grand_total:
+    JV: 67
+    Joshua Vial: 60
+    Paul Gauthier: 61
+    Paul Gauthier (stella): 1
+  start_tag: v0.13.0
+  total_lines: 189
+- stella_percentage: 10.57
+  stella_total: 41
+  end_date: '2023-10-20'
+  end_tag: v0.15.0
+  file_counts:
+    .github/workflows/release.yml:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 14
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 13
+      Thinh Nguyen: 2
+    stella/commands.py:
+      Alexander Kjeldaas (stella): 1
+      Paul Gauthier: 49
+    stella/main.py:
+      Paul Gauthier: 29
+      Paul Gauthier (stella): 24
+      Thinh Nguyen: 7
+    stella/repo.py:
+      Paul Gauthier: 26
+      Paul Gauthier (stella): 2
+    stella/repomap.py:
+      Paul Gauthier: 11
+    stella/voice.py:
+      Paul Gauthier: 9
+    benchmark/Dockerfile:
+      Joshua Vial: 1
+    benchmark/benchmark.py:
+      Joshua Vial: 1
+    docker/Dockerfile:
+      Paul Gauthier: 9
+    scripts/versionbump.py:
+      Paul Gauthier: 2
+    tests/test_commands.py:
+      Paul Gauthier: 123
+    tests/test_main.py:
+      Paul Gauthier: 17
+    tests/test_repo.py:
+      Paul Gauthier: 38
+  grand_total:
+    Alexander Kjeldaas (stella): 1
+    Joshua Vial: 2
+    Paul Gauthier: 336
+    Paul Gauthier (stella): 40
+    Thinh Nguyen: 9
+  start_tag: v0.14.0
+  total_lines: 388
+- stella_percentage: 1.71
+  stella_total: 16
+  end_date: '2023-10-29'
+  end_tag: v0.16.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 7
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 13
+    stella/commands.py:
+      Paul Gauthier: 5
+    stella/queries/tree-sitter-c-sharp-tags.scm:
+      Paul Gauthier: 46
+    stella/queries/tree-sitter-c-tags.scm:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 4
+    stella/queries/tree-sitter-cpp-tags.scm:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 8
+    stella/queries/tree-sitter-elisp-tags.scm:
+      Paul Gauthier: 5
+    stella/queries/tree-sitter-elixir-tags.scm:
+      Paul Gauthier: 54
+    stella/queries/tree-sitter-elm-tags.scm:
+      Paul Gauthier: 19
+    stella/queries/tree-sitter-go-tags.scm:
+      Paul Gauthier: 30
+    stella/queries/tree-sitter-java-tags.scm:
+      Paul Gauthier: 20
+    stella/queries/tree-sitter-javascript-tags.scm:
+      Paul Gauthier: 88
+    stella/queries/tree-sitter-ocaml-tags.scm:
+      Paul Gauthier: 116
+    stella/queries/tree-sitter-php-tags.scm:
+      Paul Gauthier: 26
+    stella/queries/tree-sitter-python-tags.scm:
+      Paul Gauthier: 12
+    stella/queries/tree-sitter-ql-tags.scm:
+      Paul Gauthier: 26
+    stella/queries/tree-sitter-ruby-tags.scm:
+      Paul Gauthier: 64
+    stella/queries/tree-sitter-rust-tags.scm:
+      Paul Gauthier: 60
+    stella/queries/tree-sitter-typescript-tags.scm:
+      Paul Gauthier: 23
+    stella/repomap.py:
+      Paul Gauthier: 193
+      Paul Gauthier (stella): 2
+    benchmark/Dockerfile:
+      Paul Gauthier: 4
+    docker/Dockerfile:
+      Paul Gauthier: 1
+    setup.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 2
+    tests/test_coder.py:
+      Paul Gauthier: 21
+    tests/test_commands.py:
+      Paul Gauthier: 10
+      paul-gauthier: 1
+    tests/test_editblock.py:
+      Paul Gauthier: 55
+    tests/test_repomap.py:
+      Paul Gauthier: 5
+  grand_total:
+    Paul Gauthier: 918
+    Paul Gauthier (stella): 16
+    paul-gauthier: 1
+  start_tag: v0.15.0
+  total_lines: 935
+- stella_percentage: 7.91
+  stella_total: 22
+  end_date: '2023-11-06'
+  end_tag: v0.17.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 16
+    .github/workflows/release.yml:
+      Paul Gauthier: 4
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 21
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 29
+    stella/commands.py:
+      Omri Bloch: 1
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 6
+    stella/io.py:
+      Paul Gauthier: 1
+    stella/main.py:
+      Paul Gauthier: 3
+    stella/models/openai.py:
+      Paul Gauthier: 9
+    stella/queries/tree-sitter-elisp-tags.scm:
+      Paul Gauthier: 3
+    stella/repomap.py:
+      Paul Gauthier: 6
+    benchmark/Dockerfile:
+      Paul Gauthier: 2
+    benchmark/benchmark.py:
+      Paul Gauthier: 24
+    docker/Dockerfile:
+      Paul Gauthier: 5
+    setup.py:
+      Jack Hallam: 3
+      Paul Gauthier: 10
+    tests/test_commands.py:
+      Paul Gauthier: 65
+    tests/test_editblock.py:
+      Paul Gauthier: 23
+    tests/test_io.py:
+      Paul Gauthier: 24
+    tests/utils.py:
+      Paul Gauthier: 6
+  grand_total:
+    Jack Hallam: 3
+    Omri Bloch: 1
+    Paul Gauthier: 252
+    Paul Gauthier (stella): 22
+  start_tag: v0.16.0
+  total_lines: 278
+- stella_percentage: 38.49
+  stella_total: 107
+  end_date: '2023-11-17'
+  end_tag: v0.18.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 33
+    stella/commands.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 3
+    stella/io.py:
+      Paul Gauthier: 3
+    stella/models/model.py:
+      Paul Gauthier: 13
+    stella/repomap.py:
+      Paul Gauthier: 10
+    benchmark/benchmark.py:
+      Paul Gauthier: 22
+      Paul Gauthier (stella): 50
+    benchmark/rungrid.py:
+      Paul Gauthier: 16
+    scripts/versionbump.py:
+      Paul Gauthier (stella): 41
+    tests/test_coder.py:
+      Paul Gauthier: 25
+    tests/test_commands.py:
+      Paul Gauthier: 19
+    tests/test_main.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 13
+    tests/test_repomap.py:
+      Paul Gauthier: 13
+  grand_total:
+    Paul Gauthier: 171
+    Paul Gauthier (stella): 107
+  start_tag: v0.17.0
+  total_lines: 278
+- stella_percentage: 0.75
+  stella_total: 14
+  end_date: '2023-12-19'
+  end_tag: v0.19.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/__init__.py:
+      Paul Gauthier: 2
+    stella/coders/base_coder.py:
+      Paul Gauthier: 66
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 2
+    stella/coders/search_replace.py:
+      Paul Gauthier: 769
+    stella/coders/udiff_coder.py:
+      Paul Gauthier: 395
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 2
+    stella/commands.py:
+      Paul Gauthier: 1
+    stella/history.py:
+      Paul Gauthier: 3
+    stella/main.py:
+      Paul Gauthier: 44
+      Your Name: 3
+      Your Name (stella): 14
+    stella/models/__init__.py:
+      Paul Gauthier: 3
+    stella/models/model.py:
+      Paul Gauthier: 7
+    stella/models/openai.py:
+      Paul Gauthier: 13
+    stella/models/openrouter.py:
+      Paul Gauthier: 4
+    stella/repo.py:
+      Paul Gauthier: 4
+    stella/sendchat.py:
+      Paul Gauthier: 15
+    stella/utils.py:
+      Paul Gauthier: 28
+    stella/voice.py:
+      Paul Gauthier: 7
+    benchmark/benchmark.py:
+      Paul Gauthier: 200
+    benchmark/refactor_tools.py:
+      Paul Gauthier: 209
+    tests/test_coder.py:
+      Paul Gauthier: 11
+    tests/test_commands.py:
+      Paul Gauthier: 1
+    tests/test_io.py:
+      Paul Gauthier: 1
+    tests/test_main.py:
+      Paul Gauthier: 10
+      Your Name: 18
+    tests/test_models.py:
+      Paul Gauthier: 10
+    tests/test_repo.py:
+      Paul Gauthier: 1
+    tests/test_repomap.py:
+      Paul Gauthier: 1
+    tests/test_sendchat.py:
+      Paul Gauthier: 23
+    tests/test_wholefile.py:
+      Paul Gauthier: 10
+  grand_total:
+    Paul Gauthier: 1843
+    Your Name: 21
+    Your Name (stella): 14
+  start_tag: v0.18.0
+  total_lines: 1878
+- stella_percentage: 11.49
+  stella_total: 40
+  end_date: '2024-01-04'
+  end_tag: v0.20.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier: 4
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Joshua Vial: 28
+      Paul Gauthier: 25
+    stella/coders/search_replace.py:
+      Paul Gauthier: 2
+    stella/coders/udiff_coder.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 2
+    stella/commands.py:
+      Christopher Toth: 2
+      Joshua Vial: 16
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 7
+    stella/io.py:
+      Joshua Vial: 15
+    stella/models/model.py:
+      Joshua Vial: 43
+    stella/models/openrouter.py:
+      Joshua Vial: 4
+    stella/repo.py:
+      Christopher Toth: 5
+    stella/repomap.py:
+      Paul Gauthier: 6
+    stella/sendchat.py:
+      Joshua Vial: 9
+    stella/utils.py:
+      Joshua Vial: 29
+    benchmark/benchmark.py:
+      Joshua Vial: 16
+    tests/test_commands.py:
+      Paul Gauthier: 21
+      Paul Gauthier (stella): 24
+    tests/test_models.py:
+      Joshua Vial: 13
+    tests/test_udiff.py:
+      Paul Gauthier: 66
+      Paul Gauthier (stella): 7
+  grand_total:
+    Christopher Toth: 7
+    Joshua Vial: 173
+    Paul Gauthier: 128
+    Paul Gauthier (stella): 40
+  start_tag: v0.19.0
+  total_lines: 348
+- stella_percentage: 19.78
+  stella_total: 18
+  end_date: '2024-01-08'
+  end_tag: v0.21.0
+  file_counts:
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 1
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier: 1
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/udiff_coder.py:
+      Paul Gauthier: 22
+    stella/main.py:
+      Paul Gauthier (stella): 10
+    stella/versioncheck.py:
+      Paul Gauthier (stella): 8
+    setup.py:
+      Paul Gauthier: 2
+    tests/test_udiff.py:
+      Paul Gauthier: 46
+  grand_total:
+    Paul Gauthier: 73
+    Paul Gauthier (stella): 18
+  start_tag: v0.20.0
+  total_lines: 91
+- stella_percentage: 0.0
+  stella_total: 0
+  end_date: '2024-01-22'
+  end_tag: v0.22.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 2
+    stella/coders/udiff_coder.py:
+      Paul Gauthier: 5
+    stella/commands.py:
+      Paul Gauthier: 48
+    stella/main.py:
+      Paul Gauthier: 2
+  grand_total:
+    Paul Gauthier: 58
+  start_tag: v0.21.0
+  total_lines: 58
+- stella_percentage: 1.11
+  stella_total: 2
+  end_date: '2024-02-03'
+  end_tag: v0.23.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 10
+    stella/commands.py:
+      Paul Gauthier: 5
+    stella/main.py:
+      Paul Gauthier: 15
+      Zachary Vorhies: 7
+    stella/mdstream.py:
+      Paul Gauthier: 120
+      Paul Gauthier (stella): 2
+    stella/models/openai.py:
+      Paul Gauthier: 3
+    benchmark/benchmark.py:
+      Paul Gauthier: 17
+  grand_total:
+    Paul Gauthier: 171
+    Paul Gauthier (stella): 2
+    Zachary Vorhies: 7
+  start_tag: v0.22.0
+  total_lines: 180
+- stella_percentage: 5.07
+  stella_total: 19
+  end_date: '2024-02-10'
+  end_tag: v0.24.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 5
+    stella/commands.py:
+      Paul Gauthier: 16
+      Paul Gauthier (stella): 8
+    stella/main.py:
+      Paul Gauthier: 2
+    stella/models/__init__.py:
+      Paul Gauthier: 2
+    stella/models/model.py:
+      Paul Gauthier: 3
+    stella/models/openai.py:
+      Paul Gauthier: 135
+    stella/scrape.py:
+      Paul Gauthier: 176
+      Paul Gauthier (stella): 11
+    stella/utils.py:
+      Paul Gauthier: 8
+    tests/test_models.py:
+      Paul Gauthier: 8
+  grand_total:
+    Paul Gauthier: 356
+    Paul Gauthier (stella): 19
+  start_tag: v0.23.0
+  total_lines: 375
+- stella_percentage: 6.02
+  stella_total: 8
+  end_date: '2024-03-04'
+  end_tag: v0.25.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 46
+    stella/commands.py:
+      Paul Gauthier: 5
+    stella/main.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 8
+    stella/models/openai.py:
+      Paul Gauthier: 1
+    stella/repo.py:
+      Paul Gauthier: 11
+    stella/scrape.py:
+      Paul Gauthier: 1
+    tests/test_coder.py:
+      Paul Gauthier: 28
+    tests/test_commands.py:
+      Paul Gauthier: 28
+  grand_total:
+    Paul Gauthier: 125
+    Paul Gauthier (stella): 8
+  start_tag: v0.24.0
+  total_lines: 133
+- stella_percentage: 0.0
+  stella_total: 0
+  end_date: '2024-03-08'
+  end_tag: v0.26.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 8
+    stella/main.py:
+      Paul Gauthier: 30
+  grand_total:
+    Paul Gauthier: 39
+  start_tag: v0.25.0
+  total_lines: 39
+- stella_percentage: 0.0
+  stella_total: 0
+  end_date: '2024-03-22'
+  end_tag: v0.27.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 10
+    stella/main.py:
+      Paul Gauthier: 14
+    stella/queries/tree-sitter-typescript-tags.scm:
+      Ryan Freckleton: 32
+    stella/repomap.py:
+      Paul Gauthier: 6
+    benchmark/benchmark.py:
+      Paul Gauthier: 111
+    tests/test_commands.py:
+      Paul Gauthier: 3
+    tests/test_repomap.py:
+      Ryan Freckleton: 59
+  grand_total:
+    Paul Gauthier: 145
+    Ryan Freckleton: 91
+  start_tag: v0.26.0
+  total_lines: 236
+- stella_percentage: 0.0
+  stella_total: 0
+  end_date: '2024-04-09'
+  end_tag: v0.28.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/models/openai.py:
+      Paul Gauthier: 10
+  grand_total:
+    Paul Gauthier: 11
+  start_tag: v0.27.0
+  total_lines: 11
+- stella_percentage: 5.47
+  stella_total: 35
+  end_date: '2024-04-21'
+  end_tag: v0.29.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier: 1
+    .github/workflows/release.yml:
+      Paul Gauthier: 2
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 2
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier: 2
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Aloha: 1
+      Paul Gauthier: 22
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 9
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 2
+    stella/commands.py:
+      Paul Gauthier: 30
+    stella/history.py:
+      Paul Gauthier: 6
+    stella/main.py:
+      Paul Gauthier: 81
+    stella/models.py:
+      Paul Gauthier: 219
+      Paul Gauthier (stella): 33
+    stella/repo.py:
+      Paul Gauthier: 19
+    stella/repomap.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 2
+    stella/sendchat.py:
+      Paul Gauthier: 4
+    stella/voice.py:
+      Paul Gauthier: 3
+    benchmark/benchmark.py:
+      Paul Gauthier: 60
+    tests/test_coder.py:
+      Paul Gauthier: 28
+    tests/test_commands.py:
+      Paul Gauthier: 25
+    tests/test_editblock.py:
+      Paul Gauthier: 4
+    tests/test_models.py:
+      Paul Gauthier: 13
+    tests/test_repo.py:
+      Paul Gauthier: 26
+    tests/test_repomap.py:
+      Paul Gauthier: 13
+    tests/test_sendchat.py:
+      Paul Gauthier: 8
+    tests/test_wholefile.py:
+      Paul Gauthier: 14
+  grand_total:
+    Aloha: 1
+    Paul Gauthier: 604
+    Paul Gauthier (stella): 35
+  start_tag: v0.28.0
+  total_lines: 640
+- stella_percentage: 0.0
+  stella_total: 0
+  end_date: '2024-04-23'
+  end_tag: v0.30.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 11
+    stella/history.py:
+      Paul Gauthier: 2
+    stella/main.py:
+      Paul Gauthier: 27
+    stella/models.py:
+      Paul Gauthier: 171
+    stella/sendchat.py:
+      Paul Gauthier: 3
+    stella/voice.py:
+      Paul Gauthier: 2
+    benchmark/benchmark.py:
+      Paul Gauthier: 1
+    tests/test_coder.py:
+      Paul Gauthier: 1
+    tests/test_commands.py:
+      Paul Gauthier: 1
+    tests/test_editblock.py:
+      Paul Gauthier: 1
+    tests/test_models.py:
+      Paul Gauthier: 6
+    tests/test_repo.py:
+      Paul Gauthier: 1
+    tests/test_repomap.py:
+      Paul Gauthier: 2
+    tests/test_wholefile.py:
+      Paul Gauthier: 1
+  grand_total:
+    Paul Gauthier: 231
+  start_tag: v0.29.0
+  total_lines: 231
+- stella_percentage: 0.16
+  stella_total: 2
+  end_date: '2024-05-02'
+  end_tag: v0.31.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 375
+    stella/coders/base_coder.py:
+      Paul Gauthier: 131
+    stella/commands.py:
+      Paul Gauthier: 45
+    stella/gui.py:
+      Paul Gauthier: 531
+      Paul Gauthier (stella): 2
+    stella/main.py:
+      Paul Gauthier: 114
+    stella/models.py:
+      Paul Gauthier: 14
+    stella/scrape.py:
+      Paul Gauthier: 15
+    stella/sendchat.py:
+      Paul Gauthier: 3
+    tests/test_coder.py:
+      Paul Gauthier: 16
+    tests/test_commands.py:
+      Paul Gauthier: 10
+    tests/test_editblock.py:
+      Paul Gauthier: 4
+    tests/test_wholefile.py:
+      Paul Gauthier: 1
+  grand_total:
+    Paul Gauthier: 1260
+    Paul Gauthier (stella): 2
+  start_tag: v0.30.0
+  total_lines: 1262
+- stella_percentage: 3.0
+  stella_total: 8
+  end_date: '2024-05-07'
+  end_tag: v0.32.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 7
+    stella/coders/__init__.py:
+      Paul Gauthier: 2
+    stella/coders/base_coder.py:
+      Paul Gauthier: 55
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 4
+    stella/coders/editblock_fenced_coder.py:
+      Paul Gauthier: 11
+    stella/gui.py:
+      Paul Gauthier: 1
+    stella/main.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 3
+    stella/models.py:
+      Paul Gauthier: 54
+    stella/sendchat.py:
+      Paul Gauthier: 10
+    stella/utils.py:
+      Paul Gauthier: 1
+    benchmark/benchmark.py:
+      Paul Gauthier: 81
+      Paul Gauthier (stella): 5
+    benchmark/plots.py:
+      Paul Gauthier: 5
+    tests/test_main.py:
+      Paul Gauthier: 18
+    tests/test_sendchat.py:
+      Paul Gauthier: 4
+  grand_total:
+    Paul Gauthier: 259
+    Paul Gauthier (stella): 8
+  start_tag: v0.31.0
+  total_lines: 267
+- stella_percentage: 0.0
+  stella_total: 0
+  end_date: '2024-05-08'
+  end_tag: v0.33.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 1
+    stella/litellm.py:
+      Paul Gauthier: 11
+    stella/main.py:
+      Paul Gauthier: 1
+    stella/models.py:
+      Paul Gauthier: 9
+    stella/sendchat.py:
+      Paul Gauthier: 1
+    stella/voice.py:
+      Paul Gauthier: 2
+  grand_total:
+    Paul Gauthier: 27
+  start_tag: v0.32.0
+  total_lines: 27
+- stella_percentage: 0.0
+  stella_total: 0
+  end_date: '2024-05-10'
+  end_tag: v0.34.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 18
+    stella/main.py:
+      Paul Gauthier: 9
+    stella/models.py:
+      Paul Gauthier: 14
+    stella/repomap.py:
+      Paul Gauthier: 3
+    stella/sendchat.py:
+      Paul Gauthier: 7
+    tests/test_sendchat.py:
+      Paul Gauthier: 4
+  grand_total:
+    Paul Gauthier: 62
+  start_tag: v0.33.0
+  total_lines: 62
+- stella_percentage: 6.42
+  stella_total: 17
+  end_date: '2024-05-13'
+  end_tag: v0.35.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 18
+      Paul Gauthier (stella): 5
+    stella/coders/base_coder.py:
+      Paul Gauthier: 22
+      Paul Gauthier (stella): 1
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 84
+      Paul Gauthier (stella): 10
+    stella/history.py:
+      Paul Gauthier: 20
+    stella/io.py:
+      Paul Gauthier: 8
+    stella/main.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 1
+    stella/models.py:
+      Paul Gauthier: 25
+    stella/sendchat.py:
+      Paul Gauthier: 8
+    stella/utils.py:
+      Paul Gauthier: 51
+    stella/versioncheck.py:
+      Paul Gauthier: 10
+  grand_total:
+    Paul Gauthier: 248
+    Paul Gauthier (stella): 17
+  start_tag: v0.34.0
+  total_lines: 265
+- stella_percentage: 14.64
+  stella_total: 89
+  end_date: '2024-05-22'
+  end_tag: v0.36.0
+  file_counts:
+    Gemfile:
+      Paul Gauthier (stella): 5
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 42
+      Paul Gauthier (stella): 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 113
+      Paul Gauthier (stella): 3
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier (stella): 2
+    stella/commands.py:
+      Paul Gauthier: 49
+    stella/io.py:
+      Paul Gauthier: 9
+    stella/linter.py:
+      Paul Gauthier: 211
+      Paul Gauthier (stella): 29
+    stella/litellm.py:
+      Paul Gauthier: 2
+    stella/main.py:
+      Paul Gauthier: 48
+      Paul Gauthier (stella): 2
+    stella/models.py:
+      Paul Gauthier: 3
+    stella/repo.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 14
+    benchmark/benchmark.py:
+      Paul Gauthier: 5
+    benchmark/over_time.py:
+      Paul Gauthier: 30
+      Paul Gauthier (stella): 27
+    scripts/jekyll_build.sh:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 3
+    scripts/jekyll_run.sh:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 3
+  grand_total:
+    Paul Gauthier: 519
+    Paul Gauthier (stella): 89
+  start_tag: v0.35.0
+  total_lines: 608
+- stella_percentage: 18.65
+  stella_total: 113
+  end_date: '2024-06-04'
+  end_tag: v0.37.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 73
+      Paul Gauthier (stella): 3
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Aleksandr Bobrov: 1
+      Aleksandr Bobrov (stella): 1
+      Paul Gauthier: 24
+    stella/io.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 1
+    stella/linter.py:
+      Paul Gauthier: 4
+    stella/litellm.py:
+      Paul Gauthier: 1
+    stella/repomap.py:
+      Paul Gauthier: 115
+    stella/sendchat.py:
+      Paul Gauthier: 2
+    stella/voice.py:
+      Paul Gauthier (stella): 4
+    benchmark/over_time.py:
+      Paul Gauthier (stella): 7
+    benchmark/swe_bench.py:
+      Paul Gauthier: 101
+      Paul Gauthier (stella): 30
+    scripts/blame.py:
+      Paul Gauthier: 159
+      Paul Gauthier (stella): 53
+    tests/test_io.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 14
+  grand_total:
+    Aleksandr Bobrov: 1
+    Aleksandr Bobrov (stella): 1
+    Paul Gauthier: 492
+    Paul Gauthier (stella): 112
+  start_tag: v0.36.0
+  total_lines: 606
+- stella_percentage: 8.96
+  stella_total: 50
+  end_date: '2024-06-16'
+  end_tag: v0.38.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 4
+    .github/workflows/pages.yml:
+      Paul Gauthier: 71
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 4
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 4
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Krazer: 4
+      Paul Gauthier: 58
+      develmusa: 1
+    stella/args_formatter.py:
+      Paul Gauthier: 119
+      Paul Gauthier (stella): 17
+    stella/coders/base_coder.py:
+      Paul Gauthier: 78
+    stella/commands.py:
+      Paul Gauthier: 29
+    stella/gui.py:
+      Paul Gauthier: 22
+    stella/io.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 2
+    stella/main.py:
+      Krazer: 13
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 5
+    stella/models.py:
+      Krazer: 11
+      Paul Gauthier: 10
+    stella/repo.py:
+      Paul Gauthier: 2
+    stella/repomap.py:
+      Paul Gauthier: 13
+    stella/scrape.py:
+      Paul Gauthier: 10
+    stella/tests/test_urls.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 8
+    stella/urls.py:
+      Paul Gauthier: 8
+    scripts/jekyll_run.sh:
+      Paul Gauthier: 9
+    scripts/update-docs.sh:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 6
+    website/Gemfile:
+      Paul Gauthier: 4
+  grand_total:
+    Krazer: 28
+    Paul Gauthier: 479
+    Paul Gauthier (stella): 50
+    develmusa: 1
+  start_tag: v0.37.0
+  total_lines: 558
+- stella_percentage: 17.1
+  stella_total: 59
+  end_date: '2024-06-20'
+  end_tag: v0.39.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/__main__.py:
+      Paul Gauthier (stella): 4
+    stella/args.py:
+      Daniel Vainsencher: 6
+      John-Mason P. Shackelford: 18
+      Paul Gauthier: 23
+    stella/args_formatter.py:
+      Paul Gauthier: 24
+      Paul Gauthier (stella): 15
+    stella/coders/base_coder.py:
+      Daniel Vainsencher: 5
+      Daniel Vainsencher (stella): 2
+      Paul Gauthier: 2
+    stella/commands.py:
+      Paul Gauthier: 1
+    stella/io.py:
+      Daniel Vainsencher: 14
+    stella/main.py:
+      Daniel Vainsencher: 1
+      John-Mason P. Shackelford: 14
+    stella/models.py:
+      Paul Gauthier: 18
+    stella/repo.py:
+      Paul Gauthier: 23
+    stella/scrape.py:
+      Nicolas Perez: 1
+    stella/tests/test_commands.py:
+      Paul Gauthier: 6
+    stella/tests/test_main.py:
+      John-Mason P. Shackelford: 88
+    stella/tests/test_repo.py:
+      Paul Gauthier: 24
+      Paul Gauthier (stella): 24
+    stella/urls.py:
+      Nicolas Perez: 1
+      Paul Gauthier: 1
+    stella/utils.py:
+      Daniel Vainsencher: 7
+      Daniel Vainsencher (stella): 14
+      John-Mason P. Shackelford: 7
+    scripts/update-docs.sh:
+      Paul Gauthier: 1
+  grand_total:
+    Daniel Vainsencher: 33
+    Daniel Vainsencher (stella): 16
+    John-Mason P. Shackelford: 127
+    Nicolas Perez: 2
+    Paul Gauthier: 124
+    Paul Gauthier (stella): 43
+  start_tag: v0.38.0
+  total_lines: 345
+- stella_percentage: 5.82
+  stella_total: 21
+  end_date: '2024-06-24'
+  end_tag: v0.40.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Krazer: 6
+      Paul Gauthier: 33
+    stella/coders/base_coder.py:
+      Paul Gauthier: 28
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 64
+    stella/linter.py:
+      Paul Gauthier: 24
+      Paul Gauthier (stella): 21
+    stella/main.py:
+      Krazer: 36
+      Paul Gauthier: 23
+    stella/models.py:
+      Dustin Miller: 14
+      Krazer: 31
+      Paul Gauthier: 28
+    stella/repo.py:
+      Paul Gauthier: 26
+    stella/tests/test_editblock.py:
+      Paul Gauthier: 26
+  grand_total:
+    Dustin Miller: 14
+    Krazer: 73
+    Paul Gauthier: 253
+    Paul Gauthier (stella): 21
+  start_tag: v0.39.0
+  total_lines: 361
+- stella_percentage: 5.86
+  stella_total: 15
+  end_date: '2024-07-01'
+  end_tag: v0.41.0
+  file_counts:
+    .github/workflows/release.yml:
+      Paul Gauthier: 1
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 125
+      Paul Gauthier (stella): 2
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 3
+    stella/commands.py:
+      Amir Elaguizy (stella): 6
+      Paul Gauthier: 1
+    stella/gui.py:
+      Paul Gauthier: 4
+    stella/main.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 1
+    stella/mdstream.py:
+      Paul Gauthier: 1
+    stella/models.py:
+      Mitsuki Ogasahara: 3
+      Paul Gauthier: 38
+    stella/repo.py:
+      Paul Gauthier: 7
+    stella/repomap.py:
+      Paul Gauthier: 12
+    stella/sendchat.py:
+      Paul Gauthier: 2
+    stella/tests/test_coder.py:
+      Paul Gauthier: 10
+    stella/tests/test_editblock.py:
+      Paul Gauthier: 2
+    stella/tests/test_wholefile.py:
+      Paul Gauthier: 4
+    scripts/update-docs.sh:
+      Paul Gauthier: 3
+    setup.py:
+      Paul Gauthier: 3
+  grand_total:
+    Amir Elaguizy (stella): 6
+    Mitsuki Ogasahara: 3
+    Paul Gauthier: 238
+    Paul Gauthier (stella): 9
+  start_tag: v0.40.0
+  total_lines: 256
+- stella_percentage: 2.29
+  stella_total: 7
+  end_date: '2024-07-04'
+  end_tag: v0.42.0
+  file_counts:
+    .github/workflows/pages.yml:
+      Paul Gauthier: 14
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 7
+    stella/commands.py:
+      Paul Gauthier: 31
+    stella/history.py:
+      Paul Gauthier: 5
+    stella/io.py:
+      Paul Gauthier: 32
+    stella/llm.py:
+      Paul Gauthier: 18
+    stella/main.py:
+      Paul Gauthier: 26
+    stella/models.py:
+      Paul Gauthier: 78
+    stella/repomap.py:
+      Paul Gauthier: 4
+    stella/scrape.py:
+      Paul Gauthier: 8
+    stella/sendchat.py:
+      Paul Gauthier: 45
+    stella/tests/test_sendchat.py:
+      Paul Gauthier: 1
+    stella/versioncheck.py:
+      Paul Gauthier: 12
+    stella/voice.py:
+      Paul Gauthier: 6
+    scripts/jekyll_run.sh:
+      Paul Gauthier: 2
+  grand_total:
+    Paul Gauthier: 299
+    Paul Gauthier (stella): 7
+  start_tag: v0.41.0
+  total_lines: 306
+- stella_percentage: 9.82
+  stella_total: 38
+  end_date: '2024-07-07'
+  end_tag: v0.43.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier: 2
+    .github/workflows/pages.yml:
+      Paul Gauthier: 4
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 2
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier: 2
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 2
+    stella/args_formatter.py:
+      Paul Gauthier: 4
+    stella/coders/__init__.py:
+      Paul Gauthier: 2
+    stella/coders/base_coder.py:
+      Paul Gauthier: 45
+    stella/coders/help_coder.py:
+      Paul Gauthier: 17
+    stella/commands.py:
+      Paul Gauthier: 69
+      Paul Gauthier (stella): 5
+    stella/help.py:
+      Paul Gauthier: 114
+      Paul Gauthier (stella): 6
+    stella/help_pats.py:
+      Paul Gauthier: 10
+    stella/llm.py:
+      Paul Gauthier: 1
+    stella/main.py:
+      Paul Gauthier: 36
+    stella/repomap.py:
+      Paul Gauthier: 14
+    stella/tests/test_commands.py:
+      Paul Gauthier: 1
+    stella/tests/test_help.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 24
+    stella/versioncheck.py:
+      Paul Gauthier: 2
+    scripts/jekyll_run.sh:
+      Paul Gauthier: 1
+    scripts/update-docs.sh:
+      Paul Gauthier: 7
+    setup.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 3
+  grand_total:
+    Paul Gauthier: 349
+    Paul Gauthier (stella): 38
+  start_tag: v0.42.0
+  total_lines: 387
+- stella_percentage: 27.04
+  stella_total: 159
+  end_date: '2024-07-16'
+  end_tag: v0.44.0
+  file_counts:
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 3
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier: 4
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 5
+    stella/args_formatter.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier (stella): 1
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 10
+    stella/help.py:
+      Paul Gauthier: 20
+    stella/main.py:
+      Paul Gauthier: 22
+    stella/models.py:
+      Paul Gauthier: 11
+    stella/scrape.py:
+      Paul Gauthier: 54
+    stella/utils.py:
+      Paul Gauthier: 78
+      Paul Gauthier (stella): 16
+    stella/versioncheck.py:
+      Paul Gauthier: 28
+    stella/voice.py:
+      Paul Gauthier: 6
+    benchmark/Dockerfile:
+      Paul Gauthier: 3
+    docker/Dockerfile:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 1
+    scripts/blame.py:
+      Paul Gauthier: 38
+      Paul Gauthier (stella): 49
+    scripts/pip-compile.sh:
+      Paul Gauthier: 18
+    scripts/update-docs.sh:
+      Paul Gauthier: 2
+    setup.py:
+      Paul Gauthier: 26
+      Paul Gauthier (stella): 1
+    tests/basic/test_coder.py:
+      Paul Gauthier: 25
+      Paul Gauthier (stella): 37
+    tests/browser/test_browser.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 18
+    tests/help/test_help.py:
+      Paul Gauthier: 23
+    tests/scrape/test_scrape.py:
+      Paul Gauthier: 16
+      Paul Gauthier (stella): 26
+  grand_total:
+    Paul Gauthier: 429
+    Paul Gauthier (stella): 159
+  start_tag: v0.43.0
+  total_lines: 588
+- stella_percentage: 48.43
+  stella_total: 123
+  end_date: '2024-07-18'
+  end_tag: v0.45.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 3
+    stella/commands.py:
+      Paul Gauthier: 18
+      Paul Gauthier (stella): 4
+    stella/main.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 5
+    stella/models.py:
+      Paul Gauthier: 16
+    stella/repomap.py:
+      Paul Gauthier: 1
+    stella/scrape.py:
+      Paul Gauthier: 9
+    stella/versioncheck.py:
+      Paul Gauthier: 14
+    tests/basic/test_coder.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 25
+    tests/basic/test_commands.py:
+      Paul Gauthier: 22
+      Paul Gauthier (stella): 81
+    tests/basic/test_main.py:
+      Paul Gauthier: 27
+      Paul Gauthier (stella): 5
+  grand_total:
+    Paul Gauthier: 131
+    Paul Gauthier (stella): 123
+  start_tag: v0.44.0
+  total_lines: 254
+- stella_percentage: 53.3
+  stella_total: 339
+  end_date: '2024-07-29'
+  end_tag: v0.46.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier (stella): 3
+    stella/coders/__init__.py:
+      Paul Gauthier: 2
+      Your Name: 1
+    stella/coders/ask_coder.py:
+      Your Name: 9
+    stella/coders/base_coder.py:
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 45
+      Your Name: 27
+      Your Name (stella): 6
+    stella/coders/editblock_coder.py:
+      Your Name (stella): 2
+    stella/coders/editblock_fenced_coder.py:
+      Your Name (stella): 2
+    stella/coders/help_coder.py:
+      Your Name: 1
+      Your Name (stella): 1
+    stella/coders/udiff_coder.py:
+      Your Name (stella): 2
+    stella/coders/wholefile_coder.py:
+      Your Name (stella): 2
+    stella/commands.py:
+      Paul Gauthier: 43
+      Your Name: 28
+      Your Name (stella): 34
+    stella/io.py:
+      Paul Gauthier: 3
+    stella/llm.py:
+      Paul Gauthier: 11
+    stella/main.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 8
+      Your Name: 6
+      Your Name (stella): 1
+    stella/models.py:
+      Paul Gauthier: 24
+    stella/queries/tree-sitter-elm-tags.scm:
+      Charles Joachim: 4
+    stella/repomap.py:
+      Paul Gauthier: 12
+    stella/scrape.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 32
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 85
+    benchmark/Dockerfile:
+      Your Name: 1
+    tests/basic/test_coder.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 5
+    tests/basic/test_repo.py:
+      Paul Gauthier (stella): 13
+    tests/basic/test_repomap.py:
+      Paul Gauthier: 70
+      Paul Gauthier (stella): 25
+    tests/scrape/test_scrape.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 73
+  grand_total:
+    Charles Joachim: 4
+    Paul Gauthier: 220
+    Paul Gauthier (stella): 289
+    Your Name: 73
+    Your Name (stella): 50
+  start_tag: v0.45.0
+  total_lines: 636
+- stella_percentage: 58.42
+  stella_total: 392
+  end_date: '2024-07-31'
+  end_tag: v0.47.0
+  file_counts:
+    .github/workflows/docker-release.yml:
+      Paul Gauthier (stella): 35
+    .github/workflows/release.yml:
+      Paul Gauthier (stella): 2
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 5
+    stella/coders/base_coder.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 3
+    stella/commands.py:
+      Paul Gauthier: 23
+      Paul Gauthier (stella): 4
+    stella/history.py:
+      Paul Gauthier: 16
+      Paul Gauthier (stella): 6
+    stella/io.py:
+      Paul Gauthier: 27
+      Paul Gauthier (stella): 8
+    stella/linter.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 1
+    stella/main.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 1
+    stella/queries/tree-sitter-ocaml-tags.scm:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 18
+    stella/repo.py:
+      Paul Gauthier (stella): 4
+    stella/repomap.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 5
+    stella/scrape.py:
+      Paul Gauthier: 2
+    stella/sendchat.py:
+      Paul Gauthier (stella): 2
+    stella/utils.py:
+      Paul Gauthier: 7
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 12
+    docker/Dockerfile:
+      Paul Gauthier: 19
+      Paul Gauthier (stella): 21
+    scripts/blame.py:
+      Paul Gauthier: 64
+      Paul Gauthier (stella): 110
+    scripts/update-blame.sh:
+      Paul Gauthier: 6
+    scripts/update-docs.sh:
+      Paul Gauthier: 1
+    tests/basic/test_coder.py:
+      Paul Gauthier: 33
+      Paul Gauthier (stella): 4
+    tests/basic/test_commands.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 30
+    tests/basic/test_history.py:
+      Paul Gauthier (stella): 109
+    tests/basic/test_repo.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 12
+    tests/basic/test_repomap.py:
+      Paul Gauthier: 1
+  grand_total:
+    Paul Gauthier: 279
+    Paul Gauthier (stella): 392
+  start_tag: v0.46.0
+  total_lines: 671
+- stella_percentage: 45.1
+  stella_total: 276
+  end_date: '2024-08-06'
+  end_tag: v0.48.0
+  file_counts:
+    .github/workflows/ubuntu-tests.yml:
+      paul-gauthier: 1
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 61
+      Paul Gauthier (stella): 41
+    stella/commands.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 24
+    stella/history.py:
+      Paul Gauthier: 2
+    stella/main.py:
+      Paul Gauthier: 21
+      Paul Gauthier (stella): 30
+    stella/models.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 7
+      Thinh Nguyen: 1
+    stella/repo.py:
+      Paul Gauthier: 42
+      Paul Gauthier (stella): 23
+    stella/repomap.py:
+      Paul Gauthier: 62
+      Paul Gauthier (stella): 2
+    stella/sendchat.py:
+      Paul Gauthier: 26
+      Paul Gauthier (stella): 2
+    stella/utils.py:
+      Paul Gauthier: 29
+      Paul Gauthier (stella): 4
+    scripts/blame.py:
+      Paul Gauthier (stella): 2
+    tests/basic/test_coder.py:
+      Paul Gauthier: 13
+    tests/basic/test_commands.py:
+      Paul Gauthier: 19
+      Paul Gauthier (stella): 18
+    tests/basic/test_history.py:
+      Paul Gauthier: 2
+    tests/basic/test_main.py:
+      Paul Gauthier: 25
+      Paul Gauthier (stella): 42
+    tests/basic/test_repo.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 36
+    tests/basic/test_scripting.py:
+      Paul Gauthier (stella): 39
+  grand_total:
+    Paul Gauthier: 334
+    Paul Gauthier (stella): 276
+    Thinh Nguyen: 1
+    paul-gauthier: 1
+  start_tag: v0.47.0
+  total_lines: 612
+- stella_percentage: 59.65
+  stella_total: 473
+  end_date: '2024-08-10'
+  end_tag: v0.49.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 13
+    stella/coders/base_coder.py:
+      Paul Gauthier: 91
+      Paul Gauthier (stella): 44
+    stella/commands.py:
+      Paul Gauthier: 34
+      Paul Gauthier (stella): 108
+    stella/io.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 24
+    stella/llm.py:
+      Paul Gauthier (stella): 5
+    stella/main.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 4
+    stella/models.py:
+      Paul Gauthier: 34
+      Paul Gauthier (stella): 3
+    stella/repo.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 13
+    stella/repomap.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 23
+    stella/scrape.py:
+      Paul Gauthier (stella): 17
+    stella/sendchat.py:
+      Paul Gauthier: 21
+    stella/urls.py:
+      Paul Gauthier: 1
+    stella/utils.py:
+      Paul Gauthier (stella): 11
+    stella/versioncheck.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 11
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 11
+    docker/Dockerfile:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 2
+    tests/basic/test_coder.py:
+      Paul Gauthier (stella): 7
+    tests/basic/test_commands.py:
+      Paul Gauthier: 35
+      Paul Gauthier (stella): 93
+    tests/basic/test_editblock.py:
+      Paul Gauthier (stella): 1
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 33
+    tests/basic/test_sendchat.py:
+      Paul Gauthier: 47
+    tests/basic/test_wholefile.py:
+      Paul Gauthier (stella): 1
+    tests/scrape/test_scrape.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 49
+  grand_total:
+    Paul Gauthier: 320
+    Paul Gauthier (stella): 473
+  start_tag: v0.48.0
+  total_lines: 793
+- stella_percentage: 65.52
+  stella_total: 209
+  end_date: '2024-08-13'
+  end_tag: v0.50.0
+  file_counts:
+    .github/workflows/release.yml:
+      Branch Vincent: 2
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier (stella): 10
+    stella/coders/base_coder.py:
+      Paul Gauthier: 24
+      Paul Gauthier (stella): 32
+    stella/commands.py:
+      Amir Elaguizy (stella): 13
+      Paul Gauthier: 28
+      Paul Gauthier (stella): 18
+    stella/io.py:
+      Paul Gauthier: 1
+    stella/main.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 2
+    stella/models.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 4
+    stella/scrape.py:
+      Paul Gauthier (stella): 26
+    stella/sendchat.py:
+      Paul Gauthier (stella): 1
+    stella/utils.py:
+      Paul Gauthier: 1
+    stella/versioncheck.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 1
+    scripts/versionbump.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 34
+    tests/basic/test_coder.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 19
+    tests/basic/test_commands.py:
+      Paul Gauthier: 18
+      Paul Gauthier (stella): 41
+    tests/basic/test_main.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 8
+    tests/help/test_help.py:
+      Paul Gauthier: 7
+  grand_total:
+    Amir Elaguizy (stella): 13
+    Branch Vincent: 2
+    Paul Gauthier: 108
+    Paul Gauthier (stella): 196
+  start_tag: v0.49.0
+  total_lines: 319
+- stella_percentage: 62.86
+  stella_total: 689
+  end_date: '2024-08-20'
+  end_tag: v0.51.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 10
+    stella/coders/__init__.py:
+      Paul Gauthier: 4
+    stella/coders/base_coder.py:
+      Paul Gauthier: 172
+      Paul Gauthier (stella): 51
+    stella/coders/single_wholefile_func_coder.py:
+      Paul Gauthier: 29
+    stella/commands.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 5
+    stella/llm.py:
+      Paul Gauthier: 2
+    stella/main.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 16
+    stella/models.py:
+      Paul Gauthier: 45
+      Paul Gauthier (stella): 2
+    stella/repomap.py:
+      Paul Gauthier: 16
+      Paul Gauthier (stella): 58
+    stella/sendchat.py:
+      Paul Gauthier: 3
+    stella/utils.py:
+      Paul Gauthier (stella): 6
+    stella/website/_includes/code-in-json-benchmark.js:
+      Paul Gauthier: 24
+      Paul Gauthier (stella): 141
+    stella/website/_includes/code-in-json-syntax.js:
+      Paul Gauthier: 42
+      Paul Gauthier (stella): 97
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    benchmark/benchmark.py:
+      Paul Gauthier: 7
+    benchmark/over_time.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 57
+    docker/Dockerfile:
+      Paul Gauthier: 10
+    scripts/blame.py:
+      Paul Gauthier (stella): 17
+    tests/basic/test_commands.py:
+      Paul Gauthier: 5
+    tests/basic/test_main.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 125
+    tests/basic/test_repomap.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 104
+  grand_total:
+    Paul Gauthier: 407
+    Paul Gauthier (stella): 689
+  start_tag: v0.50.0
+  total_lines: 1096
+- stella_percentage: 66.9
+  stella_total: 479
+  end_date: '2024-08-23'
+  end_tag: v0.52.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 80
+      Paul Gauthier (stella): 23
+    stella/coders/chat_chunks.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 3
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 45
+      Paul Gauthier (stella): 68
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 42
+      pcamp: 1
+    stella/io.py:
+      Paul Gauthier: 40
+      Paul Gauthier (stella): 41
+    stella/main.py:
+      Paul Gauthier: 2
+    stella/models.py:
+      Paul Gauthier: 30
+    stella/repomap.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 5
+    stella/utils.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 9
+    stella/versioncheck.py:
+      Paul Gauthier: 2
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    benchmark/benchmark.py:
+      Paul Gauthier: 1
+    scripts/blame.py:
+      Paul Gauthier: 1
+    tests/basic/test_commands.py:
+      Paul Gauthier (stella): 100
+    tests/basic/test_editblock.py:
+      Paul Gauthier (stella): 1
+    tests/basic/test_find_or_blocks.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 106
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 32
+    tests/basic/test_main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 43
+    tests/basic/test_wholefile.py:
+      Paul Gauthier: 8
+  grand_total:
+    Paul Gauthier: 236
+    Paul Gauthier (stella): 479
+    pcamp: 1
+  start_tag: v0.51.0
+  total_lines: 716
+- stella_percentage: 62.33
+  stella_total: 455
+  end_date: '2024-08-27'
+  end_tag: v0.53.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 10
+    stella/coders/base_coder.py:
+      Paul Gauthier: 57
+      Paul Gauthier (stella): 18
+    stella/coders/chat_chunks.py:
+      Paul Gauthier (stella): 9
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 44
+      Paul Gauthier (stella): 6
+    stella/commands.py:
+      Paul Gauthier: 19
+    stella/history.py:
+      Paul Gauthier (stella): 3
+    stella/io.py:
+      Paul Gauthier: 44
+      Paul Gauthier (stella): 22
+    stella/main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 9
+    stella/models.py:
+      Paul Gauthier: 50
+      Paul Gauthier (stella): 21
+    stella/repo.py:
+      Paul Gauthier (stella): 3
+    stella/repomap.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 1
+    stella/sendchat.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 11
+    stella/utils.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 9
+    stella/versioncheck.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 10
+    scripts/versionbump.py:
+      Paul Gauthier: 1
+    tests/basic/test_commands.py:
+      Paul Gauthier: 12
+    tests/basic/test_editblock.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 26
+    tests/basic/test_io.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 66
+    tests/basic/test_main.py:
+      Paul Gauthier: 2
+    tests/basic/test_models.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 42
+    tests/basic/test_repo.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 8
+    tests/basic/test_repomap.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 63
+    tests/fixtures/sample-code-base/sample.js:
+      Paul Gauthier (stella): 50
+    tests/fixtures/sample-code-base/sample.py:
+      Paul Gauthier (stella): 68
+  grand_total:
+    Paul Gauthier: 275
+    Paul Gauthier (stella): 455
+  start_tag: v0.52.0
+  total_lines: 730
+- stella_percentage: 70.0
+  stella_total: 224
+  end_date: '2024-08-28'
+  end_tag: v0.54.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier (stella): 1
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier (stella): 1
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier (stella): 1
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 12
+    stella/coders/base_coder.py:
+      Paul Gauthier: 25
+      Paul Gauthier (stella): 12
+    stella/commands.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 4
+    stella/io.py:
+      Paul Gauthier: 28
+    stella/main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 6
+    stella/models.py:
+      Paul Gauthier (stella): 11
+    stella/run_cmd.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 70
+    stella/utils.py:
+      Paul Gauthier (stella): 15
+    stella/versioncheck.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 13
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    tests/basic/test_coder.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 49
+    tests/basic/test_io.py:
+      Paul Gauthier: 4
+    tests/basic/test_main.py:
+      Antti Kaihola: 4
+      Paul Gauthier (stella): 29
+    tests/scrape/test_scrape.py:
+      Paul Gauthier: 1
+  grand_total:
+    Antti Kaihola: 4
+    Paul Gauthier: 92
+    Paul Gauthier (stella): 224
+  start_tag: v0.53.0
+  total_lines: 320
+- stella_percentage: 52.4
+  stella_total: 787
+  end_date: '2024-09-04'
+  end_tag: v0.55.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 2
+    stella/args.py:
+      Paul Gauthier (stella): 7
+    stella/coders/base_coder.py:
+      Paul Gauthier: 63
+      Paul Gauthier (stella): 42
+    stella/coders/editblock_coder.py:
+      Nikolay Sedelnikov: 8
+    stella/coders/editblock_func_coder.py:
+      Antti Kaihola: 2
+    stella/coders/search_replace.py:
+      Paul Gauthier: 2
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 16
+    stella/commands.py:
+      Antti Kaihola: 7
+      Paul Gauthier: 83
+      Paul Gauthier (stella): 27
+    stella/format_settings.py:
+      Paul Gauthier (stella): 2
+    stella/gui.py:
+      Paul Gauthier: 4
+    stella/io.py:
+      Paul Gauthier: 57
+      Paul Gauthier (stella): 13
+    stella/linter.py:
+      Paul Gauthier: 5
+    stella/llm.py:
+      Paul Gauthier: 2
+    stella/main.py:
+      Paul Gauthier: 86
+      Paul Gauthier (stella): 22
+    stella/models.py:
+      Paul Gauthier: 24
+      Paul Gauthier (stella): 2
+    stella/repo.py:
+      Paul Gauthier: 85
+    stella/repomap.py:
+      Paul Gauthier: 32
+      Paul Gauthier (stella): 4
+    stella/report.py:
+      Paul Gauthier: 77
+      Paul Gauthier (stella): 120
+    stella/run_cmd.py:
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 24
+    stella/scrape.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 8
+    stella/special.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 197
+    stella/urls.py:
+      Paul Gauthier (stella): 1
+    stella/utils.py:
+      Paul Gauthier: 31
+      Paul Gauthier (stella): 29
+    stella/versioncheck.py:
+      Paul Gauthier: 32
+      Paul Gauthier (stella): 6
+    stella/voice.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 9
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    scripts/versionbump.py:
+      Paul Gauthier: 9
+    tests/basic/test_coder.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 105
+    tests/basic/test_editblock.py:
+      Antti Kaihola: 3
+      Nikolay Sedelnikov: 37
+    tests/basic/test_io.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 15
+    tests/basic/test_main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 10
+    tests/basic/test_models.py:
+      Paul Gauthier (stella): 4
+    tests/basic/test_repomap.py:
+      Paul Gauthier (stella): 42
+    tests/basic/test_run_cmd.py:
+      Paul Gauthier (stella): 11
+    tests/basic/test_special.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 74
+    tests/scrape/test_scrape.py:
+      Paul Gauthier (stella): 11
+  grand_total:
+    Antti Kaihola: 12
+    Nikolay Sedelnikov: 45
+    Paul Gauthier: 658
+    Paul Gauthier (stella): 787
+  start_tag: v0.54.0
+  total_lines: 1502
+- stella_percentage: 55.4
+  stella_total: 154
+  end_date: '2024-09-09'
+  end_tag: v0.56.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 10
+    stella/commands.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 6
+    stella/io.py:
+      Paul Gauthier: 5
+    stella/linter.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 4
+      fry69: 12
+    stella/main.py:
+      Paul Gauthier: 35
+      Paul Gauthier (stella): 48
+    stella/models.py:
+      Paul Gauthier: 2
+      fry69: 3
+    stella/repo.py:
+      Paul Gauthier: 16
+    stella/repomap.py:
+      Paul Gauthier: 13
+    stella/report.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 20
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    benchmark/benchmark.py:
+      Paul Gauthier: 1
+    tests/basic/test_linter.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 51
+    tests/basic/test_main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 9
+  grand_total:
+    Paul Gauthier: 109
+    Paul Gauthier (stella): 154
+    fry69: 15
+  start_tag: v0.55.0
+  total_lines: 278
+- stella_percentage: 70.36
+  stella_total: 406
+  end_date: '2024-09-21'
+  end_tag: v0.57.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args_formatter.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 1
+    stella/coders/base_coder.py:
+      Krazer: 1
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 2
+    stella/coders/chat_chunks.py:
+      Paul Gauthier: 5
+    stella/coders/editblock_coder.py:
+      Paul Gauthier (stella): 27
+    stella/commands.py:
+      Krazer: 3
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 34
+    stella/io.py:
+      Krazer: 27
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 42
+    stella/main.py:
+      Krazer: 2
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 8
+    stella/models.py:
+      Jay Alammar: 1
+      Jay Alammar (stella): 13
+      Paul Gauthier: 43
+      Paul Gauthier (stella): 46
+    stella/repo.py:
+      Paul Gauthier: 3
+    stella/run_cmd.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 33
+    stella/sendchat.py:
+      Paul Gauthier: 3
+    stella/utils.py:
+      Paul Gauthier: 2
+    stella/website/docs/leaderboards/index.md:
+      Anjor Kanekar: 1
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 12
+    benchmark/benchmark.py:
+      Paul Gauthier: 4
+    scripts/issues.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 123
+    scripts/versionbump.py:
+      Paul Gauthier (stella): 8
+    tests/basic/test_coder.py:
+      Paul Gauthier: 1
+    tests/basic/test_editblock.py:
+      Christian Clauss: 2
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 37
+    tests/basic/test_main.py:
+      Paul Gauthier: 18
+      Paul Gauthier (stella): 20
+  grand_total:
+    Anjor Kanekar: 1
+    Christian Clauss: 2
+    Jay Alammar: 1
+    Jay Alammar (stella): 13
+    Krazer: 33
+    Paul Gauthier: 134
+    Paul Gauthier (stella): 393
+  start_tag: v0.56.0
+  total_lines: 577
+- stella_percentage: 48.74
+  stella_total: 658
+  end_date: '2024-09-29'
+  end_tag: v0.58.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 11
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Mike Bailey: 7
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 55
+      Stein Martin Hustad: 17
+      fry69: 2
+    stella/coders/__init__.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 2
+    stella/coders/architect_coder.py:
+      Paul Gauthier: 40
+      Paul Gauthier (stella): 3
+    stella/coders/base_coder.py:
+      Jonathan Ellis: 1
+      Paul Gauthier: 32
+      Paul Gauthier (stella): 8
+    stella/coders/editor_editblock_coder.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 1
+    stella/coders/editor_whole_coder.py:
+      Paul Gauthier: 7
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 2
+    stella/commands.py:
+      Jonathan Ellis: 1
+      Mike Bailey: 1
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 78
+      fry69: 2
+    stella/help.py:
+      Paul Gauthier: 27
+      Paul Gauthier (stella): 7
+    stella/history.py:
+      Paul Gauthier: 1
+    stella/io.py:
+      Paul Gauthier: 39
+      Paul Gauthier (stella): 62
+      Stein Martin Hustad: 5
+      fry69: 10
+    stella/linter.py:
+      Paul Gauthier: 6
+    stella/main.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 6
+      Stein Martin Hustad: 4
+      fry69: 1
+      rti: 1
+    stella/models.py:
+      Paul Gauthier: 58
+      Paul Gauthier (stella): 85
+    stella/repo.py:
+      Paul Gauthier: 16
+      Paul Gauthier (stella): 2
+    stella/repomap.py:
+      Paul Gauthier: 5
+    stella/scrape.py:
+      Paul Gauthier (stella): 3
+    stella/sendchat.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 5
+    stella/utils.py:
+      Paul Gauthier: 4
+    stella/versioncheck.py:
+      Paul Gauthier: 2
+    stella/voice.py:
+      Mike Bailey: 17
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 10
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 92
+    benchmark/benchmark.py:
+      Paul Gauthier: 25
+      Paul Gauthier (stella): 29
+      fry69: 3
+    scripts/issues.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 45
+    scripts/update-docs.sh:
+      Paul Gauthier: 1
+    scripts/yank-old-versions.py:
+      Paul Gauthier (stella): 51
+    tests/basic/test_commands.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 98
+    tests/basic/test_io.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 97
+    tests/basic/test_main.py:
+      Paul Gauthier: 2
+    tests/basic/test_models.py:
+      Paul Gauthier: 4
+    tests/basic/test_sanity_check_repo.py:
+      fry69: 179
+    tests/basic/test_wholefile.py:
+      Paul Gauthier: 16
+  grand_total:
+    Jonathan Ellis: 2
+    Mike Bailey: 25
+    Paul Gauthier: 441
+    Paul Gauthier (stella): 658
+    Stein Martin Hustad: 26
+    fry69: 197
+    rti: 1
+  start_tag: v0.57.0
+  total_lines: 1350
+- stella_percentage: 72.14
+  stella_total: 145
+  end_date: '2024-10-04'
+  end_tag: v0.59.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 6
+    stella/args_formatter.py:
+      Paul Gauthier: 4
+    stella/coders/architect_coder.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 6
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 49
+    stella/gui.py:
+      Paul Gauthier: 2
+    stella/main.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 4
+    stella/models.py:
+      Paul Gauthier (stella): 12
+    stella/repomap.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 3
+    stella/urls.py:
+      Paul Gauthier: 2
+    stella/versioncheck.py:
+      Paul Gauthier: 1
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 4
+    scripts/issues.py:
+      Paul Gauthier: 1
+    scripts/update-docs.sh:
+      Paul Gauthier: 2
+    tests/basic/test_commands.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 53
+    tests/basic/test_models.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 18
+    tests/basic/test_sanity_check_repo.py:
+      Paul Gauthier: 1
+    tests/help/test_help.py:
+      Paul Gauthier: 1
+  grand_total:
+    Paul Gauthier: 56
+    Paul Gauthier (stella): 145
+  start_tag: v0.58.0
+  total_lines: 201
+- stella_percentage: 51.47
+  stella_total: 140
+  end_date: '2024-10-22'
+  end_tag: v0.60.0
+  file_counts:
+    .github/workflows/close-stale.yml:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 19
+    .github/workflows/pages.yml:
+      Paul Gauthier: 3
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 1
+      fry69: 2
+    stella/coders/base_coder.py:
+      Paul Gauthier: 2
+    stella/coders/editblock_coder.py:
+      Paul Gauthier (stella): 3
+    stella/commands.py:
+      Paul Gauthier: 1
+    stella/help.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 33
+    stella/io.py:
+      Jonathan Ellis: 10
+      Paul Gauthier: 7
+    stella/main.py:
+      Paul Gauthier: 20
+      Paul Gauthier (stella): 39
+    stella/models.py:
+      Paul Gauthier: 18
+      Sven Grunewaldt: 10
+      fry69: 16
+    stella/resources/__init__.py:
+      Paul Gauthier: 3
+    stella/sendchat.py:
+      Paul Gauthier: 3
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    tests/basic/test_editblock.py:
+      Paul Gauthier: 23
+    tests/basic/test_main.py:
+      Paul Gauthier: 1
+    tests/help/test_help.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 46
+  grand_total:
+    Jonathan Ellis: 10
+    Paul Gauthier: 94
+    Paul Gauthier (stella): 140
+    Sven Grunewaldt: 10
+    fry69: 18
+  start_tag: v0.59.0
+  total_lines: 272
+- stella_percentage: 65.31
+  stella_total: 804
+  end_date: '2024-11-01'
+  end_tag: v0.61.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 75
+      Paul Gauthier (stella): 89
+    stella/args.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 28
+    stella/coders/base_coder.py:
+      Paul Gauthier: 56
+      Paul Gauthier (stella): 43
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 14
+    stella/commands.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 86
+    stella/io.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 32
+    stella/linter.py:
+      Paul Gauthier: 6
+    stella/main.py:
+      Paul Gauthier: 48
+      Paul Gauthier (stella): 10
+    stella/models.py:
+      Paul Gauthier: 40
+      Paul Gauthier (stella): 63
+      kAIto47802: 4
+    stella/repomap.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 52
+    stella/sendchat.py:
+      Paul Gauthier: 23
+      Paul Gauthier (stella): 23
+    stella/urls.py:
+      Paul Gauthier: 2
+    stella/utils.py:
+      Paul Gauthier (stella): 6
+    scripts/issues.py:
+      Paul Gauthier (stella): 13
+    scripts/pip-compile.sh:
+      Paul Gauthier (stella): 13
+    scripts/update-docs.sh:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 5
+    tests/basic/test_analytics.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 99
+    tests/basic/test_commands.py:
+      Konstantin L: 16
+      Paul Gauthier: 91
+      Paul Gauthier (stella): 212
+    tests/basic/test_io.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 4
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 3
+    tests/basic/test_models.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 9
+    tests/basic/test_sanity_check_repo.py:
+      Paul Gauthier (stella): 6
+    tests/basic/test_sendchat.py:
+      Paul Gauthier (stella): 8
+  grand_total:
+    Konstantin L: 16
+    Paul Gauthier: 407
+    Paul Gauthier (stella): 804
+    kAIto47802: 4
+  start_tag: v0.60.0
+  total_lines: 1231
+- stella_percentage: 80.49
+  stella_total: 66
+  end_date: '2024-11-04'
+  end_tag: v0.62.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier (stella): 14
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 6
+    stella/main.py:
+      Paul Gauthier (stella): 4
+    stella/models.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 36
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 12
+  grand_total:
+    Paul Gauthier: 16
+    Paul Gauthier (stella): 66
+  start_tag: v0.61.0
+  total_lines: 82
+- stella_percentage: 54.99
+  stella_total: 369
+  end_date: '2024-11-13'
+  end_tag: v0.63.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/architect_coder.py:
+      Paul Gauthier: 3
+    stella/coders/base_coder.py:
+      Paul Gauthier: 42
+      Paul Gauthier (stella): 1
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 4
+    stella/commands.py:
+      Paul Gauthier: 13
+    stella/exceptions.py:
+      Paul Gauthier: 72
+      Paul Gauthier (stella): 4
+    stella/io.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 23
+    stella/main.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 9
+    stella/models.py:
+      Logan Attwood: 17
+      Paul Gauthier: 50
+      Paul Gauthier (stella): 7
+    stella/repo.py:
+      Paul Gauthier: 7
+    stella/repomap.py:
+      Paul Gauthier: 4
+    stella/sendchat.py:
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 4
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    scripts/issues.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 183
+    tests/basic/test_coder.py:
+      Paul Gauthier: 2
+    tests/basic/test_commands.py:
+      Paul Gauthier (stella): 16
+    tests/basic/test_editblock.py:
+      Paul Gauthier: 41
+    tests/basic/test_exceptions.py:
+      Paul Gauthier (stella): 65
+    tests/basic/test_main.py:
+      Paul Gauthier: 1
+    tests/basic/test_sanity_check_repo.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 2
+    tests/basic/test_sendchat.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 55
+    tests/scrape/test_scrape.py:
+      Paul Gauthier: 1
+  grand_total:
+    Logan Attwood: 17
+    Paul Gauthier: 285
+    Paul Gauthier (stella): 369
+  start_tag: v0.62.0
+  total_lines: 671
+- stella_percentage: 72.99
+  stella_total: 873
+  end_date: '2024-11-21'
+  end_tag: v0.64.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 20
+      Paul Gauthier (stella): 21
+    stella/args.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 10
+    stella/coders/base_coder.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 3
+      caetanominuzzo: 1
+    stella/commands.py:
+      Chad Phillips: 4
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 19
+    stella/editor.py:
+      Chad Phillips: 133
+      Paul Gauthier (stella): 13
+    stella/exceptions.py:
+      Paul Gauthier: 5
+    stella/help_pats.py:
+      Paul Gauthier: 1
+    stella/io.py:
+      Chad Phillips: 9
+      Paul Gauthier (stella): 41
+      mw: 21
+    stella/main.py:
+      Paul Gauthier: 21
+      Paul Gauthier (stella): 37
+    stella/models.py:
+      Paul Gauthier: 41
+      Paul Gauthier (stella): 33
+    stella/repo.py:
+      Paul Gauthier (stella): 5
+    stella/urls.py:
+      Paul Gauthier: 1
+    stella/website/_includes/edit-leaderboard.js:
+      Paul Gauthier (stella): 97
+    stella/website/_includes/quant-chart.js:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 66
+    stella/website/_includes/refactor-leaderboard.js:
+      Paul Gauthier (stella): 90
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 10
+    stella/website/share/index.md:
+      Paul Gauthier (stella): 29
+    benchmark/over_time.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 159
+    scripts/blame.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 2
+    scripts/issues.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 12
+    scripts/versionbump.py:
+      Paul Gauthier: 7
+    tests/basic/test_analytics.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 30
+    tests/basic/test_commands.py:
+      Paul Gauthier (stella): 4
+    tests/basic/test_editor.py:
+      Paul Gauthier (stella): 129
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 8
+    tests/basic/test_models.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 55
+  grand_total:
+    Chad Phillips: 146
+    Paul Gauthier: 155
+    Paul Gauthier (stella): 873
+    caetanominuzzo: 1
+    mw: 21
+  start_tag: v0.63.0
+  total_lines: 1196
+- stella_percentage: 81.11
+  stella_total: 584
+  end_date: '2024-11-26'
+  end_tag: v0.65.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 5
+    stella/args.py:
+      Paul Gauthier (stella): 12
+    stella/coders/base_coder.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 31
+    stella/commands.py:
+      Paul Gauthier: 2
+    stella/io.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 9
+    stella/main.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 19
+    stella/models.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 17
+    stella/queries/tree-sitter-dart-tags.scm:
+      malkoG: 91
+    stella/urls.py:
+      Paul Gauthier (stella): 1
+    stella/website/_includes/quant-chart.js:
+      Paul Gauthier (stella): 76
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    benchmark/benchmark.py:
+      Paul Gauthier (stella): 10
+    benchmark/docker.sh:
+      Paul Gauthier (stella): 1
+    benchmark/over_time.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 157
+    scripts/update-docs.sh:
+      Paul Gauthier: 1
+    scripts/update-history.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 64
+    tests/basic/test_coder.py:
+      Paul Gauthier (stella): 81
+    tests/basic/test_editor.py:
+      Paul Gauthier (stella): 16
+    tests/basic/test_main.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 42
+    tests/basic/test_models.py:
+      Paul Gauthier (stella): 30
+    tests/basic/test_repomap.py:
+      Paul Gauthier (stella): 13
+  grand_total:
+    Paul Gauthier: 45
+    Paul Gauthier (stella): 584
+    malkoG: 91
+  start_tag: v0.64.0
+  total_lines: 720
+- stella_percentage: 86.35
+  stella_total: 854
+  end_date: '2024-12-01'
+  end_tag: v0.66.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier (stella): 2
+    .github/workflows/docker-release.yml:
+      Paul Gauthier (stella): 2
+    .github/workflows/pages.yml:
+      Paul Gauthier (stella): 3
+    .github/workflows/release.yml:
+      Paul Gauthier (stella): 2
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 8
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier (stella): 4
+    stella/__init__.py:
+      Paul Gauthier: 16
+    stella/analytics.py:
+      Paul Gauthier (stella): 19
+    stella/args.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 6
+      Philippe de Reynal: 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 41
+    stella/commands.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 27
+    stella/io.py:
+      Paul Gauthier (stella): 17
+    stella/linter.py:
+      Paul Gauthier (stella): 2
+    stella/main.py:
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 46
+    stella/models.py:
+      Paul Gauthier: 7
+    stella/run_cmd.py:
+      Paul Gauthier (stella): 8
+    stella/utils.py:
+      Paul Gauthier: 1
+    stella/voice.py:
+      Philippe de Reynal: 24
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    benchmark/benchmark.py:
+      Paul Gauthier (stella): 38
+    scripts/blame.py:
+      Paul Gauthier (stella): 26
+    scripts/issues.py:
+      Paul Gauthier: 3
+    scripts/update-history.py:
+      Paul Gauthier (stella): 59
+    tests/basic/test_coder.py:
+      Paul Gauthier: 4
+    tests/basic/test_commands.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 72
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 4
+    tests/basic/test_models.py:
+      Paul Gauthier: 2
+    tests/basic/test_repomap.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 45
+    tests/basic/test_voice.py:
+      Paul Gauthier (stella): 103
+    tests/browser/test_browser.py:
+      Paul Gauthier: 1
+    tests/fixtures/languages/c/test.c:
+      Paul Gauthier (stella): 6
+    tests/fixtures/languages/cpp/test.cpp:
+      Paul Gauthier (stella): 6
+    tests/fixtures/languages/csharp/test.cs:
+      Paul Gauthier (stella): 39
+    tests/fixtures/languages/elisp/test.el:
+      Paul Gauthier (stella): 25
+    tests/fixtures/languages/elixir/test.ex:
+      Paul Gauthier (stella): 5
+    tests/fixtures/languages/elm/test.elm:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 37
+    tests/fixtures/languages/go/test.go:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 41
+    tests/fixtures/languages/java/test.java:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 14
+    tests/fixtures/languages/javascript/test.js:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 25
+    tests/fixtures/languages/ocaml/test.ml:
+      Paul Gauthier (stella): 19
+    tests/fixtures/languages/php/test.php:
+      Paul Gauthier (stella): 5
+    tests/fixtures/languages/python/test.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 26
+    tests/fixtures/languages/ql/test.ql:
+      Paul Gauthier (stella): 3
+    tests/fixtures/languages/ruby/test.rb:
+      Paul Gauthier (stella): 3
+    tests/fixtures/languages/rust/test.rs:
+      Paul Gauthier (stella): 33
+    tests/fixtures/languages/tsx/test.tsx:
+      Paul Gauthier (stella): 30
+    tests/fixtures/languages/typescript/test.ts:
+      Paul Gauthier (stella): 3
+  grand_total:
+    Paul Gauthier: 105
+    Paul Gauthier (stella): 854
+    Philippe de Reynal: 30
+  start_tag: v0.65.0
+  total_lines: 989
+- stella_percentage: 64.41
+  stella_total: 429
+  end_date: '2024-12-06'
+  end_tag: v0.67.0
+  file_counts:
+    .github/workflows/issues.yml:
+      Paul Gauthier (stella): 29
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 7
+    stella/args.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 5
+    stella/coders/base_coder.py:
+      Paul Gauthier: 15
+    stella/commands.py:
+      Paul Gauthier: 11
+    stella/io.py:
+      Paul Gauthier: 28
+      Paul Gauthier (stella): 32
+    stella/llm.py:
+      Paul Gauthier: 5
+    stella/main.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 5
+    stella/models.py:
+      Paul Gauthier: 1
+    stella/run_cmd.py:
+      Paul Gauthier: 1
+    stella/utils.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 22
+    stella/watch.py:
+      Paul Gauthier: 52
+      Paul Gauthier (stella): 211
+    stella/website/_includes/qwq-chart.js:
+      Paul Gauthier: 55
+      Paul Gauthier (stella): 47
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    scripts/blame.py:
+      Paul Gauthier (stella): 26
+    scripts/update-history.py:
+      Paul Gauthier: 5
+    scripts/versionbump.py:
+      Paul Gauthier: 2
+    tests/basic/test_analytics.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 3
+    tests/basic/test_main.py:
+      Paul Gauthier: 1
+    tests/basic/test_models.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 7
+    tests/basic/test_watch.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 34
+    tests/browser/test_browser.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 1
+  grand_total:
+    Paul Gauthier: 237
+    Paul Gauthier (stella): 429
+  start_tag: v0.66.0
+  total_lines: 666
+- stella_percentage: 65.11
+  stella_total: 418
+  end_date: '2024-12-10'
+  end_tag: v0.68.0
+  file_counts:
+    .github/workflows/pages.yml:
+      Paul Gauthier (stella): 1
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 2
+    stella/args.py:
+      Paul Gauthier: 62
+      Paul Gauthier (stella): 7
+    stella/coders/base_coder.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 12
+    stella/coders/editor_editblock_coder.py:
+      Paul Gauthier: 1
+    stella/coders/editor_whole_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 28
+      Paul Gauthier (stella): 21
+    stella/copypaste.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 60
+    stella/exceptions.py:
+      Paul Gauthier: 9
+    stella/history.py:
+      Paul Gauthier (stella): 1
+    stella/io.py:
+      Paul Gauthier: 13
+    stella/main.py:
+      Paul Gauthier: 34
+      Paul Gauthier (stella): 26
+    stella/models.py:
+      Paul Gauthier: 15
+    stella/repo.py:
+      Paul Gauthier (stella): 1
+    stella/run_cmd.py:
+      Paul Gauthier: 1
+    stella/sendchat.py:
+      Paul Gauthier (stella): 4
+    stella/utils.py:
+      Paul Gauthier: 1
+    stella/voice.py:
+      Paul Gauthier: 9
+    stella/watch.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 35
+    stella/website/_includes/edit-leaderboard.js:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 90
+    stella/website/_includes/head_custom.html:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 53
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 2
+    scripts/blame.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 17
+    scripts/pip-compile.sh:
+      Paul Gauthier: 2
+    tests/basic/test_commands.py:
+      Paul Gauthier (stella): 28
+    tests/basic/test_history.py:
+      Paul Gauthier (stella): 3
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 53
+    tests/basic/test_repo.py:
+      Paul Gauthier (stella): 3
+    tests/basic/test_sendchat.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 1
+    tests/basic/test_watch.py:
+      Paul Gauthier: 1
+  grand_total:
+    Paul Gauthier: 224
+    Paul Gauthier (stella): 418
+  start_tag: v0.67.0
+  total_lines: 642
+- stella_percentage: 68.65
+  stella_total: 219
+  end_date: '2024-12-13'
+  end_tag: v0.69.0
+  file_counts:
+    .github/workflows/pages.yml:
+      Paul Gauthier: 2
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 2
+    stella/args.py:
+      Mir Adnan ALI: 5
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      JeongJuhyeon: 1
+      Mir Adnan ALI: 3
+    stella/commands.py:
+      Mir Adnan ALI: 4
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 3
+    stella/io.py:
+      Mir Adnan ALI: 37
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 3
+    stella/main.py:
+      Mir Adnan ALI: 1
+    stella/models.py:
+      Paul Gauthier: 7
+    stella/watch.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 47
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    benchmark/benchmark.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 7
+    scripts/blame.py:
+      Paul Gauthier (stella): 1
+    scripts/issues.py:
+      Paul Gauthier (stella): 70
+    scripts/update-history.py:
+      Paul Gauthier: 3
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 20
+    tests/basic/test_watch.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 68
+  grand_total:
+    JeongJuhyeon: 1
+    Mir Adnan ALI: 50
+    Paul Gauthier: 49
+    Paul Gauthier (stella): 219
+  start_tag: v0.68.0
+  total_lines: 319
+- stella_percentage: 73.19
+  stella_total: 871
+  end_date: '2024-12-26'
+  end_tag: v0.70.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 42
+    stella/args.py:
+      Evan Johnson: 2
+    stella/coders/search_replace.py:
+      Paul Gauthier: 5
+    stella/commands.py:
+      Paul Gauthier (stella): 36
+    stella/help_pats.py:
+      Paul Gauthier: 3
+    stella/io.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 9
+    stella/main.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 5
+      apaz-cli: 3
+      mdk: 6
+    stella/models.py:
+      Paul Gauthier: 38
+    stella/repo.py:
+      Paul Gauthier: 14
+    stella/utils.py:
+      Paul Gauthier: 2
+    stella/watch.py:
+      Paul Gauthier: 13
+    stella/website/_includes/head_custom.html:
+      Paul Gauthier (stella): 4
+    stella/website/_includes/leaderboard.js:
+      Paul Gauthier (stella): 14
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 28
+      Paul Gauthier (stella): 2
+    benchmark/Dockerfile:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 43
+    benchmark/benchmark.py:
+      Paul Gauthier: 70
+      Paul Gauthier (stella): 152
+    benchmark/clone-exercism.sh:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 18
+    benchmark/cpp-test.sh:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 1
+    benchmark/docker.sh:
+      Paul Gauthier (stella): 4
+    benchmark/install-docker-ubuntu.sh:
+      Paul Gauthier (stella): 63
+    benchmark/npm-test.sh:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 3
+    benchmark/problem_stats.py:
+      Paul Gauthier: 34
+      Paul Gauthier (stella): 319
+    benchmark/rsync.sh:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 26
+    scripts/blame.py:
+      Paul Gauthier (stella): 6
+    scripts/my_models.py:
+      Paul Gauthier (stella): 95
+    scripts/update-blame.sh:
+      Paul Gauthier (stella): 3
+    scripts/update-docs.sh:
+      Paul Gauthier: 1
+    tests/basic/test_analytics.py:
+      Paul Gauthier (stella): 19
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 7
+    tests/basic/test_sanity_check_repo.py:
+      mdk: 34
+  grand_total:
+    Evan Johnson: 2
+    Paul Gauthier: 274
+    Paul Gauthier (stella): 871
+    apaz-cli: 3
+    mdk: 40
+  start_tag: v0.69.0
+  total_lines: 1190
+- stella_percentage: 60.61
+  stella_total: 237
+  end_date: '2025-01-10'
+  end_tag: v0.71.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 2
+    stella/coders/base_coder.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 13
+    stella/commands.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 22
+    stella/io.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 16
+    stella/linter.py:
+      Aaron Weisberg: 6
+    stella/main.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 13
+      apaz-cli: 18
+    stella/mdstream.py:
+      Paul Gauthier: 38
+      Paul Gauthier (stella): 58
+    stella/models.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 2
+    stella/repo.py:
+      Krazer: 10
+      Paul Gauthier: 5
+    stella/run_cmd.py:
+      Aaron Weisberg: 2
+    stella/utils.py:
+      Paul Gauthier: 9
+    stella/voice.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 13
+    stella/watch.py:
+      Paul Gauthier: 1
+    benchmark/Dockerfile:
+      Josh Vera: 1
+      Paul Maunders: 12
+    benchmark/benchmark.py:
+      Nimesh Ghelani: 1
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 30
+    benchmark/problem_stats.py:
+      Paul Gauthier (stella): 5
+    docker/Dockerfile:
+      Paul Gauthier (stella): 32
+    scripts/update-history.py:
+      Paul Gauthier (stella): 1
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 7
+    tests/basic/test_linter.py:
+      Aaron Weisberg: 2
+    tests/basic/test_models.py:
+      Paul Gauthier (stella): 25
+  grand_total:
+    Aaron Weisberg: 10
+    Josh Vera: 1
+    Krazer: 10
+    Nimesh Ghelani: 1
+    Paul Gauthier: 102
+    Paul Gauthier (stella): 237
+    Paul Maunders: 12
+    apaz-cli: 18
+  start_tag: v0.70.0
+  total_lines: 391
+- stella_percentage: 48.35
+  stella_total: 161
+  end_date: '2025-01-20'
+  end_tag: v0.72.0
+  file_counts:
+    .github/workflows/docker-build-test.yml:
+      Paul Gauthier (stella): 58
+    .github/workflows/pages.yml:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 1
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier (stella): 8
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier (stella): 8
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Titusz Pan: 6
+    stella/coders/base_coder.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 2
+    stella/coders/single_wholefile_func_coder.py:
+      Paul Gauthier: 1
+    stella/coders/wholefile_func_coder.py:
+      Paul Gauthier: 1
+    stella/commands.py:
+      Paul Gauthier: 3
+    stella/history.py:
+      Paul Gauthier: 7
+    stella/io.py:
+      Paul Gauthier (stella): 14
+      Titusz Pan: 6
+    stella/main.py:
+      Titusz Pan: 1
+    stella/models.py:
+      Paul Gauthier: 39
+    stella/queries/tree-sitter-kotlin-tags.scm:
+      Paul Walker: 27
+    stella/repomap.py:
+      Paul Gauthier (stella): 2
+    stella/sendchat.py:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 22
+    stella/utils.py:
+      Paul Gauthier: 1
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 2
+    benchmark/benchmark.py:
+      Paul Gauthier: 9
+    benchmark/rsync.sh:
+      Paul Gauthier: 21
+    docker/Dockerfile:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 6
+    scripts/my_models.py:
+      Paul Gauthier: 3
+    scripts/update-docs.sh:
+      Paul Gauthier: 2
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 40
+    tests/basic/test_repomap.py:
+      Paul Walker: 1
+    tests/fixtures/languages/kotlin/test.kt:
+      Paul Walker: 16
+  grand_total:
+    Paul Gauthier: 115
+    Paul Gauthier (stella): 161
+    Paul Walker: 44
+    Titusz Pan: 13
+  start_tag: v0.71.0
+  total_lines: 333
+- stella_percentage: 33.7
+  stella_total: 307
+  end_date: '2025-01-31'
+  end_tag: v0.73.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 5
+    stella/coders/base_coder.py:
+      Paul Gauthier: 38
+      Paul Gauthier (stella): 29
+    stella/commands.py:
+      xqyz: 1
+    stella/io.py:
+      Paul Gauthier: 7
+    stella/main.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 15
+    stella/models.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 34
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 442
+      kennyfrc: 17
+      xqyz: 12
+    stella/sendchat.py:
+      Mir Adnan ALI: 26
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 6
+    stella/urls.py:
+      Paul Gauthier: 1
+    stella/website/_includes/leaderboard.js:
+      Paul Gauthier (stella): 1
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 2
+    benchmark/benchmark.py:
+      Paul Gauthier (stella): 21
+    benchmark/rsync.sh:
+      Paul Gauthier: 2
+    tests/basic/test_coder.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 53
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 69
+    tests/basic/test_sendchat.py:
+      Paul Gauthier (stella): 77
+  grand_total:
+    Mir Adnan ALI: 26
+    Paul Gauthier: 548
+    Paul Gauthier (stella): 307
+    kennyfrc: 17
+    xqyz: 13
+  start_tag: v0.72.0
+  total_lines: 911
+- stella_percentage: 72.82
+  stella_total: 635
+  end_date: '2025-02-06'
+  end_tag: v0.74.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 24
+      Paul Gauthier (stella): 9
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 5
+    stella/coders/wholefile_coder.py:
+      Paul Gauthier: 2
+    stella/commands.py:
+      Paul Gauthier: 1
+    stella/exceptions.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 7
+    stella/history.py:
+      Paul Gauthier (stella): 1
+    stella/io.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 20
+    stella/llm.py:
+      Paul Gauthier: 3
+    stella/main.py:
+      Paul Gauthier: 21
+      Paul Gauthier (stella): 25
+    stella/models.py:
+      Paul Gauthier: 104
+      Paul Gauthier (stella): 77
+    stella/repo.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 2
+      "Viktor Sz\xE9pe": 3
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 24
+    stella/watch.py:
+      Paul Gauthier (stella): 45
+    benchmark/docker.sh:
+      Paul Gauthier: 2
+    docker/Dockerfile:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 4
+    tests/basic/test_editblock.py:
+      Paul Gauthier: 21
+    tests/basic/test_history.py:
+      Paul Gauthier (stella): 13
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 68
+    tests/basic/test_main.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 1
+    tests/basic/test_models.py:
+      Paul Gauthier (stella): 298
+    tests/basic/test_repo.py:
+      Paul Gauthier (stella): 11
+    tests/basic/test_sendchat.py:
+      Paul Gauthier (stella): 7
+    tests/basic/test_watch.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 47
+  grand_total:
+    Paul Gauthier: 234
+    Paul Gauthier (stella): 635
+    "Viktor Sz\xE9pe": 3
+  start_tag: v0.73.0
+  total_lines: 872
+- stella_percentage: 43.8
+  stella_total: 166
+  end_date: '2025-02-24'
+  end_tag: v0.75.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 7
+    stella/coders/base_coder.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 4
+    stella/commands.py:
+      FeepingCreature (stella): 6
+    stella/editor.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 5
+    stella/io.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 4
+    stella/linter.py:
+      Paul Gauthier: 1
+    stella/main.py:
+      Paul Gauthier: 20
+    stella/models.py:
+      Paul Gauthier: 4
+    stella/queries/tree-sitter-language-pack/javascript-tags.scm:
+      Paul Gauthier: 5
+    stella/queries/tree-sitter-languages/hcl-tags.scm:
+      Paul Gauthier: 3
+      Warren Krewenki: 74
+    stella/queries/tree-sitter-languages/javascript-tags.scm:
+      Paul Gauthier: 5
+    stella/repomap.py:
+      Paul Gauthier: 43
+      Paul Gauthier (stella): 11
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 20
+    stella/special.py:
+      Lucas Shadler: 1
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    benchmark/Dockerfile:
+      Paul Gauthier (stella): 1
+    benchmark/benchmark.py:
+      Paul Gauthier: 4
+    benchmark/cpp-test.sh:
+      Paul Gauthier: 1
+    scripts/blame.py:
+      Paul Gauthier (stella): 2
+    scripts/issues.py:
+      Paul Gauthier (stella): 19
+    tests/basic/test_coder.py:
+      Paul Gauthier (stella): 19
+    tests/basic/test_editor.py:
+      Antti Kaihola: 1
+      Paul Gauthier (stella): 41
+    tests/basic/test_models.py:
+      Paul Gauthier (stella): 1
+    tests/basic/test_repomap.py:
+      Paul Gauthier (stella): 1
+    tests/fixtures/languages/hcl/test.tf:
+      Paul Gauthier (stella): 52
+  grand_total:
+    Antti Kaihola: 1
+    FeepingCreature (stella): 6
+    Lucas Shadler: 1
+    Paul Gauthier: 137
+    Paul Gauthier (stella): 160
+    Warren Krewenki: 74
+  start_tag: v0.74.0
+  total_lines: 379
+- stella_percentage: 82.52
+  stella_total: 1667
+  end_date: '2025-03-10'
+  end_tag: v0.76.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 25
+    stella/args_formatter.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 3
+    stella/coders/base_coder.py:
+      Paul Gauthier: 57
+      Paul Gauthier (stella): 30
+    stella/deprecated.py:
+      Paul Gauthier (stella): 125
+    stella/io.py:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 130
+    stella/main.py:
+      Akira Komamura: 2
+      Mattias: 1
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 16
+    stella/models.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 72
+    stella/queries/tree-sitter-language-pack/csharp-tags.scm:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 12
+    stella/reasoning_tags.py:
+      Paul Gauthier: 14
+      Paul Gauthier (stella): 68
+    stella/repo.py:
+      Akira Komamura: 1
+      Paul Gauthier (stella): 5
+    stella/repomap.py:
+      Paul Gauthier: 9
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 105
+      Paul Gauthier (stella): 51
+      gmoz22: 12
+    stella/website/_includes/leaderboard.js:
+      Paul Gauthier (stella): 48
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 2
+    benchmark/benchmark.py:
+      Paul Gauthier: 1
+    benchmark/problem_stats.py:
+      Paul Gauthier (stella): 2
+    docker/Dockerfile:
+      Paul Gauthier: 1
+    scripts/blame.py:
+      Paul Gauthier: 1
+    scripts/pip-compile.sh:
+      Claudia Pellegrino: 12
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 11
+    scripts/update-history.py:
+      Paul Gauthier: 1
+    scripts/versionbump.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 64
+    tests/basic/test_deprecated.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 125
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 54
+    tests/basic/test_main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 97
+    tests/basic/test_model_info_manager.py:
+      Paul Gauthier (stella): 80
+    tests/basic/test_models.py:
+      Paul Gauthier: 31
+      Paul Gauthier (stella): 38
+    tests/basic/test_reasoning.py:
+      Paul Gauthier: 33
+      Paul Gauthier (stella): 534
+    tests/basic/test_repomap.py:
+      Paul Gauthier: 2
+    tests/basic/test_ssl_verification.py:
+      Paul Gauthier (stella): 77
+  grand_total:
+    Akira Komamura: 3
+    Claudia Pellegrino: 12
+    Mattias: 1
+    Paul Gauthier: 325
+    Paul Gauthier (stella): 1667
+    gmoz22: 12
+  start_tag: v0.75.0
+  total_lines: 2020
+- stella_percentage: 68.94
+  stella_total: 1447
+  end_date: '2025-03-13'
+  end_tag: v0.77.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier (stella): 7
+    stella/coders/architect_coder.py:
+      Paul Gauthier (stella): 2
+    stella/coders/base_coder.py:
+      Paul Gauthier (stella): 14
+    stella/commands.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 73
+    stella/deprecated.py:
+      Paul Gauthier: 2
+    stella/io.py:
+      Paul Gauthier (stella): 5
+    stella/main.py:
+      Paul Gauthier (stella): 12
+    stella/models.py:
+      Paul Gauthier (stella): 83
+    stella/queries/tree-sitter-language-pack/arduino-tags.scm:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 2
+    stella/queries/tree-sitter-language-pack/c-tags.scm:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 5
+    stella/queries/tree-sitter-language-pack/chatito-tags.scm:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 5
+    stella/queries/tree-sitter-language-pack/commonlisp-tags.scm:
+      Paul Gauthier: 116
+      Paul Gauthier (stella): 6
+    stella/queries/tree-sitter-language-pack/cpp-tags.scm:
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 8
+    stella/queries/tree-sitter-language-pack/d-tags.scm:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 17
+    stella/queries/tree-sitter-language-pack/dart-tags.scm:
+      Paul Gauthier: 65
+      Paul Gauthier (stella): 19
+    stella/queries/tree-sitter-language-pack/elisp-tags.scm:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 2
+    stella/queries/tree-sitter-language-pack/elixir-tags.scm:
+      Paul Gauthier: 35
+      Paul Gauthier (stella): 8
+    stella/queries/tree-sitter-language-pack/elm-tags.scm:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 6
+    stella/queries/tree-sitter-language-pack/gleam-tags.scm:
+      Paul Gauthier: 26
+      Paul Gauthier (stella): 15
+    stella/queries/tree-sitter-language-pack/go-tags.scm:
+      Paul Gauthier: 28
+      Paul Gauthier (stella): 10
+    stella/queries/tree-sitter-language-pack/java-tags.scm:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 7
+    stella/queries/tree-sitter-language-pack/lua-tags.scm:
+      Paul Gauthier: 25
+      Paul Gauthier (stella): 9
+    stella/queries/tree-sitter-language-pack/pony-tags.scm:
+      Paul Gauthier: 20
+      Paul Gauthier (stella): 19
+    stella/queries/tree-sitter-language-pack/properties-tags.scm:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 2
+    stella/queries/tree-sitter-language-pack/python-tags.scm:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 5
+    stella/queries/tree-sitter-language-pack/r-tags.scm:
+      Paul Gauthier: 17
+      Paul Gauthier (stella): 4
+    stella/queries/tree-sitter-language-pack/racket-tags.scm:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 2
+    stella/queries/tree-sitter-language-pack/ruby-tags.scm:
+      Paul Gauthier: 52
+      Paul Gauthier (stella): 12
+    stella/queries/tree-sitter-language-pack/rust-tags.scm:
+      Paul Gauthier: 46
+      Paul Gauthier (stella): 14
+    stella/queries/tree-sitter-language-pack/solidity-tags.scm:
+      Paul Gauthier: 30
+      Paul Gauthier (stella): 13
+    stella/queries/tree-sitter-language-pack/swift-tags.scm:
+      Paul Gauthier: 39
+      Paul Gauthier (stella): 12
+    stella/queries/tree-sitter-language-pack/udev-tags.scm:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 5
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 12
+    stella/watch.py:
+      Yutaka Matsubara: 4
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 8
+    scripts/redact-cast.py:
+      Paul Gauthier: 27
+      Paul Gauthier (stella): 98
+    scripts/tsl_pack_langs.py:
+      Paul Gauthier (stella): 145
+    scripts/versionbump.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 1
+    tests/basic/test_coder.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 109
+    tests/basic/test_commands.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 222
+    tests/basic/test_models.py:
+      Paul Gauthier (stella): 45
+    tests/basic/test_repomap.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 132
+    tests/fixtures/languages/arduino/test.ino:
+      Paul Gauthier (stella): 21
+    tests/fixtures/languages/c/test.c:
+      Paul Gauthier (stella): 15
+    tests/fixtures/languages/chatito/test.chatito:
+      Paul Gauthier (stella): 20
+    tests/fixtures/languages/commonlisp/test.lisp:
+      Paul Gauthier (stella): 17
+    tests/fixtures/languages/d/test.d:
+      Paul Gauthier (stella): 26
+    tests/fixtures/languages/dart/test.dart:
+      Paul Gauthier (stella): 21
+    tests/fixtures/languages/elm/test.elm:
+      Paul Gauthier (stella): 21
+    tests/fixtures/languages/gleam/test.gleam:
+      Paul Gauthier (stella): 10
+    tests/fixtures/languages/lua/test.lua:
+      Paul Gauthier (stella): 25
+    tests/fixtures/languages/pony/test.pony:
+      Paul Gauthier (stella): 8
+    tests/fixtures/languages/properties/test.properties:
+      Paul Gauthier (stella): 14
+    tests/fixtures/languages/r/test.r:
+      Paul Gauthier (stella): 17
+    tests/fixtures/languages/racket/test.rkt:
+      Paul Gauthier (stella): 8
+    tests/fixtures/languages/solidity/test.sol:
+      Paul Gauthier (stella): 21
+    tests/fixtures/languages/swift/test.swift:
+      Paul Gauthier (stella): 18
+    tests/fixtures/languages/udev/test.rules:
+      Paul Gauthier (stella): 22
+  grand_total:
+    Paul Gauthier: 648
+    Paul Gauthier (stella): 1447
+    Yutaka Matsubara: 4
+  start_tag: v0.76.0
+  total_lines: 2099
+- stella_percentage: 91.82
+  stella_total: 2682
+  end_date: '2025-03-21'
+  end_tag: v0.78.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier (stella): 24
+      Yutaka Matsubara: 2
+    stella/coders/base_coder.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 6
+    stella/commands.py:
+      Carles Sala (stella): 30
+      Paul Gauthier (stella): 10
+    stella/help_pats.py:
+      Paul Gauthier: 6
+    stella/io.py:
+      Marco Mayer: 2
+      Paul Gauthier (stella): 17
+    stella/main.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 29
+    stella/mdstream.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 22
+    stella/models.py:
+      Paul Gauthier (stella): 41
+      lentil32 (stella): 15
+    stella/repo.py:
+      Paul Gauthier (stella): 5
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 22
+    stella/website/_includes/head_custom.html:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 53
+    stella/website/_includes/recording.js:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 424
+    stella/website/assets/asciinema/asciinema-player.min.js:
+      Paul Gauthier: 1
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    stella/website/index.html:
+      Paul Gauthier: 173
+      Paul Gauthier (stella): 371
+    scripts/badges.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 496
+    scripts/blame.py:
+      Paul Gauthier: 2
+    scripts/jekyll_run.sh:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 5
+    scripts/logo_svg.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 169
+    scripts/recording_audio.py:
+      Paul Gauthier (stella): 338
+    scripts/redact-cast.py:
+      Paul Gauthier: 22
+      Paul Gauthier (stella): 37
+    scripts/tmux_record.sh:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 17
+    scripts/update-docs.sh:
+      Paul Gauthier: 1
+    scripts/update-history.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 52
+    tests/basic/test_aws_credentials.py:
+      lentil32 (stella): 169
+    tests/basic/test_commands.py:
+      Carles Sala (stella): 40
+    tests/basic/test_main.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 193
+    tests/basic/test_repo.py:
+      Paul Gauthier (stella): 48
+    tests/help/test_help.py:
+      Paul Gauthier (stella): 49
+  grand_total:
+    Carles Sala (stella): 70
+    Marco Mayer: 2
+    Paul Gauthier: 235
+    Paul Gauthier (stella): 2428
+    Yutaka Matsubara: 2
+    lentil32 (stella): 184
+  start_tag: v0.77.0
+  total_lines: 2921
+- stella_percentage: 65.38
+  stella_total: 221
+  end_date: '2025-03-25'
+  end_tag: v0.79.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/__init__.py:
+      Paul Gauthier: 2
+    stella/coders/base_coder.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 5
+    stella/coders/context_coder.py:
+      Paul Gauthier: 45
+      Paul Gauthier (stella): 8
+    stella/commands.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 20
+    stella/io.py:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 2
+    stella/main.py:
+      Paul Gauthier (stella): 4
+    stella/models.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 1
+    stella/repomap.py:
+      Paul Gauthier: 17
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 10
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    stella/website/index.html:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 16
+    scripts/badges.py:
+      Paul Gauthier (stella): 2
+    scripts/blame.py:
+      Paul Gauthier (stella): 16
+    scripts/dl_icons.py:
+      Paul Gauthier (stella): 60
+    scripts/tmux_record.sh:
+      Paul Gauthier: 1
+    tests/basic/test_coder.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 77
+  grand_total:
+    Paul Gauthier: 117
+    Paul Gauthier (stella): 221
+  start_tag: v0.78.0
+  total_lines: 338
+- stella_percentage: 86.86
+  stella_total: 1837
+  end_date: '2025-03-31'
+  end_tag: v0.80.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 2
+    stella/commands.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 20
+    stella/exceptions.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 3
+    stella/io.py:
+      Andrey Ivanov: 2
+      Matteo Landi (stella): 11
+      Paul Gauthier (stella): 38
+    stella/linter.py:
+      Mir Adnan ALI: 2
+    stella/main.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 21
+    stella/mdstream.py:
+      Peter Schilling (stella) (stella): 25
+    stella/models.py:
+      Paul Gauthier: 12
+      Paul Gauthier (stella): 9
+    stella/onboarding.py:
+      Paul Gauthier: 44
+      Paul Gauthier (stella): 389
+    stella/queries/tree-sitter-languages/scala-tags.scm:
+      Vasil Markoukin: 65
+    stella/repo.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 7
+    stella/repomap.py:
+      Paul Gauthier (stella): 19
+    stella/resources/model-settings.yml:
+      Paul Gauthier (stella): 13
+    stella/scrape.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 1
+    stella/utils.py:
+      Paul Gauthier (stella): 5
+    stella/watch.py:
+      Matteo Landi (stella): 2
+    stella/website/_includes/leaderboard.js:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 2
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    stella/website/index.html:
+      Paul Gauthier: 51
+      Paul Gauthier (stella): 175
+    scripts/30k-image.py:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 227
+    scripts/homepage.py:
+      Paul Gauthier (stella): 122
+    tests/basic/test_commands.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 48
+    tests/basic/test_exceptions.py:
+      Paul Gauthier (stella): 17
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 28
+    tests/basic/test_main.py:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 199
+    tests/basic/test_onboarding.py:
+      Paul Gauthier (stella): 439
+    tests/basic/test_repomap.py:
+      Vasil Markoukin: 3
+    tests/basic/test_ssl_verification.py:
+      Paul Gauthier (stella): 8
+    tests/basic/test_watch.py:
+      Matteo Landi (stella): 9
+    tests/fixtures/languages/scala/test.scala:
+      Vasil Markoukin: 61
+  grand_total:
+    Andrey Ivanov: 2
+    Matteo Landi (stella): 22
+    Mir Adnan ALI: 2
+    Paul Gauthier: 145
+    Paul Gauthier (stella): 1790
+    Peter Schilling (stella) (stella): 25
+    Vasil Markoukin: 129
+  start_tag: v0.79.0
+  total_lines: 2115
+- stella_percentage: 85.55
+  stella_total: 225
+  end_date: '2025-04-04'
+  end_tag: v0.81.0
+  file_counts:
+    .github/workflows/check_pypi_version.yml:
+      Paul Gauthier: 11
+      Paul Gauthier (stella): 75
+    .github/workflows/windows_check_pypi_version.yml:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 86
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier (stella): 4
+    stella/exceptions.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 12
+    stella/main.py:
+      Paul Gauthier (stella): 40
+    stella/models.py:
+      Paul Gauthier (stella): 2
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 9
+      Paul Gauthier (stella): 1
+    stella/website/_includes/leaderboard.js:
+      Paul Gauthier (stella): 5
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    stella/website/index.html:
+      Paul Gauthier: 3
+    tests/basic/test_exceptions.py:
+      Paul Gauthier: 3
+  grand_total:
+    Paul Gauthier: 38
+    Paul Gauthier (stella): 225
+  start_tag: v0.80.0
+  total_lines: 263
+- stella_percentage: 91.85
+  stella_total: 1567
+  end_date: '2025-04-14'
+  end_tag: v0.82.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args_formatter.py:
+      Paul Gauthier (stella): 4
+    stella/coders/__init__.py:
+      Paul Gauthier (stella): 4
+    stella/coders/base_coder.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 5
+    stella/coders/editor_diff_fenced_coder.py:
+      Paul Gauthier (stella): 9
+    stella/coders/patch_coder.py:
+      Paul Gauthier (stella): 679
+    stella/coders/search_replace.py:
+      Paul Gauthier (stella): 1
+    stella/main.py:
+      Paul Gauthier (stella): 1
+    stella/models.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 25
+    stella/resources/model-settings.yml:
+      Felix Lisczyk: 13
+      Paul Gauthier: 37
+      Paul Gauthier (stella): 68
+    stella/website/_includes/leaderboard.js:
+      Paul Gauthier: 38
+      Paul Gauthier (stella): 6
+    stella/website/_includes/leaderboard_table.js:
+      Paul Gauthier (stella): 518
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 15
+      Paul Gauthier (stella): 209
+    stella/website/index.html:
+      Paul Gauthier: 28
+    scripts/homepage.py:
+      Paul Gauthier (stella): 2
+    scripts/versionbump.py:
+      Paul Gauthier (stella): 11
+    tests/basic/test_coder.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 25
+  grand_total:
+    Felix Lisczyk: 13
+    Paul Gauthier: 126
+    Paul Gauthier (stella): 1567
+  start_tag: v0.81.0
+  total_lines: 1706
+- stella_percentage: 66.89
+  stella_total: 1735
+  end_date: '2025-05-09'
+  end_tag: v0.83.0
+  file_counts:
+    .github/workflows/check_pypi_version.yml:
+      Paul Gauthier (stella): 1
+    .github/workflows/pre-commit.yml:
+      MDW: 48
+    .github/workflows/ubuntu-tests.yml:
+      Paul Gauthier (stella): 1
+    .github/workflows/windows-tests.yml:
+      Paul Gauthier (stella): 1
+    .github/workflows/windows_check_pypi_version.yml:
+      Paul Gauthier (stella): 1
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Andrew Grigorev: 5
+      Andrew Grigorev (stella): 21
+      Paul Gauthier (stella): 38
+    stella/coders/__init__.py:
+      Paul Gauthier (stella): 2
+    stella/coders/base_coder.py:
+      Andrew Grigorev (stella): 2
+      Paul Gauthier: 60
+      Paul Gauthier (stella): 104
+    stella/coders/editblock_coder.py:
+      Paul Gauthier: 10
+      Paul Gauthier (stella): 7
+      zjy1412: 2
+    stella/coders/editblock_fenced_coder.py:
+      MDW: 1
+    stella/coders/help_coder.py:
+      MDW: 1
+    stella/coders/patch_coder.py:
+      Paul Gauthier (stella): 38
+    stella/coders/shell.py:
+      Paul Gauthier: 37
+    stella/coders/udiff_coder.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 9
+    stella/coders/udiff_simple.py:
+      Paul Gauthier (stella): 14
+    stella/commands.py:
+      Andrew Grigorev (stella): 10
+      Paul Gauthier: 7
+      Paul Gauthier (stella): 1
+    stella/gui.py:
+      Jon Keys: 2
+    stella/io.py:
+      Kay Gosho: 1
+      Paul Gauthier (stella): 5
+    stella/linter.py:
+      Paul Gauthier: 1
+      Titusz Pan: 1
+    stella/main.py:
+      Paul Gauthier (stella): 9
+    stella/mdstream.py:
+      Paul Gauthier (stella): 11
+    stella/models.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 66
+      Stefan Hladnik: 4
+      Stefan Hladnik (stella): 41
+    stella/queries/tree-sitter-language-pack/ocaml_interface-tags.scm:
+      Andrey Popp: 98
+    stella/queries/tree-sitter-languages/ocaml_interface-tags.scm:
+      Andrey Popp: 98
+    stella/repo.py:
+      Andrew Grigorev (stella): 136
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 33
+    stella/repomap.py:
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 6
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 183
+      Paul Gauthier (stella): 175
+      cantalupo555: 1
+    stella/scrape.py:
+      Jon Keys: 12
+    stella/utils.py:
+      Paul Gauthier: 13
+      Paul Gauthier (stella): 131
+      Titusz Pan: 1
+    stella/waiting.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 54
+    stella/watch.py:
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 7
+    stella/website/_includes/leaderboard_table.js:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 18
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 2
+    stella/website/index.html:
+      Paul Gauthier: 13
+    benchmark/benchmark.py:
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 42
+    benchmark/docker.sh:
+      Paul Gauthier: 2
+    benchmark/refactor_tools.py:
+      MDW: 1
+    scripts/30k-image.py:
+      MDW: 1
+    scripts/clean_metadata.py:
+      Paul Gauthier (stella): 258
+    scripts/update-history.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 7
+    tests/basic/test_coder.py:
+      Paul Gauthier (stella): 3
+    tests/basic/test_commands.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 90
+    tests/basic/test_editblock.py:
+      Paul Gauthier: 10
+      zjy1412: 52
+    tests/basic/test_io.py:
+      Paul Gauthier (stella): 132
+    tests/basic/test_linter.py:
+      Paul Gauthier: 22
+      Titusz Pan: 10
+    tests/basic/test_repo.py:
+      Andrew Grigorev: 1
+      Andrew Grigorev (stella): 139
+      Paul Gauthier: 79
+      Paul Gauthier (stella): 6
+    tests/basic/test_repomap.py:
+      Andrey Popp: 7
+    tests/basic/test_watch.py:
+      MDW: 1
+    tests/fixtures/languages/ocaml_interface/test.mli:
+      Andrey Popp: 14
+    tests/scrape/test_playwright_disable.py:
+      Andrew Grigorev (stella): 111
+      Paul Gauthier: 25
+      Paul Gauthier (stella): 3
+  grand_total:
+    Andrew Grigorev: 6
+    Andrew Grigorev (stella): 419
+    Andrey Popp: 217
+    Jon Keys: 14
+    Kay Gosho: 1
+    MDW: 53
+    Paul Gauthier: 497
+    Paul Gauthier (stella): 1275
+    Stefan Hladnik: 4
+    Stefan Hladnik (stella): 41
+    Titusz Pan: 12
+    cantalupo555: 1
+    zjy1412: 54
+  start_tag: v0.82.0
+  total_lines: 2594
+- stella_percentage: 78.92
+  stella_total: 655
+  end_date: '2025-05-30'
+  end_tag: v0.84.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/args.py:
+      Paul Gauthier (stella): 27
+      saviour: 2
+    stella/args_formatter.py:
+      Paul Gauthier: 1
+    stella/coders/base_coder.py:
+      Paul Gauthier: 4
+      Paul Gauthier (stella): 10
+    stella/commands.py:
+      Paul Gauthier (stella): 23
+      wangboxue: 1
+    stella/models.py:
+      Lih Chen: 15
+      Paul Gauthier: 16
+      Paul Gauthier (stella): 12
+    stella/onboarding.py:
+      Paul Gauthier: 2
+    stella/openrouter.py:
+      Paul Gauthier (stella): 120
+    stella/repo.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 10
+    stella/repomap.py:
+      Paul Gauthier (stella): 1
+    stella/resources/model-settings.yml:
+      Paul Gauthier: 71
+      Paul Gauthier (stella): 193
+      Trung Dinh: 11
+    stella/utils.py:
+      Paul Gauthier (stella): 1
+    stella/waiting.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 6
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    stella/website/index.html:
+      Paul Gauthier: 43
+    scripts/update-history.py:
+      Paul Gauthier: 2
+    tests/basic/test_coder.py:
+      Paul Gauthier: 2
+      Paul Gauthier (stella): 144
+    tests/basic/test_main.py:
+      Paul Gauthier (stella): 28
+    tests/basic/test_models.py:
+      Paul Gauthier (stella): 2
+    tests/basic/test_onboarding.py:
+      Paul Gauthier (stella): 5
+    tests/basic/test_openrouter.py:
+      Paul Gauthier (stella): 73
+  grand_total:
+    Lih Chen: 15
+    Paul Gauthier: 146
+    Paul Gauthier (stella): 655
+    Trung Dinh: 11
+    saviour: 2
+    wangboxue: 1
+  start_tag: v0.83.0
+  total_lines: 830
+- stella_percentage: 22.79
+  stella_total: 139
+  end_date: '2025-06-27'
+  end_tag: v0.85.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier: 5
+      Vasil Markoukin (stella): 6
+    stella/args.py:
+      Kyosuke Takayama: 6
+      Paul Gauthier: 5
+      Paul Gauthier (stella): 2
+      Vasil Markoukin (stella): 9
+      omarcinkonis: 6
+    stella/coders/base_coder.py:
+      Kyosuke Takayama: 3
+      omarcinkonis: 3
+    stella/coders/editblock_coder.py:
+      Mathis Beer (stella): 1
+    stella/coders/search_replace.py:
+      Emmanuel Ferdman: 1
+    stella/commands.py:
+      Ali Ayas (claude-sonnet-4-20250514): 6
+      Matteo Landi: 16
+      Paul Gauthier: 4
+      omarcinkonis: 5
+    stella/history.py:
+      jayeshthk: 18
+    stella/io.py:
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 14
+      Vamsi Talupula: 5
+    stella/main.py:
+      Kyosuke Takayama: 1
+      Makar Ivashko: 1
+      Paul Gauthier: 3
+      Vasil Markoukin (stella): 5
+      omarcinkonis: 1
+    stella/models.py:
+      Ali Ayas (claude-sonnet-4-20250514): 11
+      Nimesh Ghelani: 3
+      Paul Gauthier: 1
+      Sebastian Estrella: 11
+      Vincent Taverna: 32
+    stella/queries/tree-sitter-language-pack/clojure-tags.scm:
+      Garrett Hopper: 7
+    stella/queries/tree-sitter-language-pack/matlab-tags.scm:
+      Matthew Tofano: 4
+    stella/queries/tree-sitter-languages/matlab-tags.scm:
+      Matthew Tofano: 4
+    stella/repo.py:
+      Kyosuke Takayama: 3
+      Luke Reeves: 13
+      Paul Gauthier: 2
+      muravvv: 12
+    stella/repomap.py:
+      Garrett Hopper: 2
+    stella/resources/model-settings.yml:
+      Andrew Grigorev: 7
+      Leon Mergen: 20
+      Nimesh Ghelani: 15
+      Paul Gauthier: 1
+      Paul Gauthier (stella): 21
+      Trung Dinh: 8
+      Wietse Venema: 9
+      therealmarv: 14
+    stella/utils.py:
+      Paul Gauthier (stella): 7
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    stella/website/index.html:
+      Paul Gauthier: 8
+      Paul Gauthier (stella): 1
+    benchmark/benchmark.py:
+      Paul Gauthier: 1
+    tests/basic/test_commands.py:
+      Matteo Landi: 22
+    tests/basic/test_history.py:
+      Paul Gauthier: 15
+    tests/basic/test_main.py:
+      Kyosuke Takayama: 10
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 64
+      omarcinkonis: 41
+    tests/basic/test_repo.py:
+      Luke Reeves: 31
+      Paul Gauthier: 2
+      muravvv: 22
+    tests/basic/test_repomap.py:
+      Matthew Tofano: 3
+      Paul Gauthier (stella): 3
+    tests/fixtures/languages/clojure/test.clj:
+      Paul Gauthier (stella): 6
+    tests/fixtures/languages/matlab/test.m:
+      Matthew Tofano: 42
+  grand_total:
+    Ali Ayas (claude-sonnet-4-20250514): 17
+    Andrew Grigorev: 7
+    Emmanuel Ferdman: 1
+    Garrett Hopper: 9
+    Kyosuke Takayama: 23
+    Leon Mergen: 20
+    Luke Reeves: 44
+    Makar Ivashko: 1
+    Mathis Beer (stella): 1
+    Matteo Landi: 38
+    Matthew Tofano: 53
+    Nimesh Ghelani: 18
+    Paul Gauthier: 53
+    Paul Gauthier (stella): 118
+    Sebastian Estrella: 11
+    Trung Dinh: 8
+    Vamsi Talupula: 5
+    Vasil Markoukin (stella): 20
+    Vincent Taverna: 32
+    Wietse Venema: 9
+    jayeshthk: 18
+    muravvv: 34
+    omarcinkonis: 56
+    therealmarv: 14
+  start_tag: v0.84.0
+  total_lines: 610
+- stella_percentage: 87.75
+  stella_total: 222
+  end_date: '2025-08-09'
+  end_tag: v0.86.0
+  file_counts:
+    stella/__init__.py:
+      Paul Gauthier: 1
+    stella/analytics.py:
+      Paul Gauthier (stella): 1
+    stella/commands.py:
+      Paul Gauthier (stella): 7
+      Zexin Yuan: 1
+    stella/models.py:
+      Andrew Grigorev (stella): 3
+      Paul Gauthier: 3
+      Paul Gauthier (stella): 5
+    stella/resources/model-settings.yml:
+      Jack Harrington: 7
+      Paul Gauthier: 6
+      Paul Gauthier (stella): 199
+      Tamir Zahavi-Brunner: 7
+    stella/website/_includes/leaderboard_table.js:
+      Paul Gauthier: 1
+    stella/website/docs/leaderboards/index.md:
+      Paul Gauthier: 1
+    stella/website/index.html:
+      Paul Gauthier: 3
+    scripts/blame.py:
+      Paul Gauthier (stella): 7
+    scripts/update-history.py:
+      Paul Gauthier: 1
+  grand_total:
+    Andrew Grigorev (stella): 3
+    Jack Harrington: 7
+    Paul Gauthier: 16
+    Paul Gauthier (stella): 219
+    Tamir Zahavi-Brunner: 7
+    Zexin Yuan: 1
+  start_tag: v0.85.0
+  total_lines: 253

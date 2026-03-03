@@ -1,0 +1,6 @@
+model: ollama/deepseek-coder:33b-instruct-q4_K_M
+analytics: false
+chat-language: francais
+commit-language: francais
+detect-urls: false
+

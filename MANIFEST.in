@@ -1,0 +1,20 @@
+# This needs to sync with stella_ai/help_pats.py
+
+global-exclude .DS_Store
+
+recursive-exclude stella_ai/website/examples *
+recursive-exclude stella_ai/website/_posts *
+
+exclude stella_ai/website/HISTORY.md
+exclude stella_ai/website/docs/benchmarks*.md
+exclude stella_ai/website/docs/ctags.md
+exclude stella_ai/website/docs/unified-diffs.md
+
+exclude stella_ai/website/install.ps1
+exclude stella_ai/website/install.sh
+
+recursive-exclude stella_ai/website/docs/leaderboards *
+recursive-exclude stella_ai/website/assets *
+recursive-exclude stella_ai/website *.js
+recursive-exclude stella_ai/website *.html
+recursive-exclude stella_ai/website *.yml

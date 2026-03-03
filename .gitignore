@@ -1,5 +1,6 @@
 # --- Dossier runtime Stella ---
 .stella/
+.stella*
 *.bak_*
 
 # --- Environnements Python ---
@@ -41,3 +42,4 @@ desktop.ini
 # --- Fichiers temporaires de dev ---
 temp_*.py
 test_*_temp.py
+.aider*
